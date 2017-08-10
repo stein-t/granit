@@ -21,6 +21,7 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Granit", "Granit\", "{F01CF
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
 		VWDPort = "59016"
+		SlnRelativePath = "Granit\"
 	EndProjectSection
 EndProject
 Global
