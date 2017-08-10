@@ -1,0 +1,56 @@
+﻿
+.granitSplitter_wrapper {
+    display: block !important;
+    float: none !important;
+    box-sizing: border-box !important;
+    width: auto !important;
+    overflow: auto;
+    position: relative;
+    height: 100%;
+}
+
+.granitSplitter_Container {
+    width: auto;
+    height: 100%;
+    display: flex;
+    overflow: hidden;
+}
+
+.granitSplitter_Container_vertical {
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+}
+
+.granitSplitter_Container_horizontal {
+    flex-flow: column nowrap;
+    align-items: flex-start;
+}
+
+.granitSplitter_Panel {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    flex: auto;
+}
+
+.granitSplitter_PanelStatic {
+    flex: none;
+}
+
+.granitSplitter_Splitter {
+    display: block !important;
+    float: none !important;
+    box-sizing: border-box !important;
+    flex: none !important;
+    align-self: center !important;
+}
+
+/*custom default Layout styles*/
+.granitSplitter_Splitter_Default {
+    background: darkgrey;
+}
+
+.granitSplitter_Panel_Default {
+    border: 1px solid grey;
+    padding: 5px;
+}
