@@ -75,7 +75,7 @@
         if (!numberSet || (numberSet !== "Q" && numberSet !== "Q+" && numberSet !== "Q-")) {
             numberSet = "Q";
         }
-        if (size && jQuery.type(size) !== "string" && jQuery.type(size) !== "number") {
+        if (jQuery.type(size) !== "string" && jQuery.type(size) !== "number") {
             self.output("value (" + size + ") is not a number or a string", errorObject);
         }
 
@@ -91,7 +91,7 @@
 
         var value, unit = '';
 
-        if (size && jQuery.type(size) === "string") {
+        if (jQuery.type(size) === "string") {
             var match = size.match(regex);
 
             if (!match) {

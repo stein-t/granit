@@ -17,7 +17,8 @@ $(function () {
             panelMargin: 0,
             splitterWidth: 5,
             splitterLength: "100%",
-            splitterStyle: "granitSplitter_Splitter_Default"
+            splitterStyle: "granitSplitter_Splitter_Default",
+            overflow: "auto",
         },
         _create: function () {
             self = this;
@@ -32,17 +33,22 @@ $(function () {
                 self.output("value (" + self.options.direction + ") is invalid -- expected values are 'vertical', 'horizontal'", this.IdString + " -- self.options.direction");
             }
 
+            //validate options.overflow
+            if (self.options.overflow !== "auto" && self.options.overflow !== "hidden" && self.options.overflow !== "scroll") {
+                self.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
+            }
+
             var minSizePropertyName;
             this.element.addClass("granitSplitter_Container");
 
             if (self.options.direction === "vertical") {
                 this.element.addClass("granitSplitter_Container_vertical");
-                this.element.css("overflow-x", "auto");
+                this.element.css("overflow-x", self.options.overflow);
                 this.sizePropertyName = "width";
                 minSizePropertyName = "min-width";
             } else {
                 this.element.addClass("granitSplitter_Container_horizontal");
-                this.element.css("overflow-y", "auto");
+                this.element.css("overflow-y", self.options.overflow);
                 this.sizePropertyName = "height";
                 minSizePropertyName = "min-height";
             }
@@ -54,20 +60,18 @@ $(function () {
                 granit.output("not all panels are divs!", this.IdString + " -- self.children");
             }
 
-            var panelsWithoutSize = [];
-            var panelSizeTotal = 0.0;
-
             this.panels = [];
             this.splitterList = [];
+
+            var panelsWithoutOrRelativeSize = [];
+            var splitterOffset = "";
+            var panelSizeTotalOffset = "", panelSizePercentTotal = 0.0;
+            var panelsWithoutSizeTotal = 0;
 
             //iterate children
             children.each(function (index, element) {
                 //Panel
                 var panel = self.options.panel && self.options.panel[index];
-
-                var size = panel && panel.size;
-                size = granit.parseFloatUnit(size, "Q+", /%/, self.IdString + " -- Panel size (size)");
-                //size = granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "%", self.IdString + " -- Panel size (size)");
 
                 var minSize = (panel && panel.minSize) || self.options.panelMinSize;
                 minSize = granit.extractFloatUnit(minSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel minimum size (minSize)");
@@ -82,30 +86,36 @@ $(function () {
                 style = granit.uniqueArray(style.split(" ")).join(" ");
                 style = (style && (" " + style)) || "";
 
+                var display = (panel && panel.display);
+                if (display && display !== "flex" && display !== "static") {
+                    self.output("value (" + display + ") is invalid -- expected values are 'flex', 'static'", this.IdString + " -- panel option display");
+                }
+                var flexable;
+
                 //Splitter
-                var splitter = self.options.splitter && self.options.splitter[index];
-                var splitterWidth = (index < children.length - 1) && ((splitter && splitter.width) || self.options.splitterWidth) || 0;
-                splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Splitter width (splitterWidth)");
-
-                var splitterLength = (splitter && splitter.length) || self.options.splitterLength;
-
-                var splitterStyle = ((self.options.splitterStyle && (self.options.splitterStyle + " ")) || "") + ((splitter && splitter.style) || "");
-                splitterStyle = granit.uniqueArray(splitterStyle.split(" ")).join(" ");
-                splitterStyle = (splitterStyle && (" " + splitterStyle)) || "";
-
-                //Splitter Offset
-                var precedingSplitter = self.splitterList[index - 1];
-                var precedingSplitterWidth = precedingSplitter && precedingSplitter.data("granitWidth") || { number: 0, unit: "px" };
-                var splitterOffset = (precedingSplitterWidth.number / 2.0) + precedingSplitterWidth.unit + " - " + (splitterWidth.number / 2.0) + splitterWidth.unit;
-
                 if (index < children.length - 1) {
+                    var splitter = self.options.splitter && self.options.splitter[index];
+
+                    var splitterWidth = (splitter && splitter.width) || self.options.splitterWidth;
+                    splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Splitter width (splitterWidth)");
+
+                    var splitterLength = (splitter && splitter.length) || self.options.splitterLength;
+
+                    var splitterStyle = ((self.options.splitterStyle && (self.options.splitterStyle + " ")) || "") + ((splitter && splitter.style) || "");
+                    splitterStyle = granit.uniqueArray(splitterStyle.split(" ")).join(" ");
+                    splitterStyle = (splitterStyle && (" " + splitterStyle)) || "";
+
                     if (self.options.direction === "vertical") {
                         var splitter = $("<div id='stein-" + splitterId + "-" + (index) + "' class='granitSplitter_Splitter" + splitterStyle + "' style='width:" + splitterWidth.getSize() + ";height:" + splitterLength + ";cursor:ew-resize;'></div>");
                     } else {
                         var splitter = $("<div id='stein-" + splitterId + "-" + (index) + "' class='granitSplitter_Splitter" + splitterStyle + "' style='width:" + splitterLength + ";height:" + splitterWidth.getSize() + ";cursor:ns-resize;'></div>");
                     }
-                    splitter.data().granitSplitterWidth = splitterWidth;
                     self.splitterList[index] = splitter;
+
+                    //splitter offset
+                    if (splitterWidth.number > 0) {
+                        splitterOffset = splitterOffset.concat((" - " + (splitterWidth.number / children.length) + splitterWidth.unit));
+                    }
                 }
 
                 var wrappedElement = $(element);
@@ -122,44 +132,65 @@ $(function () {
                     }
                 }
 
-                if (!size) {
-                    //remember panels without size
-                    panelsWithoutSize.push({
-                        index: index,
-                        wrappedElement: wrappedElement,
-                        minSize: minSize.getSize(),
-                        splitterOffset: splitterOffset
-                    });
-                    return true; //leave loop
+                var size = panel && panel.size;
+
+                if (size) {
+                    size = granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "%", self.IdString + " -- Panel size (size)");
+
+                    if (size.unit === "%") {
+                        flexable = display === "static" ? false : true;
+                        panelSizePercentTotal += size.number;
+                    } else {
+                        flexable = display === "flex" ? true : false;
+                        var panelClass = flexable ? "granitSplitter_Panel" : "granitSplitter_Panel granitSplitter_PanelStatic";
+
+                        //present total static size
+                        if (size.number > 0) {
+                            panelSizeTotalOffset = panelSizeTotalOffset.concat((" - " + size.getSize()));
+                        }
+
+                        //apply splitter
+                        wrappedElement.wrap("<div id='" + splitterId + "-panel-" + (index + 1) + "'class='" + panelClass + "' style='" + self.sizePropertyName + ":" + size.getSize() + ";" + minSizePropertyName + ":" + minSize.getSize() + ";'></div>");
+
+                        wrappedElement.parent().data({ granitIndex: index, granitFlexable: flexable, granitOriginalUnit: size.unit });
+                        self.panels.splice(index, 0, wrappedElement.parent());
+
+                        self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
+
+                        return true; //leave loop
+                    }
+                } else {
+                    //count panels with no size
+                    panelsWithoutSizeTotal++;
                 }
 
-                //calculate total panel size
-                panelSizeTotal += size;
-
-                //apply splitter
-                wrappedElement.wrap("<div id='" + splitterId + "-panel-" + (index + 1) + "'class='granitSplitter_Panel' style='" + self.sizePropertyName + ":calc(" + size + "% - " + splitterOffset + ");" + minSizePropertyName + ":" + minSize.getSize() + ";'></div>");
-
-                wrappedElement.parent().data({ granitIndex: index, granitSize: size });
-                self.panels.splice(index, 0, wrappedElement.parent());
-
-                self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
+                //remember panels without size or relative size (percent)
+                panelsWithoutOrRelativeSize.push({
+                    size: size,
+                    index: index,
+                    flexable: flexable,
+                    wrappedElement: wrappedElement,
+                    minSize: minSize.getSize(),
+                    splitterOffset: splitterOffset
+                });
             });
 
-            var panelSizeDistributed = (100.0 - panelSizeTotal) / panelsWithoutSize.length;
+            //calculate remaining relative space 
+            var panelSizeDistributed = (100.0 - panelSizePercentTotal) / panelsWithoutSizeTotal;
             if (panelSizeDistributed < 0.0) {
                 panelSizeDistributed = 0.0;
             }
 
-            /*
-             * Iterate panels without sizes specified in order to fill the remaining space equally.
-             */
-            panelsWithoutSize.forEach(function (item) {
-                var size = panelSizeDistributed;
+            //apply left panels
+            panelsWithoutOrRelativeSize.forEach(function (item) {
+                var size = item.size && ("calc(" + item.size.getSize() + splitterOffset + ")") || ("calc(" + panelSizeDistributed + "%" + panelSizeTotalOffset + splitterOffset + ")");
+
+                var panelClass = item.flexable ? "granitSplitter_Panel" : "granitSplitter_Panel granitSplitter_PanelStatic";
 
                 //apply splitter
-                item.wrappedElement.wrap("<div id='" + splitterId + "-panel-" + (item.index + 1) + "'class='granitSplitter_Panel' style='" + self.sizePropertyName + ":calc(" + size + "% - " + item.splitterOffset + ");" + minSizePropertyName + ":" + item.minSize + ";'></div>");
+                item.wrappedElement.wrap("<div id='" + splitterId + "-panel-" + (item.index + 1) + "'class='" + panelClass + "' style='" + self.sizePropertyName + ":" + size + ";" + minSizePropertyName + ":" + item.minSize + ";'></div>");
 
-                item.wrappedElement.parent().data({ granitIndex: item.index, granitSize: item.size });
+                item.wrappedElement.parent().data({ granitIndex: item.index, granitFlexable: item.flexable, granitOriginalUnit: "%" });
                 self.panels.splice(item.index, 0, item.wrappedElement.parent());
 
                 self.splitterList[item.index] && self.splitterList[item.index].insertAfter(item.wrappedElement.parent());
@@ -182,18 +213,23 @@ $(function () {
 
                 var self = this;
 
-                var size;
+                var size, sizePropertyName;
 
                 this.panels.forEach(function (item, index) {
                     if (self.options.direction === "vertical") {
                         size = item.width();
+                        sizePropertyName = "width";
                     } else {
                         size = item.height();
+                        sizePropertyName = "height";
                     }
                     item.data().granitIsminmized = false;
-                    //var sizeRelative = size / self.sizeTotal * 100.0;
-                    //item.css(sizePropertyName, sizeRelative + "%");
-                    item.removeClass("granitSplitter_PanelStatic");
+                    var sizeRelative = (size + self.SplitterOffset) / self.splitterAreaSize * 100.0;
+                    if (item.data().granitOriginalUnit === "%") {
+                        item.css(sizePropertyName, "calc(" + sizeRelative + "% - " + self.SplitterOffset + "px)");
+                    }
+
+                    item.data().granitFlexable && item.css("flex", "auto");
                 });
 
                 $("html").css("cursor", "default");
@@ -221,7 +257,7 @@ $(function () {
 
             this.movedSplitter = $(event.target);
 
-            var size, minSize;
+            var size, minSize, minSizeTotal = 0.0;;
 
             this.panels.forEach(function (item, index) {
                 if (self.options.direction === "vertical") {
@@ -237,25 +273,32 @@ $(function () {
                         minSize = { number: minSize.number * $(self.element).height() / 100.0, unit: "px" };
                     }
                 }
+                minSizeTotal += minSize.number;
                 item.data().granitMinSize = minSize.number;
-                item.addClass("granitSplitter_PanelStatic");
+                item.data().granitFlexable && item.css("flex", "none");
                 item.css(self.sizePropertyName, size + "px");
             });
 
-            //var splitterSizeTotal = this.splitterList.reduce(function (total, item) {
-            //    if (self.options.direction === "vertical") {
-            //        return total + item.width();
-            //    } else {
-            //        return total + item.height();
-            //    }
-            //}, 0.0);
+            var splitterWidthTotal = this.splitterList.reduce(function (total, item) {
+                var size;
+                if (self.options.direction === "vertical") {
+                    size = item.width();
+                } else {
+                    size = item.height();
+                }
+                return total + size;
+            }, 0.0);
+            self.SplitterOffset = splitterWidthTotal / this.panels.length;
+            minSizeTotal += splitterWidthTotal;
 
             if (this.options.direction === "vertical") {
                 $("html").css("cursor", "ew-resize");
                 this.MouseMovement = event.pageX;
+                this.splitterAreaSize = Math.max($(this.element).width(), minSizeTotal);
             } else {
                 $("html").css("cursor", "ns-resize");
                 this.MouseMovement = event.pageY;
+                this.splitterAreaSize = Math.max($(this.element).height(), minSizeTotal);
             }
 
             this._on($("html"), {

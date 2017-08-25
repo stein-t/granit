@@ -14,22 +14,23 @@
         $(document).ready(function () {
             $("#splitterInner2").splitter({
                 panel: [
-                    { size: 40, style: "panelLayout1", padding: 10 },
-                    { style: "panelLayout2" },
-                    { size: 20, margin: "5vmin" },
-                    { style: "panelLayout3 panelLayout5", margin: "5pt" }
+                    { display: "static", size: "200px", style: "panelLayout1", padding: 10 },
+                    { size: "100px", style: "panelLayout2" },
+                    { display: "flex", size: "200px", margin: "5vmin" },
+                    { display: "static", style: "panelLayout3 panelLayout5", margin: "5pt" }
                 ],
                 splitter: [
                     { width: 10 },
                     { width: 5, length: "200em" },
                     { width: 10 }
                 ],
-                direction: "vertical"
+                direction: "vertical",
+                overflow: "hidden"
             });
 
             $("#splitterInner").splitter({
                 panel: [
-                    { size: 40, style: "panelLayout1", padding: 10 },
+                    { size: 50, style: "panelLayout1", padding: 10 },
                     { style: "panelLayout2" },
                     { size: 20, margin: "5vmin" },
                     { style: "panelLayout3 panelLayout5", margin: "5pt" }
@@ -45,10 +46,10 @@
 
             $("#splitterOuter").splitter({
                 panel: [
-                    { size: "", minSize: "2%", style: "panelLayout2 panelLayout7 panelLayout7" },
-                    { size: "20%", style: "panelLayout4" },
-                    { size: "50%", style: "panelLayout5" },
-                    { size: "10", style: "panelLayout6", padding: 20 }
+                    { size: "400px", minSize: "2%", style: "panelLayout2 panelLayout7 panelLayout7" },
+                    { size: "200px", style: "panelLayout4" },
+                    { size: "300px", style: "panelLayout5" },
+                    { display: "flex", size: "30", style: "panelLayout6", padding: 20 }
                 ],
                 splitter: [
                     {},
@@ -74,6 +75,9 @@
             <div id="OuterPanel1" class="stein_Content" style="width:auto;height:100%;">
                 Contentfhfjhfhjfjhfjhfjhg
             </div>
+            <!--<div id="OuterPanel2" class="stein_Content" style="width:auto;height:100%;">
+                Contentfhfjhfhjfjhfjhfjhg
+            </div>-->
             <div id="splitterInner">
                 <div id="InnerPanel1" class="stein_Content" style="width:1200px;height:1200px;">
                     Content
