@@ -11,6 +11,7 @@ $(function () {
         options: {
             direction: "vertical",
             panel: [],
+            splitter: [],
             panelMinSize: 90,
             panelStyle: "granitSplitter_Panel_Default",
             panelPadding: 5,
@@ -19,6 +20,7 @@ $(function () {
             splitterLength: "100%",
             splitterStyle: "granitSplitter_Splitter_Default",
             overflow: "auto",
+            display: "auto"
         },
         _create: function () {
             self = this;
@@ -28,14 +30,40 @@ $(function () {
             //used to identify splitter in error message
             this.IdString = "ID #" + splitterId;
 
+            var optionsAllowed = [
+                'classes', 'disabled', 'create', 'hide', 'show',    //base widget properties
+                'direction', 'panel', 'panelMinSize', 'panelStyle', 'panelPadding', 'splitter',
+                'panelMargin', 'splitterWidth', 'splitterLength', 'splitterStyle', 'overflow', 'display'
+            ];
+
+            if (!granit.findAllFromObject(this.options, optionsAllowed)) {
+                granit.output("invalid options property found - check the options object", this.IdString + " -- self.options", 'Warning');
+            }
+
+            if (this.options.panel && !Array.isArray(this.options.panel)) {
+                granit.output("the options property panel must be an array - check the options object", this.IdString + " -- self.options.panel");
+            }
+
+            if (this.options.splitter && !Array.isArray(this.options.splitter)) {
+                granit.output("the options property splitter must be an array - check the options object", this.IdString + " -- self.options.splitter");
+            }
+
+            var panelOptionsAllowed = [
+                'display', 'size', 'minSize', 'style', 'padding', 'margin'
+            ];
+
+            var splitterOptionsAllowed = [
+                'width', 'length', 'style'
+            ];
+
             //validate options.direction
             if (self.options.direction !== "vertical" && self.options.direction !== "horizontal") {
-                self.output("value (" + self.options.direction + ") is invalid -- expected values are 'vertical', 'horizontal'", this.IdString + " -- self.options.direction");
+                granit.output("value (" + self.options.direction + ") is invalid -- expected values are 'vertical', 'horizontal'", this.IdString + " -- self.options.direction");
             }
 
             //validate options.overflow
             if (self.options.overflow !== "auto" && self.options.overflow !== "hidden" && self.options.overflow !== "scroll") {
-                self.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
+                granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
             }
 
             var minSizePropertyName;
@@ -73,6 +101,10 @@ $(function () {
                 //Panel
                 var panel = self.options.panel && self.options.panel[index];
 
+                if (panel && !granit.findAllFromObject(panel, panelOptionsAllowed)) {
+                    granit.output("invalid panel array item option property found - check the panel array item options", self.IdString + " -- self.options.panel", 'Warning');
+                }
+
                 var minSize = (panel && panel.minSize) || self.options.panelMinSize;
                 minSize = granit.extractFloatUnit(minSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel minimum size (minSize)");
 
@@ -86,15 +118,19 @@ $(function () {
                 style = granit.uniqueArray(style.split(" ")).join(" ");
                 style = (style && (" " + style)) || "";
 
-                var display = (panel && panel.display);
-                if (display && display !== "flex" && display !== "static") {
-                    self.output("value (" + display + ") is invalid -- expected values are 'flex', 'static'", this.IdString + " -- panel option display");
+                var display = (panel && panel.display) || self.options.display;
+                if (display !== "auto" && display !== "flex" && display !== "static") {
+                    self.output("value (" + display + ") is invalid -- expected values are 'flex', 'static', 'auto'", self.IdString + " -- panel option.display");
                 }
                 var flexable;
 
                 //Splitter
                 if (index < children.length - 1) {
                     var splitter = self.options.splitter && self.options.splitter[index];
+
+                    if (splitter && !granit.findAllFromObject(splitter, splitterOptionsAllowed)) {
+                        granit.output("invalid splitter array item option property found - check the splitter array item options", self.IdString + " -- self.options.splitter", 'Warning');
+                    }
 
                     var splitterWidth = (splitter && splitter.width) || self.options.splitterWidth;
                     splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Splitter width (splitterWidth)");

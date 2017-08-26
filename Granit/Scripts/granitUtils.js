@@ -134,10 +134,30 @@
         return result;
     }
 
+    //checks if all items of arr can be found in haystack: https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
+    var findAll = function (arr, haystack) {
+        return arr.every(function (v) {
+            return haystack.indexOf(v) >= 0;
+        });
+    };
+
+    //checks if all property names of the object can be found in the haystack string array: https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
+    var findAllFromObject = function (object, haystack) {
+        var arr = Object.getOwnPropertyNames(object);
+        return arr.every(function (v) {
+            if (object.hasOwnProperty(v)) {
+                return haystack.indexOf(v) >= 0;
+            }
+            return true;
+        });
+    };
+
     gt.extractFloatUnit = extractFloatUnit;
     gt.parseFloatUnit = parseFloatUnit;
     gt.output = this.output;
     gt.uniqueArray = uniqueArray;
+    gt.findAll = findAll;
+    gt.findAllFromObject = findAllFromObject;
 
     return gt;
 }(granit || {}));

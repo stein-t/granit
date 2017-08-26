@@ -18,7 +18,7 @@
                     { display: "static", size: "200px", style: "panelLayout1", padding: 10 },
                     { size: "100px", style: "panelLayout2" },
                     { display: "flex", size: "200px", margin: "5vmin" },
-                    { display: "static", style: "panelLayout3 panelLayout5", margin: "5pt" }
+                    { display: "static", style: "panelLayout3 panelLayout5", margin: "5pt", test: true }
                 ],
                 splitter: [
                     { width: 10 },
@@ -31,18 +31,19 @@
 
             $("#splitterInner").splitter({
                 panel: [
-                    { size: 50, style: "panelLayout1", padding: 10 },
-                    { style: "panelLayout2" },
-                    { size: 20, margin: "5vmin" },
+                    { size: "100px", style: "panelLayout1", padding: 10 },
+                    { display: "auto", style: "panelLayout2" },
+                    { display: "flex", size: 20, margin: "5vmin" },
                     { style: "panelLayout3 panelLayout5", margin: "5pt" }
                 ],
                 splitter: [
                     { width: "3%" },
                     { width: 5, length: "200em" },
-                    { width: "2em" }
+                    { width: "2em", test: true }
                 ],
                 direction: "horizontal",
-                panelMinSize: "3em"
+                panelMinSize: "3em",
+                display: "static"
             });
 
             $("#splitterOuter").splitter({
@@ -64,7 +65,8 @@
                 splitterWidth: "7px",
                 splitterLength: "calc(100% - 10px)",
                 //direction: "horizontal",
-                direction: "vertical"
+                direction: "vertical",
+                test: true
             });
         });
     </script>
