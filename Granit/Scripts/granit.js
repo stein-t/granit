@@ -426,7 +426,7 @@ $(function () {
 
         _processPanelMovement: function (distance) {
             var self = this;
-            var origin, result1, result2;
+            var result1, result2;
 
             function test(modus, panel) {
                 var currentSize, newSize, limitSize;
@@ -471,17 +471,14 @@ $(function () {
             }
 
             if (distance > 0.0) {
-                origin = this.movedSplitter.prev();
-
-                for (var pointer = origin.data().granitIndex; pointer >= 0; pointer--) {
+                for (var pointer = this.movedSplitter.prev().data().granitIndex; pointer >= 0; pointer--) {
                     result1 = test("grow", this.panels[pointer]);
                     if (result1) {
                         break;
                     }
                 }
-
                 if (result1) {
-                    for (var pointer = origin.data().granitIndex + 1; pointer < this.panels.length; pointer++) {
+                    for (var pointer = this.movedSplitter.prev().data().granitIndex + 1; pointer < this.panels.length; pointer++) {
                         result2 = test("shrink", this.panels[pointer]);
                         if (result2) {
                             break;
@@ -491,17 +488,14 @@ $(function () {
             }
 
             if (distance < 0.0) {
-                origin = this.movedSplitter.next();
-
-                for (var pointer = origin.data().granitIndex; pointer < this.panels.length; pointer++) {
+                for (var pointer = this.movedSplitter.next().data().granitIndex; pointer < this.panels.length; pointer++) {
                     result1 = test("grow", this.panels[pointer]);
                     if (result1) {
                         break;
                     }
                 }
-
                 if (result1) {
-                    for (var pointer = origin.data().granitIndex - 1; pointer >= 0; pointer--) {
+                    for (var pointer = this.movedSplitter.next().data().granitIndex - 1; pointer >= 0; pointer--) {
                         result2 = test("shrink", this.panels[pointer]);
                         if (result2) {
                             break;
