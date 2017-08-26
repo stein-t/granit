@@ -12,6 +12,7 @@ $(function () {
             direction: "vertical",
             panel: [],
             splitter: [],
+            panelResizable: true,
             panelMinSize: 90,
             //panelMaxSize: 180,
             panelStyle: "granitSplitter_Panel_Default",
@@ -34,7 +35,7 @@ $(function () {
             var optionsAllowed = [
                 'classes', 'disabled', 'create', 'hide', 'show',    //base widget properties
                 'direction', 'panel', 'panelMinSize', 'panelMaxSize', 'panelStyle', 'panelPadding', 'splitter',
-                'panelMargin', 'splitterWidth', 'splitterLength', 'splitterStyle', 'overflow', 'display'
+                'panelMargin', 'splitterWidth', 'splitterLength', 'splitterStyle', 'overflow', 'display', 'panelResizable'
             ];
 
             if (!granit.findAllFromObject(this.options, optionsAllowed)) {
@@ -50,7 +51,7 @@ $(function () {
             }
 
             var panelOptionsAllowed = [
-                'display', 'size', 'minSize', 'maxSize', 'style', 'padding', 'margin'
+                'display', 'size', 'minSize', 'maxSize', 'style', 'padding', 'margin', 'resizable'
             ];
 
             var splitterOptionsAllowed = [
@@ -106,6 +107,14 @@ $(function () {
 
                 if (panel && !granit.findAllFromObject(panel, panelOptionsAllowed)) {
                     granit.output("invalid panel array item option property found - check the panel array item options", self.IdString + " -- self.options.panel", 'Warning');
+                }
+
+                var resizable = panel && panel.resizable;
+                if (typeof resizable === 'undefined') {
+                    resizable = self.options.panelResizable;
+                }
+                if (jQuery.type(resizable) !== "boolean") {
+                    granit.output("value (" + resizable + ") invalid", self.IdString + " -- Panel resizable");
                 }
 
                 var minSize = (panel && panel.minSize) || self.options.panelMinSize;
@@ -189,7 +198,7 @@ $(function () {
                     //apply splitter
                     wrappedElement.wrap("<div id='" + splitterId + "-panel-" + (index + 1) + "'class='" + panelClass + "' style='" + self.sizePropertyName + ":" + size.getSize() + ";" + minSizePropertyName + ":" + minSize.getSize() + ";" + maxSizePropertyName + ":" + maxSize.getSize() + ";'></div>");
 
-                    wrappedElement.parent().data({ granitIndex: index, granitFlexable: flexable, granitOriginalUnit: size.unit });
+                    wrappedElement.parent().data({ granitIndex: index, granitFlexable: flexable, granitOriginalUnit: size.unit, granitResizable: resizable });
                     self.panels.splice(index, 0, wrappedElement.parent());
 
                     self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
@@ -217,7 +226,8 @@ $(function () {
                     wrappedElement: wrappedElement,
                     minSize: minSize.getSize(),
                     maxSize: maxSize.getSize(),
-                    splitterOffset: splitterOffset
+                    splitterOffset: splitterOffset,
+                    resizable: resizable
                 });
             });
 
@@ -236,7 +246,7 @@ $(function () {
                 //apply splitter
                 item.wrappedElement.wrap("<div id='" + splitterId + "-panel-" + (item.index + 1) + "'class='" + panelClass + "' style='" + self.sizePropertyName + ":" + size + ";" + minSizePropertyName + ":" + item.minSize + ";" + maxSizePropertyName + ":" + item.maxSize + ";'></div>");
 
-                item.wrappedElement.parent().data({ granitIndex: item.index, granitFlexable: item.flexable, granitOriginalUnit: "%" });
+                item.wrappedElement.parent().data({ granitIndex: item.index, granitFlexable: item.flexable, granitOriginalUnit: "%", granitResizable: item.resizable });
                 self.panels.splice(item.index, 0, item.wrappedElement.parent());
 
                 self.splitterList[item.index] && self.splitterList[item.index].insertAfter(item.wrappedElement.parent());
@@ -419,18 +429,21 @@ $(function () {
             var origin, result1, result2;
 
             function test(modus, panel) {
-                var currentSize, newSize, rimSize;
+                var currentSize, newSize, limitSize;
+                if (!panel.data().granitResizable) {
+                    return null;
+                }
                 if (modus === 'grow') {
                     if (panel.data().granitIsmaximized === true) {
                         return null;
                     }
-                    rimSize = panel.data().granitMaxSize;
+                    limitSize = panel.data().granitMaxSize;
                 }
                 if (modus === 'shrink') {
                     if (panel.data().granitIsminmized === true) {
                         return null;
                     }
-                    rimSize = panel.data().granitMinSize;
+                    limitSize = panel.data().granitMinSize;
                 }
                 if (self.options.direction === "vertical") {
                     currentSize = panel.width();
@@ -438,19 +451,19 @@ $(function () {
                     currentSize = panel.height();
                 }
                 if (modus === 'grow') {
-                    newSize = Math.min(currentSize + Math.abs(distance), rimSize);
+                    newSize = Math.min(currentSize + Math.abs(distance), limitSize);
                 }
                 if (modus === 'shrink') {
-                    newSize = Math.max(currentSize - Math.abs(distance), rimSize);
+                    newSize = Math.max(currentSize - Math.abs(distance), limitSize);
                 }
                 if (
-                    modus === 'grow' && (newSize > currentSize && currentSize < rimSize) ||
-                    modus === 'shrink' && (newSize < currentSize && currentSize > rimSize)
+                    modus === 'grow' && (newSize > currentSize && currentSize < limitSize) ||
+                    modus === 'shrink' && (newSize < currentSize && currentSize > limitSize)
                 ) {
                     return {
                         panel: panel,
                         currentSize: currentSize,
-                        rimSize: rimSize,
+                        limitSize: limitSize,
                         offset: Math.abs(currentSize - newSize)
                     }
                 }
@@ -467,10 +480,12 @@ $(function () {
                     }
                 }
 
-                for (var pointer = origin.data().granitIndex + 1; pointer < this.panels.length; pointer++) {
-                    result2 = test("shrink", this.panels[pointer]);
-                    if (result2) {
-                        break;
+                if (result1) {
+                    for (var pointer = origin.data().granitIndex + 1; pointer < this.panels.length; pointer++) {
+                        result2 = test("shrink", this.panels[pointer]);
+                        if (result2) {
+                            break;
+                        }
                     }
                 }
             }
@@ -485,10 +500,12 @@ $(function () {
                     }
                 }
 
-                for (var pointer = origin.data().granitIndex - 1; pointer >= 0; pointer--) {
-                    result2 = test("shrink", this.panels[pointer]);
-                    if (result2) {
-                        break;
+                if (result1) {
+                    for (var pointer = origin.data().granitIndex - 1; pointer >= 0; pointer--) {
+                        result2 = test("shrink", this.panels[pointer]);
+                        if (result2) {
+                            break;
+                        }
                     }
                 }
             }
@@ -496,13 +513,13 @@ $(function () {
             if (result1 && result2) {
                 var offset = Math.min(result1.offset, result2.offset);
                 result1.panel.css(this.sizePropertyName, result1.currentSize + offset + "px");
-                if (result1.currentSize + offset >= result1.rimSize) {
+                if (result1.currentSize + offset >= result1.limitSize) {
                     result1.panel.data().granitIsmaximized = true;
                 }
                 result1.panel.data().granitIsminmized = false;
 
                 result2.panel.css(this.sizePropertyName, result2.currentSize - offset + "px");
-                if (result2.currentSize - offset <= result2.rimSize) {
+                if (result2.currentSize - offset <= result2.limitSize) {
                     result2.panel.data().granitIsminmized = true;
                 }
                 result2.panel.data().granitIsmaximized = false;

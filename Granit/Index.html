@@ -31,10 +31,11 @@
 
             $("#splitterInner").splitter({
                 panel: [
-                    { size: "100px", style: "panelLayout1", padding: 10 },
+                    { size: "100px", style: "panelLayout1", padding: 10, resizable: true },
                     { display: "auto", style: "panelLayout2" },
-                    { display: "flex", size: 20, margin: "5vmin" },
-                    { style: "panelLayout3 panelLayout5", margin: "5pt" }
+                    { display: "flex", size: 20, margin: "5vmin", resizable: true },
+                    { style: "panelLayout3 panelLayout5", margin: "5pt" },
+                    { resizable: true }
                 ],
                 splitter: [
                     { width: "3%" },
@@ -43,14 +44,15 @@
                 ],
                 direction: "horizontal",
                 panelMinSize: "3em",
+                panelResizable: false,
                 display: "static"
             });
 
             $("#splitterOuter").splitter({
                 panel: [
                     { size: "400px", minSize: "2%", style: "panelLayout2 panelLayout7 panelLayout7" },
-                    { size: "200px", style: "panelLayout4", maxSize: "30%" },
-                    { size: "300px", style: "panelLayout5", maxSize: "400px" },
+                    { size: "200px", style: "panelLayout4", maxSize: "50%" },
+                    { size: "300px", style: "panelLayout5", maxSize: "400px", resizable: false },
                     { display: "flex", size: "30", style: "panelLayout6", padding: 20 }
                 ],
                 splitter: [
