@@ -18,7 +18,7 @@ $(function () {
             panel: [],
             splitter: [],
             panelResizable: true,
-            panelMinSize: "none",
+            panelMinSize: 1,
             panelMaxSize: "none",
             panelStyle: "granitSplitter_Panel_Default",
             panelPadding: 0,
