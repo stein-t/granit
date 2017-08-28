@@ -4,6 +4,11 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ *
+ * Contributor(s): Thomas Stein, ... <please leave your name>
+ * Description:    CSS style rules for the Granit Splitter Layout
+ * License:        MPL 2.0
  */
 
 .granitSplitter_wrapper {
@@ -56,7 +61,6 @@
 .granitSplitter_Splitter_Default {
     background: darkgrey;
 }
-
 .granitSplitter_Panel_Default {
     border: 1px solid grey;
     padding: 5px;

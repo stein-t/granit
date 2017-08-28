@@ -1,10 +1,14 @@
-﻿var granit = (function (gt) {
-    // add capabilities...
-
+﻿/*
+ * Contributor(s): Thomas Stein, ... <please leave your name>
+ * Description:    Javascript library with properties & methods that are used by the Granit splitter layout control
+ * License:        MIT
+ */
+var granit = (function (gt) {
     var self = this;
 
     /*
-     * ouputs errors (as exceptions) and warnings (as console output). Optionally alerts the output.
+     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: Manages ouput errors (as exceptions) and warnings (as console output). Optionally alerts the output.
      */
     this.output = function (message, errorObject, type, alert) {
         //defaults
@@ -34,18 +38,14 @@
     };
 
     /*
-     * help function to validate the input.
-     * It returns the float numer portion of the given input. The input size must be a string or a number.
-     * if a number is given, simply the number is returned.
-     * If a string is given, consisting of a number and a measure, the measure is checked with the unitFormat regular expression and cut out, number is returned.
-     * id and type are used for detail error message to specify the object (variable, tag or other), that caused the error.
-     * numberSet can be "Q", "Q+" (positive) or "Q-" (negative). Default is "Q";
+     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: Help function to validate the input.
      */
     var parseFloatUnit = function (size, numberSet, unitFormat, errorObject, math) {
         if (!numberSet || (numberSet !== "Q" && numberSet !== "Q+" && numberSet !== "Q-")) {
             numberSet = "Q";
         }
-        if (size && jQuery.type(size) !== "string" && jQuery.type(size) !== "number") {
+        if (jQuery.type(size) !== "string" && jQuery.type(size) !== "number") {
             self.output("value (" + size + ") is not a number or a string)", errorObject);
         }
 
@@ -53,7 +53,7 @@
 
         var regex = new RegExp(/^[+-]?\d+(\.\d+)?/.source + "(" + unitFormat.source + ")?$");     //float number with optional measure
 
-        if (size && jQuery.type(size) === "string" && !size.match(regex)) {
+        if (jQuery.type(size) === "string" && !size.match(regex)) {
             self.output("value (" + size + ") format is invalid -- format (" + regex + ") expected (float number with optional measure)", errorObject);
         }
 
@@ -71,6 +71,25 @@
         return math(result);
     };
 
+    /*
+     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: the NumberUnit class -- Instances of this class are very heavily used in granit to transfer not only numbers but also associated units.
+     */
+    this.NumberUnit = (function () {
+        function NumberUnit(number, unit) {
+            this.Number = number;
+            this.Unit = unit || "px";
+        }
+        NumberUnit.prototype.getSize = function () {
+            return this.Number + this.Unit;
+        }
+        return NumberUnit;
+    })();
+
+    /*
+     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: function to validate the given size as a float number and an optional unit. As a result a NumberUnit object is returned.
+     */
     var extractFloatUnit = function (size, numberSet, unitFormat, defaultUnit, errorObject, math) {
         if (!numberSet || (numberSet !== "Q" && numberSet !== "Q+" && numberSet !== "Q-")) {
             numberSet = "Q";
@@ -117,15 +136,13 @@
             }
         }
 
-        return {
-            number: math(value),
-            unit: unit || defaultUnit,
-            getSize: function () {
-                return this.number + this.unit
-            }
-        };
+        return new self.NumberUnit(math(value), unit || defaultUnit);
     };
 
+    /*
+     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: eliminates duplicates from the list
+     */
     var uniqueArray = function (list) {
         var result = [];
         $.each(list, function (i, e) {
@@ -134,14 +151,20 @@
         return result;
     }
 
-    //checks if all items of arr can be found in haystack: https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
+    /*
+     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: checks if all items of arr can be found in haystack: https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
+     */
     var findAll = function (arr, haystack) {
         return arr.every(function (v) {
             return haystack.indexOf(v) >= 0;
         });
     };
 
-    //checks if all property names of the object can be found in the haystack string array: https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
+    /*
+     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: checks if all property names of the object can be found in the haystack string array: https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
+     */
     var findAllFromObject = function (object, haystack) {
         var arr = Object.getOwnPropertyNames(object);
         return arr.every(function (v) {
@@ -152,12 +175,47 @@
         });
     };
 
+    /*
+     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: creates a helper list of NumberUnit objects used in order to sum up items with equal units.
+     *              as a final goal this very specific array joins (concat) values together into a string to be used in css-calc statements
+     */
+    var numberUnitArray = function numberUnitArray() {
+        var arr = [];
+        arr.push.apply(arr, arguments);
+
+        /*
+         * if the new item(s) matches an existing item by unit, the items Numbers are joined together with the provided operation.
+         * otherwise the new item simply is pushed into the list, together with the respective operation.
+         */
+        arr.add = function (item, operation) {
+            //TODO
+            return this.push(item);
+        }
+
+        /*
+         * join the items together with the respective operation as a string to be used in a css-calc statement.
+         * For example: " - 5px + 10% - 80em".
+         */
+        arr.concat = function () {
+            //TODO
+            return this.toString();
+        }
+
+        //... eventually define more methods for this special array type
+
+        return arr;
+    }
+
+    //publish
     gt.extractFloatUnit = extractFloatUnit;
     gt.parseFloatUnit = parseFloatUnit;
     gt.output = this.output;
     gt.uniqueArray = uniqueArray;
     gt.findAll = findAll;
     gt.findAllFromObject = findAllFromObject;
+    gt.NumberUnitArray = numberUnitArray;
+    gt.NumberUnit = NumberUnit;
 
     return gt;
 }(granit || {}));
