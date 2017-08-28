@@ -109,7 +109,7 @@ $(function () {
 
             /*
              * iterate the children in order to ...
-             *      ... receive and validate the associated panel and splitter options
+             *      ... retrieve and validate the associated panel and splitter options
              *      ... create the respective panel style container, define the associated splitter element
              *      ... manipulate the DOM by adding the panel style container, the panel wrapper and the associated splitter element
              *      ... process special rules for panels without size: those panels share the remaining space and have precentage length
@@ -124,7 +124,7 @@ $(function () {
                     granit.output("invalid panel array item option property found - check the panel array item options", self.IdString + " -- self.options.panel", 'Warning');
                 }
 
-                //receive the resizable option: a value defined on the individual panel level overwrites any global level value
+                //retrieve the resizable option: a value defined on the individual panel level overwrites any global level value
                 var resizable = panel && panel.resizable;
                 if (typeof resizable === 'undefined') {
                     resizable = self.options.panelResizable;
@@ -133,28 +133,28 @@ $(function () {
                     granit.output("value (" + resizable + ") invalid", self.IdString + " -- Panel resizable");
                 }
 
-                //receive the minSize option: a value defined on the individual panel level overwrites any global level value
+                //retrieve the minSize option: a value defined on the individual panel level overwrites any global level value
                 var minSize = (panel && panel.minSize) || self.options.panelMinSize;
                 minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit("none");
 
-                //receive the maxSize option: a value defined on the individual panel level overwrites any global level value
+                //retrieve the maxSize option: a value defined on the individual panel level overwrites any global level value
                 var maxSize = (panel && panel.maxSize) || self.options.panelMaxSize;
                 maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
 
-                //receive the padding option: a value defined on the individual panel level overwrites any global level value
+                //retrieve the padding option: a value defined on the individual panel level overwrites any global level value
                 var padding = (panel && panel.padding) || self.options.panelPadding;
                 padding = granit.extractFloatUnit(padding, "Q+", /px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel padding");
 
-                //receive the margin option: a value defined on the individual panel level overwrites any global level value
+                //retrieve the margin option: a value defined on the individual panel level overwrites any global level value
                 var margin = (panel && panel.margin) || self.options.panelMargin;
                 margin = granit.extractFloatUnit(margin, "Q+", /px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel margin");
 
-                //receive the style option: the result is a string of class names as a combination of both the individual panel- and the global- level options
+                //retrieve the style option: the result is a string of class names as a combination of both the individual panel- and the global- level options
                 var style = ((self.options.panelStyle && (self.options.panelStyle + " ")) || "") + ((panel && panel.style) || "");  //all provided styles (class names) on global level and individual panel level are concatenated
                 style = granit.uniqueArray(style.split(" ")).join(" ");     //avoiding duplicate styles (class names) definitions
                 style = (style && (" " + style)) || "";     //prefix the class string for further operations
 
-                //receive the display option: a value defined on the individual panel level overwrites any global level value
+                //retrieve the display option: a value defined on the individual panel level overwrites any global level value
                 var display = (panel && panel.display) || self.options.display;
                 if (display !== "auto" && display !== "flex" && display !== "static") {
                     self.output("value (" + display + ") is invalid -- expected values are 'flex', 'static', 'auto'", self.IdString + " -- panel option.display");
@@ -169,14 +169,14 @@ $(function () {
                         granit.output("invalid splitter array item option property found - check the splitter array item options", self.IdString + " -- self.options.splitter", 'Warning');
                     }
 
-                    //receive the splitterWidth option: a value defined on the individual splitter level overwrites any global level value
+                    //retrieve the splitterWidth option: a value defined on the individual splitter level overwrites any global level value
                     var splitterWidth = (splitter && splitter.width) || self.options.splitterWidth;
                     splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Splitter width (splitterWidth)");
 
-                    //receive the splitterLength option: a value defined on the individual splitter level overwrites any global level value
+                    //retrieve the splitterLength option: a value defined on the individual splitter level overwrites any global level value
                     var splitterLength = (splitter && splitter.length) || self.options.splitterLength;  //Any css length value is allowed (including calc() statements). No validation needed here, because this value is directly forwarded into the css style definition.
 
-                    //receive the splitterStyle option: the result is a string of class names as a combination of both the individual splitter- and the global- level options
+                    //retrieve the splitterStyle option: the result is a string of class names as a combination of both the individual splitter- and the global- level options
                     var splitterStyle = ((self.options.splitterStyle && (self.options.splitterStyle + " ")) || "") + ((splitter && splitter.style) || "");  //all provided styles (class names) on global level and individual splitter level are concatenated
                     splitterStyle = granit.uniqueArray(splitterStyle.split(" ")).join(" ");     //avoiding duplicate styles (class names) definitions
                     splitterStyle = (splitterStyle && (" " + splitterStyle)) || "";     //prefix the class string for further operations
