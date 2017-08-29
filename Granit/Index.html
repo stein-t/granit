@@ -15,10 +15,10 @@
         $(document).ready(function () {
             $("#splitterInner2").splitter({
                 panel: [
-                    { display: "static", size: "200px", style: "panelLayout1", padding: 10 },
-                    { size: "100px", style: "panelLayout2" },
+                    { display: "static", size: "200px", classes: "panelLayout1", padding: 10 },
+                    { size: "100px", classes: "panelLayout2" },
                     { display: "flex", size: "200px", margin: "5vmin" },
-                    { display: "static", style: "panelLayout3 panelLayout5", margin: "5pt"}
+                    { display: "static", classes: "panelLayout3 panelLayout5", margin: "5pt"}
                 ],
                 splitter: [
                     { width: 10 },
@@ -32,10 +32,10 @@
 
             $("#splitterInner").splitter({
                 panel: [
-                    { size: "100px", style: "panelLayout1", padding: 10, resizable: true },
-                    { display: "auto", style: "panelLayout2" },
+                    { size: "100px", classes: "panelLayout1", padding: 10, resizable: true },
+                    { display: "auto", classes: "panelLayout2" },
                     { display: "flex", size: 20, margin: "5vmin", resizable: true },
-                    { style: "panelLayout3 panelLayout5", margin: "5pt" },
+                    { classes: "panelLayout3 panelLayout5", margin: "5pt" },
                     { resizable: true }
                 ],
                 splitter: [
@@ -51,18 +51,18 @@
 
             $("#splitterOuter").splitter({
                 panel: [
-                    { size: "400px", minSize: "2%", style: "panelLayout2 panelLayout7 panelLayout7" },
-                    { size: "200px", style: "panelLayout4", maxSize: "50%" },
-                    { size: "300px", style: "panelLayout5", maxSize: "400px", resizable: false },
-                    { display: "flex", size: "30", style: "panelLayout6", padding: 20 }
+                    { size: "400px", minSize: "2%", classes: "panelLayout2 panelLayout7 panelLayout7" },
+                    { size: "200px", classes: "panelLayout4", maxSize: "50%" },
+                    { size: "300px", classes: "panelLayout5", maxSize: "400px", resizable: false },
+                    { display: "flex", size: "30", classes: "panelLayout6", padding: 20 }
                 ],
                 splitter: [
                     {},
                     { width: 10, length: "80%" },
-                    { width: 7, length: "10ch", style: "splitter_HandleStyle" }
+                    { width: 7, length: "10ch", classes: "splitter_HandleStyle" }
                 ],
                 panelMinSize: "3em",
-                panelStyle: "panelLayout7 panelLayout7",
+                panelClasses: "panelLayout7 panelLayout7",
                 panelPadding: "2em",
                 panelMargin: "0.1cm",
                 splitterWidth: "7px",
