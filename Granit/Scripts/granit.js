@@ -29,6 +29,11 @@ $(function () {
             overflow: "auto",
             display: "auto"
         },
+        /*
+         * Author(s):   Thomas Stein, ... <please leave your name>
+         * Description: The _create() method is the widget's constructor.
+         *              The options are retrieved, the DOM is manipulated accordingly, and more ...
+         */
         _create: function () {
             self = this;
 
@@ -99,13 +104,21 @@ $(function () {
                 granit.output("not all panels are divs or semantic elements!", this.IdString + " -- self.children");
             }
 
-            this.panels = [];
-            this.splitterList = [];
+            //local help variables
+            var panelsWithoutOrRelativeSize = [];                       //holds panels without size or percentage size
+            var splitterOffset = granit.NumberUnitArray();              //the total width of splitters under consideration different units 
+            var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a non-percentage size under consideration of different units 
+            var panelSizePercentTotal = 0.0;                            //the total percentage size of percentage panels
+            var panelsWithoutSizeTotal = 0;                             //amount of panels without size
 
-            var panelsWithoutOrRelativeSize = [];
-            var splitterOffset = "";
-            var panelSizeTotalOffset = "", panelSizePercentTotal = 0.0;
-            var panelsWithoutSizeTotal = 0;
+            //global help variables
+            this.splitterOffset;                    //current splitter offset portion for any percentage panel, during a mousemove process
+            this.percentagePanelsAmount = 0;        //amount of total percentage panels
+            this.splitterAreaSize;                  //current total splitter area size, used to re-convert percentage panels during a mousemove process 
+
+            //global
+            this.panels = [];               //reference to the panels (or final panel wrappers)
+            this.splitterList = [];         //reference to the splitters
 
             /*
              * iterate the children in order to ...
@@ -183,9 +196,9 @@ $(function () {
 
                     //define the splitter element
                     if (self.options.direction === "vertical") {
-                        var splitter = $("<div id='stein-" + splitterId + "-" + (index) + "' class='granitSplitter_Splitter" + splitterStyle + "' style='width:" + splitterWidth.getSize() + ";height:" + splitterLength + ";cursor:ew-resize;'></div>");
+                        var splitter = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='granitSplitter_Splitter" + splitterStyle + "' style='width:" + splitterWidth.getSize() + ";height:" + splitterLength + ";cursor:ew-resize;'></div>");
                     } else {
-                        var splitter = $("<div id='stein-" + splitterId + "-" + (index) + "' class='granitSplitter_Splitter" + splitterStyle + "' style='width:" + splitterLength + ";height:" + splitterWidth.getSize() + ";cursor:ns-resize;'></div>");
+                        var splitter = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='granitSplitter_Splitter" + splitterStyle + "' style='width:" + splitterLength + ";height:" + splitterWidth.getSize() + ";cursor:ns-resize;'></div>");
                     }
                     self.splitterList[index] = splitter;
 
@@ -193,7 +206,7 @@ $(function () {
                      * calculate the current total splitter offset as the n'th part of the total splitter width (where n is the amount of panels)
                      */
                     if (splitterWidth.Number > 0) {
-                        splitterOffset = splitterOffset.concat((" - " + (splitterWidth.Number / children.length) + splitterWidth.Unit));
+                        splitterOffset.add(splitterWidth, "-");
                     }
                 }
 
@@ -202,7 +215,7 @@ $(function () {
                 /*
                  * we wrap the element into a style container that represents layout styles for the panel like padding, margin, border, etc.
                  * this step is skipped if the element itself is a nested splitter (in a layout szenario).
-                 * here we have the main reason for the creation-splitter-order rule in a layout szenario:
+                 * here we have the main reason for the Creation-Splitter-Order Rule in a layout szenario:
                  *      nested inner splitters must be created / instantiated before its parent splitters!
                  *      ... otherwise the logic would not recognize nested splitters and would wrap those elements into style containers
                  *          ... for those elements (nested splitters), any defined styles (border, margin, padding, etc.) would be displayed twice unintentionally
@@ -236,11 +249,11 @@ $(function () {
 
                     //present total static size
                     if (size.Number > 0) {
-                        panelSizeTotalOffset = panelSizeTotalOffset.concat((" - " + size.getSize()));
+                        panelSizeTotalOffset.add(size, "-");
                     }
 
                     //apply splitter
-                    wrappedElement.wrap("<div id='" + splitterId + "-panel-" + (index + 1) + "'class='" + panelClass + "' style='" + self.sizePropertyName + ":" + size.getSize() + ";" + minSizePropertyName + ":" + minSize.getSize() + ";" + maxSizePropertyName + ":" + maxSize.getSize() + ";'></div>");
+                    wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelClass + "' style='" + self.sizePropertyName + ":" + size.getSize() + ";" + minSizePropertyName + ":" + minSize.getSize() + ";" + maxSizePropertyName + ":" + maxSize.getSize() + ";'></div>");
 
                     wrappedElement.parent().data({ granitIndex: index, granitFlexable: flexable, granitOriginalUnit: size.Unit, granitResizable: resizable });
                     self.panels.splice(index, 0, wrappedElement.parent());
@@ -252,14 +265,14 @@ $(function () {
 
                 flexable = display === "static" ? false : true;
 
-                if (!size) {
-                    //count panels with no size
-                    panelsWithoutSizeTotal++;
+                if (!size) {                    
+                    panelsWithoutSizeTotal++;   //count panels with no size
+                    self.percentagePanelsAmount++;   //update total amount of percentage panels: panels with no size are to be introduced as percentage panels
                 }
 
-                if (size && size.Unit === "%") {
-                    //size amount of all percentage panels
-                    panelSizePercentTotal += size.Number;
+                if (size && size.Unit === "%") {                    
+                    panelSizePercentTotal += size.Number;   //update total size of percentage panels
+                    self.percentagePanelsAmount++;   //update total amount of percentage panels
                 }
 
                 //remember panels without size or percentage size
@@ -270,10 +283,19 @@ $(function () {
                     wrappedElement: wrappedElement,
                     minSize: minSize.getSize(),
                     maxSize: maxSize.getSize(),
-                    splitterOffset: splitterOffset,
                     resizable: resizable
                 });
             });
+
+            //the total space used by the splitters is shared among all percentage panels 
+            if (self.percentagePanelsAmount > 0) {
+                splitterOffset.map(function (item) {
+                    item.Number /= self.percentagePanelsAmount;
+                });
+            }
+
+            //add the total splitter offset to the total panel-size offset, in order to get the proper total offset for panels without sizes
+            panelSizeTotalOffset.addAll(splitterOffset, "-");    
 
             //calculate remaining relative space 
             var panelSizeDistributed = (100.0 - panelSizePercentTotal) / panelsWithoutSizeTotal;
@@ -283,12 +305,12 @@ $(function () {
 
             //apply left panels
             panelsWithoutOrRelativeSize.forEach(function (item) {
-                var size = item.size && ("calc(" + item.size.getSize() + splitterOffset + ")") || ("calc(" + panelSizeDistributed + "%" + panelSizeTotalOffset + splitterOffset + ")");
+                var size = item.size && ("calc(" + item.size.getSize() + splitterOffset.toString() + ")") || ("calc(" + panelSizeDistributed + "%" + panelSizeTotalOffset.toString() + ")");
 
                 var panelClass = item.flexable ? "granitSplitter_Panel" : "granitSplitter_Panel granitSplitter_PanelStatic";
 
                 //apply splitter
-                item.wrappedElement.wrap("<div id='" + splitterId + "-panel-" + (item.index + 1) + "'class='" + panelClass + "' style='" + self.sizePropertyName + ":" + size + ";" + minSizePropertyName + ":" + item.minSize + ";" + maxSizePropertyName + ":" + item.maxSize + ";'></div>");
+                item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelClass + "' style='" + self.sizePropertyName + ":" + size + ";" + minSizePropertyName + ":" + item.minSize + ";" + maxSizePropertyName + ":" + item.maxSize + ";'></div>");
 
                 item.wrappedElement.parent().data({ granitIndex: item.index, granitFlexable: item.flexable, granitOriginalUnit: "%", granitResizable: item.resizable });
                 self.panels.splice(item.index, 0, item.wrappedElement.parent());
@@ -305,58 +327,8 @@ $(function () {
         },
 
         /*
-         * final cleaning-up actions for the drag & drop process
-         */
-        _splitterMouseUp: function (event) {
-            if (this.movedSplitter) {
-                event.stopPropagation();
-                event.preventDefault();
-
-                //release mouse capture
-                if (event.target.releaseCapture) { event.target.releaseCapture(); }
-
-                var self = this;
-
-                var size, sizePropertyName;
-
-                // iterating the panels for re-setting and re-converting
-                this.panels.forEach(function (item, index) {                    
-                    item.data().granitIsminmized = false;
-                    item.data().granitIsmaximized = false;
-
-                    if (item.data().granitFlexable) {
-                        item.css("flex", "auto");   //reset flexbox capabilites
-                    }
-
-                    /*
-                     * re-convert the pixel-length into its original percent unit.
-                     * Otherwise the lenght would stay in pixels and the layout rendering behaviour of this panel (on resizing parent containers) unintentionally may change.
-                     */
-                    if (item.data().granitOriginalUnit === "%") {
-                        if (self.options.direction === "vertical") {
-                            size = item.width();
-                            sizePropertyName = "width";
-                        } else {
-                            size = item.height();
-                            sizePropertyName = "height";
-                        }
-                        //the total splitter witdh is divided equally among the percentage panels
-                        var sizeRelative = (size + self.SplitterOffset) / self.splitterAreaSize * 100.0;
-                        //... this is why we encode the percentage length as a css-calc statement
-                        item.css(sizePropertyName, "calc(" + sizeRelative + "% - " + self.SplitterOffset + "px)");
-                    }
-                });
-
-                //clean up
-                $("html").css("cursor", "default");
-                this._off($("html"), "mousemove");
-                this._off($("html"), "mouseup");
-                this.movedSplitter = undefined;
-            }
-        },
-
-        /*
-         * Preparation actions to support the mouse-moving algorithm
+         * Author(s):   Thomas Stein, ... <please leave your name>
+         * Description: EventHandler of the MouseDown event -- Preparation actions to support the mouse-moving algorithm
          */
         _splitterMouseDown: function (event) {
             if (event.which !== 1) {
@@ -396,7 +368,7 @@ $(function () {
                             minSize.Number = minSize.Number * $(self.element).width() / 100.0; minSize.Unit = "px";   //convert to pixel
                         }
                     } else {
-                        minSize = new granit.NumberUnit(0.0);
+                        minSize = new granit.NumberUnit(0.0, "px");
                     }
                     if (maxWidth !== "none") {
                         maxSize = granit.extractFloatUnit(maxWidth, "Q+", /px|%/, "px", self.IdString + " -- _splitterMouseDown: retrieving max-width");
@@ -404,7 +376,7 @@ $(function () {
                             maxSize.Number = maxSize.Number * $(self.element).width() / 100.0; maxSize.Unit = "px";   //convert to pixel
                         }
                     } else {
-                        maxSize = new granit.NumberUnit($(self.element).width());
+                        maxSize = new granit.NumberUnit($(self.element).width(), "px");
                     }
                 } else {
                     size = item.height();
@@ -417,7 +389,7 @@ $(function () {
                             minSize.Number = minSize.Number * $(self.element).height() / 100.0; minSize.Unit = "px";   //convert to pixel
                         }
                     } else {
-                        minSize = new granit.NumberUnit(0.0);
+                        minSize = new granit.NumberUnit(0.0, "px");
                     }
                     if (maxHeight !== "none") {
                         maxSize = granit.extractFloatUnit(maxHeight, "Q+", /px|%/, "px", self.IdString + " -- _splitterMouseDown: retrieving max-height");
@@ -425,7 +397,7 @@ $(function () {
                             maxSize.Number = maxSize.Number * $(self.element).height() / 100.0; maxSize.Unit = "px";   //convert to pixel
                         }
                     } else {
-                        maxSize = new granit.NumberUnit($(self.element).height());
+                        maxSize = new granit.NumberUnit($(self.element).height(), "px");
                     }
                 }
 
@@ -454,8 +426,8 @@ $(function () {
                 return total + size;
             }, 0.0);
 
-            //calculating the offset as the n'th part of the total splitter width (where n is the amount of panels)
-            self.SplitterOffset = splitterWidthTotal / this.panels.length;
+            //calculating the offset as the n'th part of the total splitter width (where n is the amount of percentage panels)
+            this.splitterOffset = splitterWidthTotal / this.percentagePanelsAmount;
 
             /*
              * adding the total splitter width to the minimum limit sizes
@@ -487,6 +459,10 @@ $(function () {
             });
         },
 
+        /*
+         * Author(s):   Thomas Stein, ... <please leave your name>
+         * Description: EventHandler of the MouseMove event -- logic to be processes with every mouse move event
+         */
         _splitterMouseMove: function (event) {
             event.stopPropagation();
             event.stopImmediatePropagation();
@@ -505,6 +481,63 @@ $(function () {
             this._processPanelMovement(distance);
         },
 
+        /*
+         * Author(s):   Thomas Stein, ... <please leave your name>
+         * Description: EventHandler of the MouseUp event -- final cleaning-up actions for the drag & drop process
+         */
+        _splitterMouseUp: function (event) {
+            if (this.movedSplitter) {
+                event.stopPropagation();
+                event.preventDefault();
+
+                //release mouse capture
+                if (event.target.releaseCapture) { event.target.releaseCapture(); }
+
+                var self = this;
+
+                var size, sizePropertyName;
+
+                // iterating the panels for re-setting and re-converting
+                this.panels.forEach(function (item, index) {
+                    item.data().granitIsminmized = false;
+                    item.data().granitIsmaximized = false;
+
+                    if (item.data().granitFlexable) {
+                        item.css("flex", "auto");   //reset flexbox capabilites
+                    }
+
+                    /*
+                     * re-convert the pixel-length into its original percent unit.
+                     * Otherwise the lenght would stay in pixels and the layout rendering behaviour of this panel (on resizing parent containers) unintentionally may change.
+                     */
+                    if (item.data().granitOriginalUnit === "%") {
+                        if (self.options.direction === "vertical") {
+                            size = item.width();
+                            sizePropertyName = "width";
+                        } else {
+                            size = item.height();
+                            sizePropertyName = "height";
+                        }
+                        //the total splitter witdh is divided equally among the percentage panels (splitterOffset)
+                        var sizeRelative = (size + self.splitterOffset) / self.splitterAreaSize * 100.0;
+                        //... this is why we encode the percentage length as a css-calc statement
+                        item.css(sizePropertyName, "calc(" + sizeRelative + "% - " + self.splitterOffset + "px)");
+                    }
+                });
+
+                //clean up
+                $("html").css("cursor", "default");
+                this._off($("html"), "mousemove");
+                this._off($("html"), "mouseup");
+                this.movedSplitter = undefined;
+            }
+        },
+
+
+        /*
+         * Author(s):   Thomas Stein, ... <please leave your name>
+         * Description: The heart of the dragging algorithm
+         */
         _processPanelMovement: function (distance) {
             var self = this;
             var result1, result2;

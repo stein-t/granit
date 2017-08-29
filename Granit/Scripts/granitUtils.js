@@ -1,6 +1,6 @@
 ﻿/*
  * Contributor(s): Thomas Stein, ... <please leave your name>
- * Description:    Javascript library with properties & methods that are used by the Granit splitter layout control
+ * Description:    Javascript library with properties, methods, classes that are used by the Granit splitter layout control
  * License:        MIT
  */
 var granit = (function (gt) {
@@ -10,7 +10,7 @@ var granit = (function (gt) {
      * Author(s):   Thomas Stein, ... <please leave your name>
      * Description: Manages ouput errors (as exceptions) and warnings (as console output). Optionally alerts the output.
      */
-    this.output = function (message, errorObject, type, alert) {
+    var output = function (message, errorObject, type, alert) {
         //defaults
         if (!message) {
             message = "";
@@ -46,7 +46,7 @@ var granit = (function (gt) {
             numberSet = "Q";
         }
         if (jQuery.type(size) !== "string" && jQuery.type(size) !== "number") {
-            self.output("value (" + size + ") is not a number or a string)", errorObject);
+            output("value (" + size + ") is not a number or a string)", errorObject);
         }
 
         math = math || function (x) { return x; };
@@ -54,17 +54,17 @@ var granit = (function (gt) {
         var regex = new RegExp(/^[+-]?\d+(\.\d+)?/.source + "(" + unitFormat.source + ")?$");     //float number with optional measure
 
         if (jQuery.type(size) === "string" && !size.match(regex)) {
-            self.output("value (" + size + ") format is invalid -- format (" + regex + ") expected (float number with optional measure)", errorObject);
+            output("value (" + size + ") format is invalid -- format (" + regex + ") expected (float number with optional measure)", errorObject);
         }
 
         var result = parseFloat(size);
 
         if (numberSet !== "Q") {
             if (result < 0.0 && numberSet == "Q+") {
-                self.output("value (" + result + ") < 0.0 -- positive value expected", errorObject);
+                output("value (" + result + ") < 0.0 -- positive value expected", errorObject);
             }
             if (result > 0.0 && numberSet == "Q-") {
-                self.output("value (" + result + ") > 0.0 -- negative value expected", errorObject);
+                output("value (" + result + ") > 0.0 -- negative value expected", errorObject);
             }
         }
 
@@ -75,10 +75,10 @@ var granit = (function (gt) {
      * Author(s):   Thomas Stein, ... <please leave your name>
      * Description: the NumberUnit class -- Instances of this class are very heavily used in granit to transfer not only numbers but also associated units.
      */
-    this.NumberUnit = (function () {
+    var NumberUnit = (function () {
         function NumberUnit(number, unit) {
             this.Number = number;
-            this.Unit = unit || "px";
+            this.Unit = unit || "";
         }
         NumberUnit.prototype.getSize = function () {
             return this.Number + this.Unit;
@@ -95,14 +95,14 @@ var granit = (function (gt) {
             numberSet = "Q";
         }
         if (jQuery.type(size) !== "string" && jQuery.type(size) !== "number") {
-            self.output("value (" + size + ") is not a number or a string", errorObject);
+            output("value (" + size + ") is not a number or a string", errorObject);
         }
 
         math = math || function (x) { return x; };
 
         var unitRegex = new RegExp("^" + unitFormat.source + "$");
         if (defaultUnit && !defaultUnit.match(unitRegex)) {
-            self.output("the provided default unit (" + defaultUnit + ") is not a valid unit according to the given unit format " + unitFormat, errorObject);
+            output("the provided default unit (" + defaultUnit + ") is not a valid unit according to the given unit format " + unitFormat, errorObject);
         }
 
         var floatRegex = /[+-]?\d+(\.\d+)?/;
@@ -114,7 +114,7 @@ var granit = (function (gt) {
             var match = size.match(regex);
 
             if (!match) {
-                self.output("value (" + size + ") format is invalid -- format (" + regex + ") expected (float number with optional measure)", errorObject);
+                output("value (" + size + ") format is invalid -- format (" + regex + ") expected (float number with optional measure)", errorObject);
             }
 
             size = match[1];
@@ -122,21 +122,21 @@ var granit = (function (gt) {
         }
 
         if (!defaultUnit && !unit) {
-            self.output("value (" + size + ") format is invalid -- unit expected (float number with measure unit)", errorObject);
+            output("value (" + size + ") format is invalid -- unit expected (float number with measure unit)", errorObject);
         }
 
         value = parseFloat(size);
 
         if (numberSet !== "Q") {
             if (value < 0.0 && numberSet == "Q+") {
-                self.output("value (" + value + ") < 0.0 -- positive value expected", errorObject);
+                output("value (" + value + ") < 0.0 -- positive value expected", errorObject);
             }
             if (value > 0.0 && numberSet == "Q-") {
-                self.output("value (" + value + ") > 0.0 -- negative value expected", errorObject);
+                output("value (" + value + ") > 0.0 -- negative value expected", errorObject);
             }
         }
 
-        return new self.NumberUnit(math(value), unit || defaultUnit);
+        return new NumberUnit(math(value), unit || defaultUnit);
     };
 
     /*
@@ -150,6 +150,16 @@ var granit = (function (gt) {
         });
         return result;
     }
+
+    /*
+     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: checks if the item can be found in the haystack
+     */
+    var findOne = function (item, haystack) {
+        return haystack.any(function () {
+            return haystack.indexOf(item) >= 0;
+        });
+    };
 
     /*
      * Author(s):   Thomas Stein, ... <please leave your name>
@@ -178,28 +188,79 @@ var granit = (function (gt) {
     /*
      * Author(s):   Thomas Stein, ... <please leave your name>
      * Description: creates a helper list of NumberUnit objects used in order to sum up items with equal units.
-     *              as a final goal this very specific array joins (concat) values together into a string to be used in css-calc statements
+     *              as a final goal this very specific array joins values together (toString) into a string to be used in css-calc statements
      */
     var numberUnitArray = function numberUnitArray() {
         var arr = [];
-        arr.push.apply(arr, arguments);
+        //arr.push.apply(arr, arguments); // currently no initialization arguments supported
 
         /*
-         * if the new item(s) matches an existing item by unit, the items Numbers are joined together with the provided operation.
+         * if the new item matches an existing item by unit, both the items Numbers are joined together with the provided operation.
          * otherwise the new item simply is pushed into the list, together with the respective operation.
          */
         arr.add = function (item, operation) {
-            //TODO
-            return this.push(item);
+            if (!(item instanceof NumberUnit)) {
+                output("item is no object of NumberUnit", "numberUnitArray.add");
+            }
+            var itemNumber = parseFloat(item.Number);
+
+            var element;
+            arr.forEach(function (el) {
+                if (item.Unit === el.Unit) {
+                    element = el;
+                    return true;
+                }                
+            });
+
+            if (element) {
+                var elementNumber = parseFloat(element.Operation + element.Number);
+                switch (operation) {
+                    case "+":
+                        elementNumber = elementNumber + itemNumber;
+                        break;
+                    case "-":
+                        elementNumber = elementNumber - itemNumber
+                        break;
+                    default:
+                        break;
+                }
+                if (Math.sign(elementNumber) >= 0) {
+                    element.Number = elementNumber;
+                    element.Operation = "+";
+                } else {
+                    element.Number = Math.abs(elementNumber);
+                    element.Operation = "-";
+                }
+                return true;
+            }
+            else {
+                item.Operation = operation;
+                return this.push(item);                
+            }
+        }
+
+        /*
+         * use to insert list of items
+         */
+        arr.addAll = function (itemArray, operation) {
+            if (!(Array.isArray(itemArray))) {
+                output("itemArray is no array", "numberUnitArray.addAll");
+            }
+            itemArray.forEach(function (item) {
+                arr.add(item, operation);
+            });
         }
 
         /*
          * join the items together with the respective operation as a string to be used in a css-calc statement.
          * For example: " - 5px + 10% - 80em".
          */
-        arr.concat = function () {
-            //TODO
-            return this.toString();
+        arr.toString = function () {
+            var result = arr.reduce(function (total, item) {
+                return total + " " + item.Operation + " " + item.Number + item.Unit;
+            }, "");
+
+            return result;
         }
 
         //... eventually define more methods for this special array type
@@ -210,7 +271,7 @@ var granit = (function (gt) {
     //publish
     gt.extractFloatUnit = extractFloatUnit;
     gt.parseFloatUnit = parseFloatUnit;
-    gt.output = this.output;
+    gt.output = output;
     gt.uniqueArray = uniqueArray;
     gt.findAll = findAll;
     gt.findAllFromObject = findAllFromObject;
