@@ -11,6 +11,7 @@
     <script src="Scripts/jquery-ui-1.12.1.min.js"></script>
     <script src="Scripts/granitUtils.js"></script>
     <script src="Scripts/granit.js"></script>
+    <script src="Scripts/jquery.resize.js"></script>
     <script>
         $(document).ready(function () {
             $("#splitterInner2").splitter({
@@ -45,7 +46,7 @@
                 ],
                 direction: "horizontal",
                 panelMinSize: "3em",
-                panelResizable: false,
+                panelResizable: true,
                 display: "static"
             });
 

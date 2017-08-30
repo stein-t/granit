@@ -40,11 +40,11 @@ $(function () {
             //set the version
             $.granit.splitter.prototype.version = "0.1.0.0";
 
-            console.log("Version: " + this.version);
-            console.log("uuid: " + this.uuid);
-            console.log("namespace: " + this.namespace);
-            console.log("widgetFullName: " + this.widgetFullName);
-            console.log("widgetName: " + this.widgetName);
+            //console.log("Version: " + this.version);
+            //console.log("uuid: " + this.uuid);
+            //console.log("namespace: " + this.namespace);
+            //console.log("widgetFullName: " + this.widgetFullName);
+            //console.log("widgetName: " + this.widgetName);
             
             var splitterId = self.element[0].getAttribute("id");
 
@@ -333,6 +333,14 @@ $(function () {
                     "mousedown": "_splitterMouseDown"
                 });
             });
+
+            this.element.resize($.proxy(this._elementOnResize, this)); 
+        },
+
+
+        _elementOnResize: function () {
+            var id = this.IdString;
+            console.log(id + " Change x: " + this.element.width() + ", Change y: " + this.element.height());
         },
 
         /*
