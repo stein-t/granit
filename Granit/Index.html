@@ -7,6 +7,7 @@
     <link href="Content/jquery-ui.min.css" rel="stylesheet" />
     <link href="Content/granit.css" rel="stylesheet" />
     <link href="Content/custom.css" rel="stylesheet" />
+    <link href="Content/jquery.resize.css" rel="stylesheet" />
     <script src="Scripts/jquery-3.1.1.min.js"></script>
     <script src="Scripts/jquery-ui-1.12.1.min.js"></script>
     <script src="Scripts/granitUtils.js"></script>
@@ -33,11 +34,11 @@
 
             $("#splitterInner").splitter({
                 panel: [
-                    { size: "100px", classes: "panelLayout1", padding: 10, resizable: true },
-                    { display: "auto", classes: "panelLayout2" },
-                    { display: "flex", size: 20, margin: "5vmin", resizable: true },
-                    { classes: "panelLayout3 panelLayout5", margin: "5pt" },
-                    { resizable: true }
+                    { size: "5em", classes: "panelLayout1", padding: 10, resizable: true },
+                    { size: "10%", classes: "panelLayout2" },
+                    { size: 30, margin: "5vmin", resizable: true },
+                    { size: "10%", classes: "panelLayout3 panelLayout5", margin: "5pt" },
+                    { size: "20%", resizable: true }
                 ],
                 splitter: [
                     { width: "3%" },
@@ -45,7 +46,7 @@
                     { width: "2em" }
                 ],
                 direction: "horizontal",
-                panelMinSize: "3em",
+                //panelMinSize: "3em",
                 panelResizable: true,
                 display: "static"
             });

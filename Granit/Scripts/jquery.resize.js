@@ -11,8 +11,24 @@
 	var attachEvent = document.attachEvent,
 		stylesCreated = false;
 	
-	var jQuery_resize = $.fn.resize;
-	
+    var jQuery_resize = $.fn.resize;
+    var jQuery_fontResize = $.fn.fontResize;
+
+    $.fn.fontResize = function (callback) {
+        return this.each(function () {
+            if (this == window)
+                jQuery_fontResize.call(jQuery(this), callback);
+            else
+                addFontResizeListener(this, callback);
+        });
+    }
+
+    $.fn.removeFontResize = function (callback) {
+        return this.each(function () {
+            removeFontResizeListener(this, callback);
+        });
+    }
+
 	$.fn.resize = function(callback) {
 		return this.each(function() {
 			if(this == window)
@@ -48,8 +64,8 @@
 				expandChild = expand.firstElementChild;
 			contract.scrollLeft = contract.scrollWidth;
 			contract.scrollTop = contract.scrollHeight;
-			expandChild.style.width = expand.offsetWidth + 1 + 'px';
-			expandChild.style.height = expand.offsetHeight + 1 + 'px';
+			expandChild.style.width = (expand.offsetWidth + 1) + 'px';
+			expandChild.style.height = (expand.offsetHeight + 1) + 'px';
 			expand.scrollLeft = expand.scrollWidth;
 			expand.scrollTop = expand.scrollHeight;
 		};
@@ -125,7 +141,31 @@
 			stylesCreated = true;
 		}
 	}
-	
+
+    function triggerFontListener(e) {
+        var element = this;
+        var fontSize = element.__fontResizeObserverNode__.offsetHeight / 10.0;
+
+        element.__fontResizeListeners__.forEach(function (fn) {
+            fn.call(element, { fontSize: fontSize }, e);
+        });
+    }
+
+    window.addFontResizeListener = function (element, fn) {
+        if (!element.__resizeObserverNode__) {
+            element.__fontResizeListeners__ = [];
+
+            element.__fontResizeObserverNode__ = document.createElement('div');
+
+            $(element.__fontResizeObserverNode__).addClass("fontResizeObserver");
+
+            element.appendChild(element.__fontResizeObserverNode__);
+
+            $(element.__fontResizeObserverNode__).resize($.proxy(triggerFontListener, element));
+        }
+        element.__fontResizeListeners__.push(fn);
+    };
+
 	window.addResizeListener = function(element, fn){
 		if (attachEvent) element.attachEvent('onresize', fn);
 		else {
@@ -150,7 +190,15 @@
 			element.__resizeListeners__.push(fn);
 		}
 	};
-	
+
+    //window.removeFontResizeListener = function (element, fn) {
+    //    element.__resizeListeners__.splice(element.__resizeListeners__.indexOf(fn), 1);
+    //    if (!element.__resizeListeners__.length) {
+    //        element.removeEventListener('scroll', scrollListener);
+    //        element.__resizeTriggers__ = !element.removeChild(element.__resizeTriggers__);
+    //    }
+    //}
+
 	window.removeResizeListener = function(element, fn){
 		if (attachEvent) element.detachEvent('onresize', fn);
 		else {

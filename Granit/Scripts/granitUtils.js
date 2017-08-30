@@ -224,13 +224,14 @@ var granit = (function (gt) {
                     default:
                         break;
                 }
-                if (Math.sign(elementNumber) >= 0) {
+                if (elementNumber >= 0) {
                     element.Number = elementNumber;
                     element.Operation = "+";
                 } else {
                     element.Number = Math.abs(elementNumber);
                     element.Operation = "-";
                 }
+
                 return true;
             }
             else {

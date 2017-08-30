@@ -26,6 +26,7 @@
     height: 100%;
     display: flex;
     overflow: hidden;
+    position: relative;
 }
 
 .granitSplitter_Container_vertical {
@@ -43,6 +44,7 @@
     width: 100%;
     overflow: hidden;
     flex: auto;
+    position: relative;
 }
 
 .granitSplitter_PanelStatic {

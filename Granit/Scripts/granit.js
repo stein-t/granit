@@ -49,7 +49,7 @@ $(function () {
             var splitterId = self.element[0].getAttribute("id");
 
             //used to identify splitter in error message
-            this.IdString = "ID #" + splitterId;
+            this.IdString = "#" + splitterId;
 
             var optionsAllowed = [
                 'classes', 'disabled', 'create', 'hide', 'show',    //base widget properties
@@ -288,7 +288,7 @@ $(function () {
                 panelsWithoutOrRelativeSize.push({
                     size: size,
                     index: index,
-                    flexable: true,
+                    flexable: flexable,
                     wrappedElement: wrappedElement,
                     minSize: minSize.getSize(),
                     maxSize: maxSize.getSize(),
@@ -314,7 +314,14 @@ $(function () {
 
             //apply left panels
             panelsWithoutOrRelativeSize.forEach(function (item) {
-                var size = item.size && ("calc(" + item.size.getSize() + splitterOffset.toString() + ")") || ("calc(" + panelSizeDistributed + "%" + panelSizeTotalOffset.toString() + ")");
+                var size;
+                if (item.size) {
+                    //for percent sizes the total splitterOffset is subtracted
+                    size = "calc(" + item.size.getSize() + splitterOffset.toString() + ")";
+                } else {
+                    //missing sizes panels fill the remaining space minus the total splitterOffset
+                    size = "calc(" + panelSizeDistributed + "%" + panelSizeTotalOffset.toString() + ")";
+                }
 
                 var panelDisplayClass = item.flexable ? "granitSplitter_Panel" : "granitSplitter_Panel granitSplitter_PanelStatic";
 
@@ -334,13 +341,24 @@ $(function () {
                 });
             });
 
-            this.element.resize($.proxy(this._elementOnResize, this)); 
+            this.panels.forEach(function (item, index) {
+                if (item.data().granitOriginalUnit === "em") {
+                    item.resize($.proxy(self._elementOnResize, self, item[0])); 
+                    item.fontResize($.proxy(self._elementOnFontResize, self, item[0]));
+                }
+            });
         },
 
 
-        _elementOnResize: function () {
+        _elementOnResize: function (element) {
             var id = this.IdString;
-            console.log(id + " Change x: " + this.element.width() + ", Change y: " + this.element.height());
+            console.log(id + " Change x: " + element.offsetWidth + ", Change y: " + element.offsetHeight);
+        },
+
+        _elementOnFontResize: function (element, size) {
+            var id = this.IdString;
+            var height = element.offsetHeight;
+            console.log(id + " Font-Size B: " + size.fontSize + " Height: " + height);
         },
 
         /*
@@ -457,13 +475,13 @@ $(function () {
                 $("html").css("cursor", "ew-resize");
                 this.MouseMovement = event.pageX;
 
-                //retrive the splitter container area size with consideration of the static total minimum or maximum panel limit sizes if the container is overflowed or unfilled
+                //retrive the splitter container area size with consideration of the static total minimum or maximum panel limit sizes if the container element is overflowed or unfilled
                 this.splitterAreaSize = Math.max(Math.min($(this.element).width(), maxSizeTotal), minSizeTotal);
             } else {
                 $("html").css("cursor", "ns-resize");
                 this.MouseMovement = event.pageY;
 
-                //retrive the splitter container area size with consideration of the static total minimum or maximum panel limit sizes if the container is overflowed or unfilled
+                //retrive the splitter container area size with consideration of the static total minimum or maximum panel limit sizes if the container element is overflowed or unfilled
                 this.splitterAreaSize = Math.max(Math.min($(this.element).height(), maxSizeTotal), minSizeTotal);
             }
 
