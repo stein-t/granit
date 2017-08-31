@@ -9,10 +9,25 @@
 
 (function ( $ ) {
 	var attachEvent = document.attachEvent,
-		stylesCreated = false;
+		stylesCreated = false, fontResizeTriggerStylesCreated = false;
 	
     var jQuery_resize = $.fn.resize;
     var jQuery_fontResize = $.fn.fontResize;
+
+	$.fn.resize = function(callback) {
+		return this.each(function() {
+			if(this == window)
+				jQuery_resize.call(jQuery(this), callback);
+			else
+				addResizeListener(this, callback);
+		});
+	}
+
+	$.fn.removeResize = function(callback) {
+		return this.each(function() {
+			removeResizeListener(this, callback);
+		});
+	}
 
     $.fn.fontResize = function (callback) {
         return this.each(function () {
@@ -29,21 +44,6 @@
         });
     }
 
-	$.fn.resize = function(callback) {
-		return this.each(function() {
-			if(this == window)
-				jQuery_resize.call(jQuery(this), callback);
-			else
-				addResizeListener(this, callback);
-		});
-	}
-
-	$.fn.removeResize = function(callback) {
-		return this.each(function() {
-			removeResizeListener(this, callback);
-		});
-	}
-	
 	if (!attachEvent) {
 		var requestFrame = (function(){
 			var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame ||
@@ -142,71 +142,93 @@
 		}
 	}
 
-    function triggerFontListener(e) {
-        var element = this;
-        var fontSize = element.__fontResizeObserverNode__.offsetHeight / 10.0;
+    window.addResizeListener = function (element, fn) {
+        if (attachEvent) element.attachEvent('onresize', fn);
+        else {
+            if (!element.__resizeTriggers__) {
+                if (getComputedStyle(element).position == 'static') element.style.position = 'relative';
+                createStyles();
+                element.__resizeLast__ = {};
+                element.__resizeListeners__ = [];
+                (element.__resizeTriggers__ = document.createElement('div')).className = 'resize-triggers';
+                element.__resizeTriggers__.innerHTML = '<div class="expand-trigger"><div></div></div>' + '<div class="contract-trigger"></div>';
+                element.appendChild(element.__resizeTriggers__);
+                resetTriggers(element);
+                element.addEventListener('scroll', scrollListener, true);
 
-        element.__fontResizeListeners__.forEach(function (fn) {
-            fn.call(element, { fontSize: fontSize }, e);
-        });
+                /* Listen for a css animation to detect element display/re-attach */
+                animationstartevent && element.__resizeTriggers__.addEventListener(animationstartevent, function (e) {
+                    if (e.animationName == animationName)
+                        resetTriggers(element);
+                });
+            }
+            element.__resizeListeners__.push(fn);
+        }
+    };
+
+    window.removeResizeListener = function (element, fn) {
+        if (attachEvent) element.detachEvent('onresize', fn);
+        else {
+            element.__resizeListeners__.splice(element.__resizeListeners__.indexOf(fn), 1);
+            if (!element.__resizeListeners__.length) {
+                element.removeEventListener('scroll', scrollListener);
+                element.__resizeTriggers__ = !element.removeChild(element.__resizeTriggers__);
+            }
+        }
     }
 
-    window.addFontResizeListener = function (element, fn) {
-        if (!element.__resizeObserverNode__) {
+    function createFontResizeTriggerStyles() {
+        if (!fontResizeTriggerStylesCreated) {
+            var css = '.fontResize-trigger { visibility: hidden; position: absolute; top: 0; left: 0; height: 10em; width: 10em; }',
+                head = document.head || document.getElementsByTagName('head')[0],
+                style = document.createElement('style');
+
+            style.type = 'text/css';
+            if (style.styleSheet) {
+                style.styleSheet.cssText = css;
+            } else {
+                style.appendChild(document.createTextNode(css));
+            }
+
+            head.appendChild(style);
+            fontResizeTriggerStylesCreated = true;
+        }
+    }
+
+    function triggerFontListener(e) {
+        var element = this;
+        var fontSize = element.__fontResizeTrigger__.offsetHeight / 10.0;
+
+        if (element.__resizeLast__.fontSize !== fontSize) {
+            element.__resizeLast__.fontSize = fontSize;
+            element.__fontResizeListeners__.forEach(function (fn) {
+                fn.call(element, { fontSize: fontSize }, e);
+            });
+        }
+    }
+
+    var addFontResizeListener = function (element, fn) {
+        if (!element.__fontResizeTrigger__) {
             element.__fontResizeListeners__ = [];
+            element.__fontResizeLast__ = {};
 
-            element.__fontResizeObserverNode__ = document.createElement('div');
+            createFontResizeTriggerStyles();
 
-            $(element.__fontResizeObserverNode__).addClass("fontResizeObserver");
+            (element.__fontResizeTrigger__ = document.createElement('div')).className = 'fontResize-trigger';
 
-            element.appendChild(element.__fontResizeObserverNode__);
+            element.appendChild(element.__fontResizeTrigger__);
 
-            $(element.__fontResizeObserverNode__).resize($.proxy(triggerFontListener, element));
+            $(element.__fontResizeTrigger__).resize($.proxy(triggerFontListener, element));
         }
         element.__fontResizeListeners__.push(fn);
     };
 
-	window.addResizeListener = function(element, fn){
-		if (attachEvent) element.attachEvent('onresize', fn);
-		else {
-			if (!element.__resizeTriggers__) {
-				if (getComputedStyle(element).position == 'static') element.style.position = 'relative';
-				createStyles();
-				element.__resizeLast__ = {};
-				element.__resizeListeners__ = [];
-				(element.__resizeTriggers__ = document.createElement('div')).className = 'resize-triggers';
-				element.__resizeTriggers__.innerHTML = '<div class="expand-trigger"><div></div></div>' +
-																						'<div class="contract-trigger"></div>';
-				element.appendChild(element.__resizeTriggers__);
-				resetTriggers(element);
-				element.addEventListener('scroll', scrollListener, true);
-				
-				/* Listen for a css animation to detect element display/re-attach */
-				animationstartevent && element.__resizeTriggers__.addEventListener(animationstartevent, function(e) {
-					if(e.animationName == animationName)
-						resetTriggers(element);
-				});
-			}
-			element.__resizeListeners__.push(fn);
-		}
-	};
 
-    //window.removeFontResizeListener = function (element, fn) {
-    //    element.__resizeListeners__.splice(element.__resizeListeners__.indexOf(fn), 1);
-    //    if (!element.__resizeListeners__.length) {
-    //        element.removeEventListener('scroll', scrollListener);
-    //        element.__resizeTriggers__ = !element.removeChild(element.__resizeTriggers__);
-    //    }
-    //}
+    var removeFontResizeListener = function (element, fn) {
+        element.__fontResizeListeners__.splice(element.__fontResizeListeners__.indexOf(fn), 1);
+        if (!element.__fontResizeListeners__.length) {
+            element.__fontResizeTrigger__ = !element.removeChild(element.__fontResizeTrigger__);
+        }
+    }
 
-	window.removeResizeListener = function(element, fn){
-		if (attachEvent) element.detachEvent('onresize', fn);
-		else {
-			element.__resizeListeners__.splice(element.__resizeListeners__.indexOf(fn), 1);
-			if (!element.__resizeListeners__.length) {
-					element.removeEventListener('scroll', scrollListener);
-					element.__resizeTriggers__ = !element.removeChild(element.__resizeTriggers__);
-			}
-		}
-	}
 }( jQuery ));
