@@ -383,7 +383,7 @@ $(function () {
             }
 
             //these variables support the correction of full splitter-container size calculation (re-converting the pixel sizes into percentage)
-            var minSizeTotal = 0.0, maxSizeTotal = 0.0;
+            var minSizeTotal = 0.0;
 
             /*
              * as pixel limit sizes potentially can change dynamically we need to iterate the panels here in order to ...
@@ -447,7 +447,6 @@ $(function () {
                     minSize.Number = Math.max(size, minSize.Number);      //the minimum size is overwritten by the current size if the display is configured as static
                 }
                 minSizeTotal += minSize.Number;
-                maxSizeTotal += maxSize.Number;
             });
 
             //as the pixel splitter width potentially can change dynamically we calulate the total splitter width in pixels here
@@ -466,23 +465,22 @@ $(function () {
 
             /*
              * adding the total splitter width to the minimum limit sizes
-             * This way we get the exact static total minimum or maximum sizes in order to correct the full splitter container area size if it is overflowed or unfilled by its panel children 
+             * This way we get the exact static total minimum sizes in order to correct the full splitter container area size if it is overflowed by its panel children 
              */
             minSizeTotal += splitterWidthTotal;
-            maxSizeTotal += splitterWidthTotal;
 
             if (this.options.direction === "vertical") {
                 $("html").css("cursor", "ew-resize");
                 this.MouseMovement = event.pageX;
 
-                //retrive the splitter container area size with consideration of the static total minimum or maximum panel limit sizes if the container element is overflowed or unfilled
-                this.splitterAreaSize = Math.max(Math.min(this.element[0].offsetWidth, maxSizeTotal), minSizeTotal);
+                //retrive the splitter container area size with consideration of the static total minimum panel limit sizes if the container element is overflowed
+                this.splitterAreaSize = Math.max(this.element[0].offsetWidth, minSizeTotal);
             } else {
                 $("html").css("cursor", "ns-resize");
                 this.MouseMovement = event.pageY;
 
-                //retrive the splitter container area size with consideration of the static total minimum or maximum panel limit sizes if the container element is overflowed or unfilled
-                this.splitterAreaSize = Math.max(Math.min(this.element[0].offsetHeight, maxSizeTotal), minSizeTotal);
+                //retrive the splitter container area size with consideration of the static total minimum panel limit sizes if the container element is overflowed
+                this.splitterAreaSize = Math.max(this.element[0].offsetHeight, minSizeTotal);
             }
 
             //register events
@@ -545,19 +543,19 @@ $(function () {
                      * re-convert the pixel-length into its original percent unit.
                      * Otherwise the lenght would stay in pixels and the layout rendering behaviour of this panel (on resizing parent containers) unintentionally may change.
                      */
-                    //if (item.data().__granitData__.originalUnit === "%") {
-                    //    if (self.options.direction === "vertical") {
-                    //        size = item.width();
-                    //        sizePropertyName = "width";
-                    //    } else {
-                    //        size = item.height();
-                    //        sizePropertyName = "height";
-                    //    }
-                    //    //the total splitter witdh is divided equally among the percentage panels (splitterOffset)
-                    //    var sizeRelative = (size + self.splitterOffset) / self.splitterAreaSize * 100.0;
-                    //    //... this is why we encode the percentage length as a css-calc statement
-                    //    item.css(sizePropertyName, "calc(" + sizeRelative + "% - " + self.splitterOffset + "px)");
-                    //}
+                    if (item.data().__granitData__.originalUnit === "%") {
+                        if (self.options.direction === "vertical") {
+                            size = item[0].offsetWidth;
+                            sizePropertyName = "width";
+                        } else {
+                            size = item[0].offsetHeight;
+                            sizePropertyName = "height";
+                        }
+                        //the total splitter witdh is divided equally among the percentage panels (splitterOffset)
+                        var sizeRelative = (size + self.splitterOffset) / self.splitterAreaSize * 100.0;
+                        //... this is why we encode the percentage length as a css-calc statement
+                        item.css(sizePropertyName, "calc(" + sizeRelative + "% - " + self.splitterOffset + "px)");
+                    }
                 });
 
                 //clean up
