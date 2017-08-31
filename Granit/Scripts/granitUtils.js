@@ -269,6 +269,49 @@ var granit = (function (gt) {
         return arr;
     }
 
+    /*
+     * Provides any css length property value in pixels for max-width, min-width, max-height, min-height
+     */
+    var CSSPixelProvider = (function () {
+        var element, testElement;
+
+        //Constructor
+        function CSSPixelProvider(target) {
+            //Create a temporary sibling div to resolve units into pixels.
+            testElement = document.createElement("div");
+            testElement.style.cssText = "overflow: hidden; visibility: hidden; position: absolute; top: 0; left: 0;"; 
+            element = target;
+            element.appendChild(testElement);
+        }
+
+        CSSPixelProvider.prototype.destroy = function () {
+            element.removeChild(testElement);
+        }
+
+        CSSPixelProvider.prototype.getCSSPixel = function (target, hyphenProp) {
+            //get CSS value
+            var value = getComputedStyle(target, null).getPropertyValue(hyphenProp);
+
+            //if the value is a string ("none") we simply return it
+            if (!parseFloat(value)) {
+                return value;
+            }
+
+            //We can return pixels directly, but not other units
+            if (value.slice(-2) == "px") {
+                return parseFloat(value.slice(0, -2));
+            }
+
+            var sizePropertyName = hyphenProp.slice(4);
+            var offsetSize = "offset" + sizePropertyName.charAt(0).toUpperCase() + sizePropertyName.slice(1);
+
+            testElement.style[sizePropertyName] = value;
+            return testElement[offsetSize];
+        }
+
+        return CSSPixelProvider;
+    })();
+
     //publish
     gt.extractFloatUnit = extractFloatUnit;
     gt.parseFloatUnit = parseFloatUnit;
@@ -278,6 +321,7 @@ var granit = (function (gt) {
     gt.findAllFromObject = findAllFromObject;
     gt.NumberUnitArray = numberUnitArray;
     gt.NumberUnit = NumberUnit;
+    gt.CSSPixelProvider = CSSPixelProvider;
 
     return gt;
 }(granit || {}));

@@ -385,6 +385,8 @@ $(function () {
             //these variables support the correction of full splitter-container size calculation (re-converting the pixel sizes into percentage)
             var minSizeTotal = 0.0;
 
+            var pc = new granit.CSSPixelProvider(self.element[0]);
+
             /*
              * as pixel limit sizes potentially can change dynamically we need to iterate the panels here in order to ...
              * 1. capture current pixel limit sizes to support the mouse-moving process
@@ -394,45 +396,27 @@ $(function () {
                 var size, minSize, maxSize;
                 if (self.options.direction === "vertical") {
                     size = item[0].offsetWidth;
-                    var minWidth = getComputedStyle(item[0]).minWidth,
-                        maxWidth = getComputedStyle(item[0]).maxWidth;
 
-                    if (minWidth !== "none") {
-                        minSize = granit.extractFloatUnit(minWidth, "Q+", /px|%/, "px", self.IdString + " -- _splitterMouseDown: retrieving min-width");
-                        if (minSize.Unit === "%") {
-                            minSize.Number = minSize.Number * self.element[0].offsetWidth / 100.0; minSize.Unit = "px";   //convert to pixel
-                        }
-                    } else {
-                        minSize = new granit.NumberUnit(0.0, "px");
+                    minSize = pc.getCSSPixel(item[0], "min-width");
+                    if (minSize && minSize === "none") {
+                        minSize = 0.0;
                     }
-                    if (maxWidth !== "none") {
-                        maxSize = granit.extractFloatUnit(maxWidth, "Q+", /px|%/, "px", self.IdString + " -- _splitterMouseDown: retrieving max-width");
-                        if (maxSize.Unit === "%") {
-                            maxSize.Number = maxSize.Number * self.element[0].offsetWidth / 100.0; maxSize.Unit = "px";   //convert to pixel
-                        }
-                    } else {
-                        maxSize = new granit.NumberUnit(self.element[0].offsetWidth, "px");
+
+                    maxSize = pc.getCSSPixel(item[0], "max-width");
+                    if (maxSize && maxSize === "none") {
+                        maxSize = self.element[0].offsetWidth;
                     }
                 } else {
                     size = item[0].offsetHeight;
-                    var minHeight = getComputedStyle(item[0]).minHeight,
-                        maxHeight = getComputedStyle(item[0]).maxHeight;
 
-                    if (minHeight !== "none") {
-                        minSize = granit.extractFloatUnit(minHeight, "Q+", /px|%/, "px", self.IdString + " -- _splitterMouseDown: retrieving min-height");
-                        if (minSize.Unit === "%") {
-                            minSize.Number = minSize.Number * self.element[0].offsetHeight / 100.0; minSize.Unit = "px";   //convert to pixel
-                        }
-                    } else {
-                        minSize = new granit.NumberUnit(0.0, "px");
+                    minSize = pc.getCSSPixel(item[0], "min-height");
+                    if (minSize && minSize === "none") {
+                        minSize = 0.0;
                     }
-                    if (maxHeight !== "none") {
-                        maxSize = granit.extractFloatUnit(maxHeight, "Q+", /px|%/, "px", self.IdString + " -- _splitterMouseDown: retrieving max-height");
-                        if (maxSize.Unit === "%") {
-                            maxSize.Number = maxSize.Number * self.element[0].offsetHeight / 100.0; maxSize.Unit = "px";   //convert to pixel
-                        }
-                    } else {
-                        maxSize = new granit.NumberUnit(self.element[0].offsetHeight, "px");
+
+                    maxSize = pc.getCSSPixel(item[0], "max-height");
+                    if (maxSize && maxSize === "none") {
+                        maxSize = self.element[0].offsetHeight;
                     }
                 }
 
@@ -440,14 +424,16 @@ $(function () {
                 item.css("flex", "none");   //while mouse-moving action, the flexbox shrink- or grow- capability is turned off
 
                 //capture the current limit sizes to support mouse-moving calculation 
-                item.data().__granitData__.minSize = minSize.Number;     //capture current minimum size
-                item.data().__granitData__.maxSize = maxSize.Number;     //capture current maximum size
+                item.data().__granitData__.minSize = minSize;     //capture current minimum size
+                item.data().__granitData__.maxSize = maxSize;     //capture current maximum size
 
                 if (!item.data().__granitData__.flexable) {
-                    minSize.Number = Math.max(size, minSize.Number);      //the minimum size is overwritten by the current size if the display is configured as static
+                    minSize = Math.max(size, minSize);      //the minimum size is overwritten by the current size if the display is configured as static
                 }
-                minSizeTotal += minSize.Number;
+                minSizeTotal += minSize;
             });
+
+            pc.destroy();
 
             //as the pixel splitter width potentially can change dynamically we calulate the total splitter width in pixels here
             var splitterWidthTotal = this.splitterList.reduce(function (total, item) {
