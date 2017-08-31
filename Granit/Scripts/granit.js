@@ -264,7 +264,7 @@ $(function () {
                     //apply splitter
                     wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size.getSize() + ";" + minSizePropertyName + ":" + minSize.getSize() + ";" + maxSizePropertyName + ":" + maxSize.getSize() + ";'></div>");
 
-                    wrappedElement.parent().data({ granitIndex: index, granitFlexable: flexable, granitOriginalUnit: size.Unit, granitResizable: resizable });
+                    wrappedElement.parent().data().__granitData__ = { index: index, flexable: flexable, originalUnit: size.Unit, resizable: resizable };
                     self.panels.splice(index, 0, wrappedElement.parent());
 
                     self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
@@ -328,7 +328,7 @@ $(function () {
                 //apply splitter
                 item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size + ";" + minSizePropertyName + ":" + item.minSize + ";" + maxSizePropertyName + ":" + item.maxSize + ";'></div>");
 
-                item.wrappedElement.parent().data({ granitIndex: item.index, granitFlexable: item.flexable, granitOriginalUnit: "%", granitResizable: item.resizable });
+                item.wrappedElement.parent().data().__granitData__ = { index: item.index, flexable: item.flexable, originalUnit: "%", resizable: item.resizable };
                 self.panels.splice(item.index, 0, item.wrappedElement.parent());
 
                 self.splitterList[item.index] && self.splitterList[item.index].insertAfter(item.wrappedElement.parent());
@@ -341,12 +341,12 @@ $(function () {
                 });
             });
 
-            this.panels.forEach(function (item, index) {
-                if (item.data().granitOriginalUnit === "em") {
-                    item.resize($.proxy(self._elementOnResize, self, item[0])); 
-                    item.fontResize($.proxy(self._elementOnFontResize, self, item[0]));
-                }
-            });
+            //this.panels.forEach(function (item, index) {
+            //    if (item.data().__granitData__.originalUnit === "em") {
+            //        item.resize($.proxy(self._elementOnResize, self, item[0])); 
+            //        item.fontResize($.proxy(self._elementOnFontResize, self, item[0]));
+            //    }
+            //});
         },
 
 
@@ -393,14 +393,14 @@ $(function () {
             this.panels.forEach(function (item, index) {
                 var size, minSize, maxSize;
                 if (self.options.direction === "vertical") {
-                    size = item.width();
+                    size = item[0].offsetWidth;
                     var minWidth = getComputedStyle(item[0]).minWidth,
                         maxWidth = getComputedStyle(item[0]).maxWidth;
 
                     if (minWidth !== "none") {
                         minSize = granit.extractFloatUnit(minWidth, "Q+", /px|%/, "px", self.IdString + " -- _splitterMouseDown: retrieving min-width");
                         if (minSize.Unit === "%") {
-                            minSize.Number = minSize.Number * $(self.element).width() / 100.0; minSize.Unit = "px";   //convert to pixel
+                            minSize.Number = minSize.Number * self.element[0].offsetWidth / 100.0; minSize.Unit = "px";   //convert to pixel
                         }
                     } else {
                         minSize = new granit.NumberUnit(0.0, "px");
@@ -408,20 +408,20 @@ $(function () {
                     if (maxWidth !== "none") {
                         maxSize = granit.extractFloatUnit(maxWidth, "Q+", /px|%/, "px", self.IdString + " -- _splitterMouseDown: retrieving max-width");
                         if (maxSize.Unit === "%") {
-                            maxSize.Number = maxSize.Number * $(self.element).width() / 100.0; maxSize.Unit = "px";   //convert to pixel
+                            maxSize.Number = maxSize.Number * self.element[0].offsetWidth / 100.0; maxSize.Unit = "px";   //convert to pixel
                         }
                     } else {
-                        maxSize = new granit.NumberUnit($(self.element).width(), "px");
+                        maxSize = new granit.NumberUnit(self.element[0].offsetWidth, "px");
                     }
                 } else {
-                    size = item.height();
+                    size = item[0].offsetHeight;
                     var minHeight = getComputedStyle(item[0]).minHeight,
                         maxHeight = getComputedStyle(item[0]).maxHeight;
 
                     if (minHeight !== "none") {
                         minSize = granit.extractFloatUnit(minHeight, "Q+", /px|%/, "px", self.IdString + " -- _splitterMouseDown: retrieving min-height");
                         if (minSize.Unit === "%") {
-                            minSize.Number = minSize.Number * $(self.element).height() / 100.0; minSize.Unit = "px";   //convert to pixel
+                            minSize.Number = minSize.Number * self.element[0].offsetHeight / 100.0; minSize.Unit = "px";   //convert to pixel
                         }
                     } else {
                         minSize = new granit.NumberUnit(0.0, "px");
@@ -429,10 +429,10 @@ $(function () {
                     if (maxHeight !== "none") {
                         maxSize = granit.extractFloatUnit(maxHeight, "Q+", /px|%/, "px", self.IdString + " -- _splitterMouseDown: retrieving max-height");
                         if (maxSize.Unit === "%") {
-                            maxSize.Number = maxSize.Number * $(self.element).height() / 100.0; maxSize.Unit = "px";   //convert to pixel
+                            maxSize.Number = maxSize.Number * self.element[0].offsetHeight / 100.0; maxSize.Unit = "px";   //convert to pixel
                         }
                     } else {
-                        maxSize = new granit.NumberUnit($(self.element).height(), "px");
+                        maxSize = new granit.NumberUnit(self.element[0].offsetHeight, "px");
                     }
                 }
 
@@ -440,10 +440,10 @@ $(function () {
                 item.css("flex", "none");   //while mouse-moving action, the flexbox shrink- or grow- capability is turned off
 
                 //capture the current limit sizes to support mouse-moving calculation 
-                item.data().granitMinSize = minSize.Number;     //capture current minimum size
-                item.data().granitMaxSize = maxSize.Number;     //capture current maximum size
+                item.data().__granitData__.minSize = minSize.Number;     //capture current minimum size
+                item.data().__granitData__.maxSize = maxSize.Number;     //capture current maximum size
 
-                if (!item.data().granitFlexable) {
+                if (!item.data().__granitData__.flexable) {
                     minSize.Number = Math.max(size, minSize.Number);      //the minimum size is overwritten by the current size if the display is configured as static
                 }
                 minSizeTotal += minSize.Number;
@@ -454,9 +454,9 @@ $(function () {
             var splitterWidthTotal = this.splitterList.reduce(function (total, item) {
                 var size;
                 if (self.options.direction === "vertical") {
-                    size = item.width();
+                    size = item[0].offsetWidth;
                 } else {
-                    size = item.height();
+                    size = item[0].offsetHeight;
                 }
                 return total + size;
             }, 0.0);
@@ -476,13 +476,13 @@ $(function () {
                 this.MouseMovement = event.pageX;
 
                 //retrive the splitter container area size with consideration of the static total minimum or maximum panel limit sizes if the container element is overflowed or unfilled
-                this.splitterAreaSize = Math.max(Math.min($(this.element).width(), maxSizeTotal), minSizeTotal);
+                this.splitterAreaSize = Math.max(Math.min(this.element[0].offsetWidth, maxSizeTotal), minSizeTotal);
             } else {
                 $("html").css("cursor", "ns-resize");
                 this.MouseMovement = event.pageY;
 
                 //retrive the splitter container area size with consideration of the static total minimum or maximum panel limit sizes if the container element is overflowed or unfilled
-                this.splitterAreaSize = Math.max(Math.min($(this.element).height(), maxSizeTotal), minSizeTotal);
+                this.splitterAreaSize = Math.max(Math.min(this.element[0].offsetHeight, maxSizeTotal), minSizeTotal);
             }
 
             //register events
@@ -534,10 +534,10 @@ $(function () {
 
                 // iterating the panels for re-setting and re-converting
                 this.panels.forEach(function (item, index) {
-                    item.data().granitIsminmized = false;
-                    item.data().granitIsmaximized = false;
+                    item.data().__granitData__.minimized = false;
+                    item.data().__granitData__.maximized = false;
 
-                    if (item.data().granitFlexable) {
+                    if (item.data().__granitData__.flexable) {
                         item.css("flex", "auto");   //reset flexbox capabilites
                     }
 
@@ -545,19 +545,19 @@ $(function () {
                      * re-convert the pixel-length into its original percent unit.
                      * Otherwise the lenght would stay in pixels and the layout rendering behaviour of this panel (on resizing parent containers) unintentionally may change.
                      */
-                    if (item.data().granitOriginalUnit === "%") {
-                        if (self.options.direction === "vertical") {
-                            size = item.width();
-                            sizePropertyName = "width";
-                        } else {
-                            size = item.height();
-                            sizePropertyName = "height";
-                        }
-                        //the total splitter witdh is divided equally among the percentage panels (splitterOffset)
-                        var sizeRelative = (size + self.splitterOffset) / self.splitterAreaSize * 100.0;
-                        //... this is why we encode the percentage length as a css-calc statement
-                        item.css(sizePropertyName, "calc(" + sizeRelative + "% - " + self.splitterOffset + "px)");
-                    }
+                    //if (item.data().__granitData__.originalUnit === "%") {
+                    //    if (self.options.direction === "vertical") {
+                    //        size = item.width();
+                    //        sizePropertyName = "width";
+                    //    } else {
+                    //        size = item.height();
+                    //        sizePropertyName = "height";
+                    //    }
+                    //    //the total splitter witdh is divided equally among the percentage panels (splitterOffset)
+                    //    var sizeRelative = (size + self.splitterOffset) / self.splitterAreaSize * 100.0;
+                    //    //... this is why we encode the percentage length as a css-calc statement
+                    //    item.css(sizePropertyName, "calc(" + sizeRelative + "% - " + self.splitterOffset + "px)");
+                    //}
                 });
 
                 //clean up
@@ -579,25 +579,25 @@ $(function () {
 
             function test(modus, panel) {
                 var currentSize, newSize, limitSize;
-                if (!panel.data().granitResizable) {
+                if (!panel.data().__granitData__.resizable) {
                     return null;
                 }
                 if (modus === 'grow') {
-                    if (panel.data().granitIsmaximized === true) {
+                    if (panel.data().__granitData__.maximized === true) {
                         return null;
                     }
-                    limitSize = panel.data().granitMaxSize;
+                    limitSize = panel.data().__granitData__.maxSize;
                 }
                 if (modus === 'shrink') {
-                    if (panel.data().granitIsminmized === true) {
+                    if (panel.data().__granitData__.minimized === true) {
                         return null;
                     }
-                    limitSize = panel.data().granitMinSize;
+                    limitSize = panel.data().__granitData__.minSize;
                 }
                 if (self.options.direction === "vertical") {
-                    currentSize = panel.width();
+                    currentSize = panel[0].offsetWidth;
                 } else {
-                    currentSize = panel.height();
+                    currentSize = panel[0].offsetHeight;
                 }
                 if (modus === 'grow') {
                     newSize = Math.min(currentSize + Math.abs(distance), limitSize);
@@ -620,14 +620,14 @@ $(function () {
             }
 
             if (distance > 0.0) {
-                for (var pointer = this.movedSplitter.prev().data().granitIndex; pointer >= 0; pointer--) {
+                for (var pointer = this.movedSplitter.prev().data().__granitData__.index; pointer >= 0; pointer--) {
                     result1 = test("grow", this.panels[pointer]);
                     if (result1) {
                         break;
                     }
                 }
                 if (result1) {
-                    for (var pointer = this.movedSplitter.prev().data().granitIndex + 1; pointer < this.panels.length; pointer++) {
+                    for (var pointer = this.movedSplitter.prev().data().__granitData__.index + 1; pointer < this.panels.length; pointer++) {
                         result2 = test("shrink", this.panels[pointer]);
                         if (result2) {
                             break;
@@ -637,14 +637,14 @@ $(function () {
             }
 
             if (distance < 0.0) {
-                for (var pointer = this.movedSplitter.next().data().granitIndex; pointer < this.panels.length; pointer++) {
+                for (var pointer = this.movedSplitter.next().data().__granitData__.index; pointer < this.panels.length; pointer++) {
                     result1 = test("grow", this.panels[pointer]);
                     if (result1) {
                         break;
                     }
                 }
                 if (result1) {
-                    for (var pointer = this.movedSplitter.next().data().granitIndex - 1; pointer >= 0; pointer--) {
+                    for (var pointer = this.movedSplitter.next().data().__granitData__.index - 1; pointer >= 0; pointer--) {
                         result2 = test("shrink", this.panels[pointer]);
                         if (result2) {
                             break;
@@ -657,15 +657,15 @@ $(function () {
                 var offset = Math.min(result1.offset, result2.offset);
                 result1.panel.css(this.sizePropertyName, result1.currentSize + offset + "px");
                 if (result1.currentSize + offset >= result1.limitSize) {
-                    result1.panel.data().granitIsmaximized = true;
+                    result1.panel.data().__granitData__.maximized = true;
                 }
-                result1.panel.data().granitIsminmized = false;
+                result1.panel.data().__granitData__.minimized = false;
 
                 result2.panel.css(this.sizePropertyName, result2.currentSize - offset + "px");
                 if (result2.currentSize - offset <= result2.limitSize) {
-                    result2.panel.data().granitIsminmized = true;
+                    result2.panel.data().__granitData__.minimized = true;
                 }
-                result2.panel.data().granitIsmaximized = false;
+                result2.panel.data().__granitData__.maximized = false;
             }
         },
     });
