@@ -87,21 +87,16 @@ $(function () {
                 granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
             }
 
-            var minSizePropertyName, maxSizePropertyName;
             this.element.addClass("granitSplitter_Container");
 
             if (self.options.direction === "vertical") {
                 this.element.addClass("granitSplitter_Container_vertical");
                 this.element.css("overflow-x", self.options.overflow);
                 this.sizePropertyName = "width";
-                minSizePropertyName = "min-width";
-                maxSizePropertyName = "max-width";
             } else {
                 this.element.addClass("granitSplitter_Container_horizontal");
                 this.element.css("overflow-y", self.options.overflow);
                 this.sizePropertyName = "height";
-                minSizePropertyName = "min-height";
-                maxSizePropertyName = "max-height";
             }
 
             //identify children: only divs or any semantic element are permitted
@@ -262,7 +257,7 @@ $(function () {
                     }
 
                     //apply splitter
-                    wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size.getSize() + ";" + minSizePropertyName + ":" + minSize.getSize() + ";" + maxSizePropertyName + ":" + maxSize.getSize() + ";'></div>");
+                    wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + maxSize.getSize() + ";'></div>");
 
                     wrappedElement.parent().data().__granitData__ = { index: index, flexable: flexable, originalUnit: size.Unit, resizable: resizable };
                     self.panels.splice(index, 0, wrappedElement.parent());
@@ -326,7 +321,7 @@ $(function () {
                 var panelDisplayClass = item.flexable ? "granitSplitter_Panel" : "granitSplitter_Panel granitSplitter_PanelStatic";
 
                 //apply splitter
-                item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size + ";" + minSizePropertyName + ":" + item.minSize + ";" + maxSizePropertyName + ":" + item.maxSize + ";'></div>");
+                item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + item.minSize + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + item.maxSize + ";'></div>");
 
                 item.wrappedElement.parent().data().__granitData__ = { index: item.index, flexable: item.flexable, originalUnit: "%", resizable: item.resizable };
                 self.panels.splice(item.index, 0, item.wrappedElement.parent());
@@ -393,31 +388,18 @@ $(function () {
              * 2. retrieve the total amount of current pixel limit sizes, for re-converting the pixel sizes into percentage length properly after the mouse-moving process (on mouseup)
              */
             this.panels.forEach(function (item, index) {
-                var size, minSize, maxSize;
-                if (self.options.direction === "vertical") {
-                    size = item[0].offsetWidth;
+                var offsetSize = granit.prefixSizeName(self.sizePropertyName, "offset", true);      //offsetWidth, offsetHeight
 
-                    minSize = pc.getCSSPixel(item[0], "min-width");
-                    if (minSize && minSize === "none") {
-                        minSize = 0.0;
-                    }
+                var size = item[0][offsetSize];   
 
-                    maxSize = pc.getCSSPixel(item[0], "max-width");
-                    if (maxSize && maxSize === "none") {
-                        maxSize = self.element[0].offsetWidth;
-                    }
-                } else {
-                    size = item[0].offsetHeight;
+                var minSize = pc.getCSSPixel(item[0], granit.prefixSizeName(self.sizePropertyName, "min"));     //min-width, min-height;
+                if (minSize && minSize === "none") {
+                    minSize = 0.0;
+                }
 
-                    minSize = pc.getCSSPixel(item[0], "min-height");
-                    if (minSize && minSize === "none") {
-                        minSize = 0.0;
-                    }
-
-                    maxSize = pc.getCSSPixel(item[0], "max-height");
-                    if (maxSize && maxSize === "none") {
-                        maxSize = self.element[0].offsetHeight;
-                    }
+                var maxSize = pc.getCSSPixel(item[0], granit.prefixSizeName(self.sizePropertyName, "max"));     //max-width, max-height;
+                if (maxSize && maxSize === "none") {
+                    maxSize = self.element[0][offsetSize];
                 }
 
                 item.css(self.sizePropertyName, size + "px");   //ensure to set the css-size in pixels to support smooth mouse-moving calculation
@@ -514,8 +496,6 @@ $(function () {
 
                 var self = this;
 
-                var size, sizePropertyName;
-
                 // iterating the panels for re-setting and re-converting
                 this.panels.forEach(function (item, index) {
                     item.data().__granitData__.minimized = false;
@@ -530,17 +510,12 @@ $(function () {
                      * Otherwise the lenght would stay in pixels and the layout rendering behaviour of this panel (on resizing parent containers) unintentionally may change.
                      */
                     if (item.data().__granitData__.originalUnit === "%") {
-                        if (self.options.direction === "vertical") {
-                            size = item[0].offsetWidth;
-                            sizePropertyName = "width";
-                        } else {
-                            size = item[0].offsetHeight;
-                            sizePropertyName = "height";
-                        }
+                        var size = item[0][granit.prefixSizeName(self.sizePropertyName, "offset", true)];      //offsetWidth, offsetHeight
+
                         //the total splitter witdh is divided equally among the percentage panels (splitterOffset)
                         var sizeRelative = (size + self.splitterOffset) / self.splitterAreaSize * 100.0;
                         //... this is why we encode the percentage length as a css-calc statement
-                        item.css(sizePropertyName, "calc(" + sizeRelative + "% - " + self.splitterOffset + "px)");
+                        item.css(self.sizePropertyName, "calc(" + sizeRelative + "% - " + self.splitterOffset + "px)");
                     }
                 });
 
@@ -562,7 +537,8 @@ $(function () {
             var result1, result2;
 
             function test(modus, panel) {
-                var currentSize, newSize, limitSize;
+                var newSize, limitSize;
+
                 if (!panel.data().__granitData__.resizable) {
                     return null;
                 }
@@ -578,11 +554,9 @@ $(function () {
                     }
                     limitSize = panel.data().__granitData__.minSize;
                 }
-                if (self.options.direction === "vertical") {
-                    currentSize = panel[0].offsetWidth;
-                } else {
-                    currentSize = panel[0].offsetHeight;
-                }
+
+                var currentSize = panel[0][granit.prefixSizeName(self.sizePropertyName, "offset", true)];      //offsetWidth, offsetHeight
+
                 if (modus === 'grow') {
                     newSize = Math.min(currentSize + Math.abs(distance), limitSize);
                 }

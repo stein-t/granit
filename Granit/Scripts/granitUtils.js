@@ -270,7 +270,19 @@ var granit = (function (gt) {
     }
 
     /*
-     * Provides any css length property value in pixels for max-width, min-width, max-height, min-height
+     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: prefixes the sizename "width" or "height" accordingly to get "min-width", "min-height", "max-width," "max-height", "offsetWidth", "offsetHeight"
+     */
+    var prefixSizeName = function(sizeName, prefix, camelCase) {
+        if (camelCase) {
+            return prefix + sizeName.charAt(0).toUpperCase() + sizeName.slice(1);
+        }
+        return prefix + "-" + sizeName;
+    }
+
+    /*
+     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: Provides any css length property value in pixels for max-width, min-width, max-height, min-height
      */
     var CSSPixelProvider = (function () {
         var element, testElement;
@@ -303,7 +315,7 @@ var granit = (function (gt) {
             }
 
             var sizePropertyName = hyphenProp.slice(4);
-            var offsetSize = "offset" + sizePropertyName.charAt(0).toUpperCase() + sizePropertyName.slice(1);
+            var offsetSize = prefixSizeName(sizePropertyName, "offset", true);
 
             testElement.style[sizePropertyName] = value;
             return testElement[offsetSize];
@@ -322,6 +334,7 @@ var granit = (function (gt) {
     gt.NumberUnitArray = numberUnitArray;
     gt.NumberUnit = NumberUnit;
     gt.CSSPixelProvider = CSSPixelProvider;
+    gt.prefixSizeName = prefixSizeName;
 
     return gt;
 }(granit || {}));
