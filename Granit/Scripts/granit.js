@@ -252,7 +252,7 @@ $(function () {
                     var panelDisplayClass = flexable ? "granitSplitter_Panel" : "granitSplitter_Panel granitSplitter_PanelStatic";
 
                     //present total static size
-                    if (size.Number > 0) {
+                    if (size.Number > 0.0) {
                         panelSizeTotalOffset.add(size, "-");
                     }
 
@@ -530,7 +530,7 @@ $(function () {
 
         /*
          * Author(s):   Thomas Stein, ... <please leave your name>
-         * Description: The heart of the dragging algorithm
+         * Description: last but not least ... the heart of the dragging algorithm
          */
         _processPanelMovement: function (distance) {
             var self = this;
