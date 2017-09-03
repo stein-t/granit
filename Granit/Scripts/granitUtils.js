@@ -200,10 +200,13 @@ var granit = (function (gt) {
          */
         arr.add = function (item, operation) {
             if (!(item instanceof NumberUnit)) {
-                output("item is no object of NumberUnit", "numberUnitArray.add");
+                //the item is considered to be a css length value string ("10px", "5rem", etc.) and must be converted into a NumberUnit object 
+                var number = parseFloat(item);
+                var unit = item.replace(number, "");
+                item = new NumberUnit(number, unit);
             }
-            var itemNumber = parseFloat(item.Number);
 
+            var itemNumber = parseFloat(item.Number);
             var element;
             arr.forEach(function (el) {
                 if (item.Unit === el.Unit) {
@@ -238,6 +241,8 @@ var granit = (function (gt) {
                 item.Operation = operation;
                 return this.push(item);                
             }
+
+            return arr;
         }
 
         /*
@@ -250,6 +255,8 @@ var granit = (function (gt) {
             itemArray.forEach(function (item) {
                 arr.add(item, operation);
             });
+
+            return arr;
         }
 
         /*

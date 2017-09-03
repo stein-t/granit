@@ -27,7 +27,7 @@ $(function () {
             splitterLength: "100%",
             splitterClasses: "granitSplitter_Splitter_Default",
             overflow: "auto",
-            display: "auto"
+            flexible: false
         },
         /*
          * Author(s):   Thomas Stein, ... <please leave your name>
@@ -54,7 +54,7 @@ $(function () {
             var optionsAllowed = [
                 'classes', 'disabled', 'create', 'hide', 'show',    //base widget properties
                 'direction', 'panel', 'panelMinSize', 'panelMaxSize', 'panelClasses', 'panelPadding', 'splitter',
-                'panelMargin', 'splitterWidth', 'splitterLength', 'splitterClasses', 'overflow', 'display', 'panelResizable'
+                'panelMargin', 'splitterWidth', 'splitterLength', 'splitterClasses', 'overflow', 'flexible', 'panelResizable'
             ];
 
             if (!granit.findAllFromObject(this.options, optionsAllowed)) {
@@ -70,7 +70,7 @@ $(function () {
             }
 
             var panelOptionsAllowed = [
-                'display', 'size', 'minSize', 'maxSize', 'classes', 'padding', 'margin', 'resizable'
+                'flexible', 'size', 'minSize', 'maxSize', 'classes', 'padding', 'margin', 'resizable'
             ];
 
             var splitterOptionsAllowed = [
@@ -110,15 +110,10 @@ $(function () {
 
             //local help variables
             var panelsWithoutOrRelativeSize = [];                       //holds panels without size or percentage size
-            var splitterOffset = granit.NumberUnitArray();              //the total width of splitters under consideration different units 
             var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a non-percentage size under consideration of different units 
             var panelSizePercentTotal = 0.0;                            //the total percentage size of percentage panels
             var panelsWithoutSizeTotal = 0;                             //amount of panels without size
-
-            //global help variables
-            this.splitterOffset;                    //current splitter offset portion for any percentage panel, during a mousemove process
-            this.percentagePanelsAmount = 0;        //amount of total percentage panels
-            this.splitterAreaSize;                  //current total splitter area size, used to re-convert percentage panels during a mousemove process 
+            var splitterOffset = granit.NumberUnitArray();              //the total width of splitters under consideration different units 
 
             //global
             this.panels = [];               //reference to the panels (or final panel wrappers)
@@ -171,10 +166,13 @@ $(function () {
                 panelClasses = granit.uniqueArray(panelClasses.split(" ")).join(" ");     //avoiding duplicate class names
                 panelClasses = "granitSplitter_wrapper" + ((panelClasses && (" " + panelClasses)) || "");     //prefix the class string with the required system class
 
-                //retrieve the display option: a value defined on the individual panel level overwrites any global level value
-                var display = (panel && panel.display) || self.options.display;
-                if (display !== "auto" && display !== "flex" && display !== "static") {
-                    self.output("value (" + display + ") is invalid -- expected values are 'flex', 'static', 'auto'", self.IdString + " -- panel option.display");
+                //retrieve the flexible option: a value defined on the individual panel level overwrites any global level value
+                var flexible = panel && panel.flexible;
+                if (typeof flexible === 'undefined') {
+                    flexible = self.options.flexible;
+                }
+                if (jQuery.type(flexible) !== "boolean") {
+                    granit.output("value (" + flexible + ") invalid", self.IdString + " -- Panel flexible");
                 }
 
                 if (index < children.length - 1) {
@@ -238,18 +236,11 @@ $(function () {
                     }
                 }
 
-                /*
-                 * boolean variable that specifies if the panel has Flexbox capabilites according to responsive shrinking and growing.
-                 * the value depends on the display configuration option and the size unit (% versus other units) of the associated panel.
-                 */
-                var flexable;
-
                 var size = panel && panel.size;
                 size = size && granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "%", self.IdString + " -- Panel size (size)");
 
                 if (size && size.Unit !== "%") {
-                    flexable = display === "flex" ? true : false;
-                    var panelDisplayClass = flexable ? "granitSplitter_Panel" : "granitSplitter_Panel granitSplitter_PanelStatic";
+                    var panelDisplayClass = flexible ? "granitSplitter_Panel" : "granitSplitter_Panel granitSplitter_PanelStatic";
 
                     //present total static size
                     if (size.Number > 0.0) {
@@ -259,7 +250,7 @@ $(function () {
                     //apply splitter
                     wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + maxSize.getSize() + ";'></div>");
 
-                    wrappedElement.parent().data().__granitData__ = { index: index, flexable: flexable, originalUnit: size.Unit, resizable: resizable };
+                    wrappedElement.parent().data().__granitData__ = { index: index, flexible: flexible, originalUnit: size.Unit, resizable: resizable };
                     self.panels.splice(index, 0, wrappedElement.parent());
 
                     self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
@@ -267,23 +258,22 @@ $(function () {
                     return true; //leave loop
                 }
 
-                flexable = display === "static" ? false : true;
+                //for percentage panels flexible is always true anyways
+                flexible = true;
 
                 if (!size) {                    
                     panelsWithoutSizeTotal++;   //count panels with no size
-                    self.percentagePanelsAmount++;   //update total amount of percentage panels: panels with no size are to be introduced as percentage panels
                 }
 
                 if (size && size.Unit === "%") {                    
                     panelSizePercentTotal += size.Number;   //update total size of percentage panels
-                    self.percentagePanelsAmount++;   //update total amount of percentage panels
                 }
 
                 //remember panels without size or percentage size
                 panelsWithoutOrRelativeSize.push({
                     size: size,
                     index: index,
-                    flexable: flexable,
+                    flexible: flexible,
                     wrappedElement: wrappedElement,
                     minSize: minSize.getSize(),
                     maxSize: maxSize.getSize(),
@@ -291,15 +281,8 @@ $(function () {
                 });
             });
 
-            //the total space used by the splitters is shared among all percentage panels 
-            if (self.percentagePanelsAmount > 0) {
-                splitterOffset.map(function (item) {
-                    item.Number /= self.percentagePanelsAmount;
-                });
-            }
-
-            //add the total splitter offset to the total panel-size offset, in order to get the proper total offset for panels without sizes
-            panelSizeTotalOffset.addAll(splitterOffset, "-");    
+            //the total remaining space 
+            var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(splitterOffset, "-").toString() + ")";
 
             //calculate remaining relative space 
             var panelSizeDistributed = (100.0 - panelSizePercentTotal) / panelsWithoutSizeTotal;
@@ -309,21 +292,15 @@ $(function () {
 
             //apply left panels
             panelsWithoutOrRelativeSize.forEach(function (item) {
-                var size;
-                if (item.size) {
-                    //for percent sizes the total splitterOffset is subtracted
-                    size = "calc(" + item.size.getSize() + splitterOffset.toString() + ")";
-                } else {
-                    //missing sizes panels fill the remaining space minus the total splitterOffset
-                    size = "calc(" + panelSizeDistributed + "%" + panelSizeTotalOffset.toString() + ")";
-                }
+                var proportion = "(" + (item.size ? item.size.Number : panelSizeDistributed) + " / 100)";
+                var size = "calc(" + remainingSpace + " * " + proportion + ")";
 
-                var panelDisplayClass = item.flexable ? "granitSplitter_Panel" : "granitSplitter_Panel granitSplitter_PanelStatic";
+                var panelDisplayClass = item.flexible ? "granitSplitter_Panel" : "granitSplitter_Panel granitSplitter_PanelStatic";
 
                 //apply splitter
                 item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + item.minSize + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + item.maxSize + ";'></div>");
 
-                item.wrappedElement.parent().data().__granitData__ = { index: item.index, flexable: item.flexable, originalUnit: "%", resizable: item.resizable };
+                item.wrappedElement.parent().data().__granitData__ = { index: item.index, flexible: item.flexible, originalUnit: "%", resizable: item.resizable };
                 self.panels.splice(item.index, 0, item.wrappedElement.parent());
 
                 self.splitterList[item.index] && self.splitterList[item.index].insertAfter(item.wrappedElement.parent());
@@ -377,10 +354,12 @@ $(function () {
                 event.target.setCapture();
             }
 
-            //these variables support the correction of full splitter-container size calculation (re-converting the pixel sizes into percentage)
-            var minSizeTotal = 0.0;
-
+            //create the convertion tool in order to transfer any limit-size css length value into pixel (max-width, min-width, max-height, min-height)
             var pc = new granit.CSSPixelProvider(self.element[0]);
+
+            var offsetSizeName = granit.prefixSizeName(self.sizePropertyName, "offset", true),      //offsetWidth, offsetHeight
+                minSieName = granit.prefixSizeName(self.sizePropertyName, "min"),                   //min-width, min-height
+                maxSizeName = granit.prefixSizeName(self.sizePropertyName, "max");                  //max-width, max-height
 
             /*
              * as pixel limit sizes potentially can change dynamically we need to iterate the panels here in order to ...
@@ -388,67 +367,34 @@ $(function () {
              * 2. retrieve the total amount of current pixel limit sizes, for re-converting the pixel sizes into percentage length properly after the mouse-moving process (on mouseup)
              */
             this.panels.forEach(function (item, index) {
-                var offsetSize = granit.prefixSizeName(self.sizePropertyName, "offset", true);      //offsetWidth, offsetHeight
+                var size = item[0][offsetSizeName];   
 
-                var size = item[0][offsetSize];   
-
-                var minSize = pc.getCSSPixel(item[0], granit.prefixSizeName(self.sizePropertyName, "min"));     //min-width, min-height;
+                var minSize = pc.getCSSPixel(item[0], minSieName);     
                 if (minSize && minSize === "none") {
                     minSize = 0.0;
                 }
 
-                var maxSize = pc.getCSSPixel(item[0], granit.prefixSizeName(self.sizePropertyName, "max"));     //max-width, max-height;
+                var maxSize = pc.getCSSPixel(item[0], maxSizeName);
                 if (maxSize && maxSize === "none") {
-                    maxSize = self.element[0][offsetSize];
+                    maxSize = self.element[0][offsetSizeName];
                 }
 
-                item.css(self.sizePropertyName, size + "px");   //ensure to set the css-size in pixels to support smooth mouse-moving calculation
                 item.css("flex", "none");   //while mouse-moving action, the flexbox shrink- or grow- capability is turned off
+                item.css(self.sizePropertyName, size + "px");   //ensure to set the css-size in pixels to support smooth mouse-moving calculation
 
                 //capture the current limit sizes to support mouse-moving calculation 
                 item.data().__granitData__.minSize = minSize;     //capture current minimum size
                 item.data().__granitData__.maxSize = maxSize;     //capture current maximum size
-
-                if (!item.data().__granitData__.flexable) {
-                    minSize = Math.max(size, minSize);      //the minimum size is overwritten by the current size if the display is configured as static
-                }
-                minSizeTotal += minSize;
             });
 
-            pc.destroy();
-
-            //as the pixel splitter width potentially can change dynamically we calulate the total splitter width in pixels here
-            var splitterWidthTotal = this.splitterList.reduce(function (total, item) {
-                var size;
-                if (self.options.direction === "vertical") {
-                    size = item[0].offsetWidth;
-                } else {
-                    size = item[0].offsetHeight;
-                }
-                return total + size;
-            }, 0.0);
-
-            //calculating the offset as the n'th part of the total splitter width (where n is the amount of percentage panels)
-            this.splitterOffset = splitterWidthTotal / this.percentagePanelsAmount;
-
-            /*
-             * adding the total splitter width to the minimum limit sizes
-             * This way we get the exact static total minimum sizes in order to correct the full splitter container area size if it is overflowed by its panel children 
-             */
-            minSizeTotal += splitterWidthTotal;
+            pc.destroy();   //destroy the convertion tool
 
             if (this.options.direction === "vertical") {
                 $("html").css("cursor", "ew-resize");
                 this.MouseMovement = event.pageX;
-
-                //retrive the splitter container area size with consideration of the static total minimum panel limit sizes if the container element is overflowed
-                this.splitterAreaSize = Math.max(this.element[0].offsetWidth, minSizeTotal);
             } else {
                 $("html").css("cursor", "ns-resize");
                 this.MouseMovement = event.pageY;
-
-                //retrive the splitter container area size with consideration of the static total minimum panel limit sizes if the container element is overflowed
-                this.splitterAreaSize = Math.max(this.element[0].offsetHeight, minSizeTotal);
             }
 
             //register events
@@ -496,26 +442,17 @@ $(function () {
 
                 var self = this;
 
-                // iterating the panels for re-setting and re-converting
+                // iterating the panels for re-converting
                 this.panels.forEach(function (item, index) {
                     item.data().__granitData__.minimized = false;
                     item.data().__granitData__.maximized = false;
 
-                    if (item.data().__granitData__.flexable) {
-                        item.css("flex", "auto");   //reset flexbox capabilites
+                    if (item.data().__granitData__.originalUnit !== "%") {
+                        //TODO switch different lenght units
                     }
 
-                    /*
-                     * re-convert the pixel-length into its original percent unit.
-                     * Otherwise the lenght would stay in pixels and the layout rendering behaviour of this panel (on resizing parent containers) unintentionally may change.
-                     */
-                    if (item.data().__granitData__.originalUnit === "%") {
-                        var size = item[0][granit.prefixSizeName(self.sizePropertyName, "offset", true)];      //offsetWidth, offsetHeight
-
-                        //the total splitter witdh is divided equally among the percentage panels (splitterOffset)
-                        var sizeRelative = (size + self.splitterOffset) / self.splitterAreaSize * 100.0;
-                        //... this is why we encode the percentage length as a css-calc statement
-                        item.css(self.sizePropertyName, "calc(" + sizeRelative + "% - " + self.splitterOffset + "px)");
+                    if (item.data().__granitData__.flexible) {
+                        item.css("flex", "auto");   //reset flexbox capabilites
                     }
                 });
 

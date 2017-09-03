@@ -17,10 +17,10 @@
         $(document).ready(function () {
             $("#splitterInner2").splitter({
                 panel: [
-                    { display: "static", size: "200px", classes: "panelLayout1", padding: 10 },
+                    { size: "200px", classes: "panelLayout1", padding: 10 },
                     { size: "100px", classes: "panelLayout2" },
-                    { display: "flex", size: "200px", margin: "5vmin" },
-                    { display: "static", classes: "panelLayout3 panelLayout5", margin: "5pt"}
+                    { size: "200px", margin: "5vmin" },
+                    { classes: "panelLayout3 panelLayout5", margin: "5pt"}
                 ],
                 splitter: [
                     { width: 10 },
@@ -28,17 +28,16 @@
                     { width: 10 }
                 ],
                 direction: "vertical",
-                overflow: "hidden",
-                display: "flex"
+                overflow: "hidden"
             });
 
             $("#splitterInner").splitter({
                 panel: [
                     { size: "5em", classes: "panelLayout1", padding: 10, resizable: true },
-                    { size: "10%", classes: "panelLayout2" },
+                    { size: "30%", classes: "panelLayout2", resizable: true },
                     { size: 30, margin: "5vmin", resizable: true },
-                    { size: "10%", classes: "panelLayout3 panelLayout5", margin: "5pt" },
-                    { size: "20%", resizable: true }
+                    { size: "20%", classes: "panelLayout3 panelLayout5", margin: "5pt" },
+                    { resizable: true }
                 ],
                 splitter: [
                     { width: "3%" },
@@ -46,17 +45,16 @@
                     { width: "2em" }
                 ],
                 direction: "horizontal",
-                //panelMinSize: "3em",
-                panelResizable: true,
-                display: "static"
+                panelMinSize: "3em",
+                panelResizable: false
             });
 
             $("#splitterOuter").splitter({
                 panel: [
-                    { size: "400px", minSize: "2%", classes: "panelLayout2 panelLayout7 panelLayout7" },
+                    { minSize: "2%", classes: "panelLayout2 panelLayout7 panelLayout7" },
                     { size: "200px", classes: "panelLayout4", maxSize: "50%" },
                     { size: "300px", classes: "panelLayout5", maxSize: "400px", resizable: false },
-                    { display: "static", size: "30", classes: "panelLayout6", padding: 20 }
+                    { size: "40", classes: "panelLayout6", padding: 20 }
                 ],
                 splitter: [
                     {},
