@@ -40,7 +40,7 @@
                     { resizable: true }
                 ],
                 splitter: [
-                    { width: "3%" },
+                    { width: "3%", separator: { } },
                     { width: 5, length: "200em" },
                     { width: "2em" }
                 ],
@@ -53,12 +53,12 @@
                 panel: [
                     { minSize: "2%", classes: "panelLayout2 panelLayout7 panelLayout7" },
                     { size: "200px", classes: "panelLayout4", maxSize: "50%" },
-                    { size: "300px", classes: "panelLayout5", maxSize: "400px", resizable: false },
+                    { size: "300px", classes: "panelLayout5", maxSize: "400px", resizable: true },
                     { size: "40", classes: "panelLayout6", padding: 20 }
                 ],
                 splitter: [
                     {},
-                    { width: 10, length: "80%" },
+                    { separator: { }, width: 10, length: "80%" },
                     { width: 7, length: "10ch", classes: "splitter_HandleStyle" }
                 ],
                 panelMinSize: "3em",
@@ -68,7 +68,8 @@
                 splitterWidth: "7px",
                 splitterLength: "calc(100% - 10px)",
                 //direction: "horizontal",
-                direction: "vertical"
+                direction: "vertical",
+                separator: { width: "3px", length: "100%" } 
             });
         });
     </script>

@@ -59,10 +59,15 @@
     align-self: center !important;
 }
 
-/*custom default Layout styles*/
+/*custom default splitter layout styles*/
 .granitSplitter_Splitter_Default {
     background: darkgrey;
 }
+.granitSplitter_Splitter_Default:not(.granit_Separator):hover {
+    background: grey;
+}
+
+/*custom default panel layout styles*/
 .granitSplitter_Panel_Default {
     border: 1px solid grey;
     padding: 5px;

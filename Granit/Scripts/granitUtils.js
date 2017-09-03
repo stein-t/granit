@@ -163,6 +163,15 @@ var granit = (function (gt) {
 
     /*
      * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: checks if the property can be found in the object
+     */
+    var findOneInObject = function (item, object) {
+        var arr = Object.getOwnPropertyNames(object);
+        return arr.indexOf(item) >= 0;
+    };
+
+    /*
+     * Author(s):   Thomas Stein, ... <please leave your name>
      * Description: checks if all items of arr can be found in haystack: https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
      */
     var findAll = function (arr, haystack) {
@@ -336,6 +345,8 @@ var granit = (function (gt) {
     gt.parseFloatUnit = parseFloatUnit;
     gt.output = output;
     gt.uniqueArray = uniqueArray;
+    gt.findOne = findOne;
+    gt.findOneInObject = findOneInObject;
     gt.findAll = findAll;
     gt.findAllFromObject = findAllFromObject;
     gt.NumberUnitArray = numberUnitArray;

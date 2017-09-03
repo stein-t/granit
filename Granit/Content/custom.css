@@ -13,20 +13,20 @@
     /*margin: 10px;*/
 }
 
-.stein_PanelStyle:hover {
+/*.stein_PanelStyle:hover {
     border: 2px solid orange;
     background: lightyellow;
-}
+}*/
 
 .panelLayout7 {
     border: 2px solid green;
     background: lightgreen;
     overflow: scroll;
 }
-.panelLayout7:hover {
+/*.panelLayout7:hover {
     border: 2px solid red;
     background: lightyellow;
-}
+}*/
 
 .panelLayout8 {
     border: 5px solid grey;
@@ -68,3 +68,10 @@
     background: darkgrey;
     border-radius: 20px;
 }
+
+.splitter_HandleStyle:hover {
+    border: 2px solid darkgrey;
+    background: grey;
+    /*border-radius: 20px;*/
+}
+
