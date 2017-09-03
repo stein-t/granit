@@ -258,7 +258,13 @@ $(function () {
                     return true; //leave loop
                 }
 
-                //for percentage panels flexible is always true anyways
+                /*
+                 * for percentage panels flexible is true anyways, the option is ignored
+                 * The main reason why I decided not to support unflexible behaviour for percentage panels is the similarity between both modes:
+                 * Both modes (unflexible, flexible) are assumed to behave similar according their stretch- and shrink- behaviour.
+                 * Obviously there are huge difficulties in converting the value back in percentages after the dragging operation.
+                 * So after the mouse-move process I actually leave the size in pixels and let Flebox do the job of establishing the typical stretch- and shrink- behaviour that we would expect to see from percentage sized panels.  
+                 */
                 flexible = true;
 
                 if (!size) {                    
@@ -281,6 +287,11 @@ $(function () {
                 });
             });
 
+            /*
+             * The group of percentage panels are isolated from other unit-sized panels.
+             * Their percentage size is always relative to the remaining space of all non-percentage sized panels.
+             */
+
             //the total remaining space 
             var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(splitterOffset, "-").toString() + ")";
 
@@ -290,7 +301,7 @@ $(function () {
                 panelSizeDistributed = 0.0;
             }
 
-            //apply left panels
+            //apply left percentage panels
             panelsWithoutOrRelativeSize.forEach(function (item) {
                 var proportion = "(" + (item.size ? item.size.Number : panelSizeDistributed) + " / 100)";
                 var size = "calc(" + remainingSpace + " * " + proportion + ")";
