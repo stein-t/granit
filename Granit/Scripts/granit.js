@@ -15,8 +15,6 @@ $(function () {
     $.widget("granit.splitter", {
         options: {
             direction: "vertical",
-            panel: [],
-            splitter: [],
             panelResizable: true,
             panelMinSize: 1,
             panelMaxSize: "none",
@@ -28,7 +26,12 @@ $(function () {
             splitterClasses: "granitSplitter_Splitter_Default",
             overflow: "auto",
             flexible: false,
-            separator: { width: 1, length: "100%" }
+            separator: { width: 1, length: "100%" },
+            panel: [],
+            splitter: []
+            //panelTemplate: { display: "splitter", size: "auto", minSize: 5, maxSize: "none", padding: 0, margin: 0, resizable: true, classes: "granitSplitter_Panel_Default" },
+            //splitterTemplate: { width: 5, length: "100%", classes: "granitSplitter_Splitter_Default" },
+            //separatorTemplate: { width: 3, length: "100%", classes: "granitSplitter_Separator_Default" },
         },
         /*
          * Author(s):   Thomas Stein, ... <please leave your name>
@@ -86,6 +89,10 @@ $(function () {
             //validate options.overflow
             if (self.options.overflow !== "auto" && self.options.overflow !== "hidden" && self.options.overflow !== "scroll") {
                 granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
+            }
+
+            if (self.options.separator && !granit.findAllFromObject(self.options.separator, ['width', 'length', 'classes'])) {
+                granit.output("invalid self.options.separator object property found - check the self.options.separator object", self.IdString + " -- self.options.separator", 'Warning');
             }
 
             this.element.addClass("granitSplitter_Container");
@@ -178,12 +185,9 @@ $(function () {
                     }
 
                     //retrieve the separator option: a value defined on the individual splitter level overwrites any global level value
-                    var separator = (splitter && (splitter.separator || (granit.findOneInObject("separator", splitter)) ? { } : undefined));
+                    var separator = splitter && (splitter.separator === true ? { } : splitter.separator) || false;
                     if (separator && !granit.findAllFromObject(separator, ['width', 'length', 'classes'])) {
                         granit.output("invalid splitter.separator object property found - check the splitter.separator object", self.IdString + " -- self.options.splitter.separator", 'Warning');
-                    }
-                    if (self.options.separator && !granit.findAllFromObject(self.options.separator, ['width', 'length', 'classes'])) {
-                        granit.output("invalid self.options.separator object property found - check the self.options.separator object", self.IdString + " -- self.options.separator", 'Warning');
                     }
                     if (separator) {
                         separator.width = separator.width || self.options.separator && self.options.separator.width;
@@ -208,7 +212,7 @@ $(function () {
                         width: separator && separator.width || splitterWidth,
                         length: separator && separator.length || splitterLength,
                         classes: "granitSplitter_Splitter" + (separator && " granit_Separator" || "") + ((separator && separator.classes && (" " + separator.classes) || "") || (splitterClasses && (" " + splitterClasses) || "")),
-                        cursor: separator ? "default" : this.cursor
+                        cursor: separator ? "default" : self.cursor
                     }
 
                     //define the splitter element
