@@ -70,17 +70,17 @@ $(function () {
 
             //check for invalid panelTemplate options
             if (self.options.panelTemplate && !granit.findAllFromObject(self.options.panelTemplate, panelOptionsAllowed)) {
-                granit.output("invalid or missing panel template option property found - check the panel template options", self.IdString + " -- options.panelTemplate", 'Warning');
+                granit.output("invalid panel template option property found - check the panel template options", self.IdString + " -- options.panelTemplate", 'Warning');
             }
 
             //check for invalid splitterTemplate options
             if (self.options.splitterTemplate && !granit.findAllFromObject(self.options.splitterTemplate, splitterTemplateOptionsAllowed)) {
-                granit.output("invalid or missing splitter template option property found - check the splitter template options", self.IdString + " -- options.splitterTemplate", 'Warning');
+                granit.output("invalid splitter template option property found - check the splitter template options", self.IdString + " -- options.splitterTemplate", 'Warning');
             }
 
             //check for invalid separatorTemplate options
             if (self.options.separatorTemplate && !granit.findAllFromObject(self.options.separatorTemplate, splitterTemplateOptionsAllowed)) {
-                granit.output("invalid or missing separator template option property found - check the separator template options", self.IdString + " -- options.separatorTemplate", 'Warning');
+                granit.output("invalid separator template option property found - check the separator template options", self.IdString + " -- options.separatorTemplate", 'Warning');
             }
 
             if (this.options.panel && !Array.isArray(this.options.panel)) {
