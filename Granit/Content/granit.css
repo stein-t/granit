@@ -11,7 +11,7 @@
  * License:        MPL 2.0
  */
 
-.granitSplitter_wrapper {
+.granit_Panel_wrapper {
     display: block !important;
     float: none !important;
     box-sizing: border-box !important;
@@ -39,7 +39,7 @@
     align-items: flex-start;
 }
 
-.granitSplitter_Panel {
+.granit_Panel {
     height: 100%;
     width: 100%;
     overflow: hidden;
@@ -47,7 +47,7 @@
     position: relative;
 }
 
-.granitSplitter_PanelStatic {
+.granit_Panel_Static {
     flex: none;
 }
 
@@ -60,15 +60,19 @@
 }
 
 /*custom default splitter layout styles*/
-.granitSplitter_Splitter_Default {
+.granit_Splitter_Default {
     background: darkgrey;
 }
-.granitSplitter_Splitter_Default:not(.granit_Separator):hover {
+.granit_Splitter_Default:hover {
     background: grey;
 }
 
+.granit_Separator_Default {
+    background: darkgrey;
+}
+
 /*custom default panel layout styles*/
-.granitSplitter_Panel_Default {
+.granit_Panel_Default {
     border: 1px solid grey;
     padding: 5px;
 }

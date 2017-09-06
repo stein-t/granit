@@ -184,8 +184,31 @@ var granit = (function (gt) {
      * Author(s):   Thomas Stein, ... <please leave your name>
      * Description: checks if all property names of the object can be found in the haystack string array: https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
      */
-    var findAllFromObject = function (object, haystack) {
+    var findAnyFromObject = function (object, haystack) {
+        if (!object || !haystack) {
+            return undefined;
+        }
         var arr = Object.getOwnPropertyNames(object);
+        return arr.every(function (v) {
+            if (object.hasOwnProperty(v)) {
+                return haystack.indexOf(v) >= 0;
+            }
+            return true;
+        });
+    };
+
+    /*
+     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Description: checks if any item in the haystack string array exactly matches one associated property name of the object : https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
+     */
+    var findAllFromObject = function (object, haystack) {
+        if (!object || !haystack) {
+            return undefined;
+        }
+        var arr = Object.getOwnPropertyNames(object);
+        if (arr.length !== haystack.length) {
+            return false;                       //same amount of items
+        }
         return arr.every(function (v) {
             if (object.hasOwnProperty(v)) {
                 return haystack.indexOf(v) >= 0;
@@ -348,6 +371,7 @@ var granit = (function (gt) {
     gt.findOne = findOne;
     gt.findOneInObject = findOneInObject;
     gt.findAll = findAll;
+    gt.findAnyFromObject = findAnyFromObject;
     gt.findAllFromObject = findAllFromObject;
     gt.NumberUnitArray = numberUnitArray;
     gt.NumberUnit = NumberUnit;

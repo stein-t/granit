@@ -15,23 +15,14 @@ $(function () {
     $.widget("granit.splitter", {
         options: {
             direction: "vertical",
-            panelResizable: true,
-            panelMinSize: 1,
-            panelMaxSize: "none",
-            panelClasses: "granitSplitter_Panel_Default",
-            panelPadding: 0,
-            panelMargin: 0,
-            splitterWidth: 5,
-            splitterLength: "100%",
-            splitterClasses: "granitSplitter_Splitter_Default",
             overflow: "auto",
-            flexible: false,
-            separator: { width: 1, length: "100%" },
             panel: [],
-            splitter: []
-            //panelTemplate: { display: "splitter", size: "auto", minSize: 5, maxSize: "none", padding: 0, margin: 0, resizable: true, classes: "granitSplitter_Panel_Default" },
-            //splitterTemplate: { width: 5, length: "100%", classes: "granitSplitter_Splitter_Default" },
-            //separatorTemplate: { width: 3, length: "100%", classes: "granitSplitter_Separator_Default" },
+            splitter: [],
+            panelTemplate: {
+                size: "auto", minSize: 5, maxSize: "none", padding: 0, margin: 0, flexible: false, resizable: true, classes: "granit_Panel_Default"
+            },
+            splitterTemplate: { width: 5, length: "100%", classes: "granit_Splitter_Default" },
+            separatorTemplate: { width: 3, length: "100%", classes: "granit_Separator_Default" }
         },
         /*
          * Author(s):   Thomas Stein, ... <please leave your name>
@@ -57,29 +48,48 @@ $(function () {
 
             var optionsAllowed = [
                 'classes', 'disabled', 'create', 'hide', 'show',    //base widget properties
-                'direction', 'panel', 'panelMinSize', 'panelMaxSize', 'panelClasses', 'panelPadding', 'splitter',
-                'panelMargin', 'splitterWidth', 'splitterLength', 'splitterClasses', 'overflow', 'flexible', 'panelResizable', 'separator'
+                'direction', 'overflow', 'flexible', 'panel', 'splitter', 'panelTemplate', 'splitterTemplate', 'separatorTemplate'
             ];
 
-            if (!granit.findAllFromObject(this.options, optionsAllowed)) {
-                granit.output("invalid options property found - check the options object", this.IdString + " -- self.options", 'Warning');
-            }
-
-            if (this.options.panel && !Array.isArray(this.options.panel)) {
-                granit.output("the options property panel must be an array - check the options object", this.IdString + " -- self.options.panel");
-            }
-
-            if (this.options.splitter && !Array.isArray(this.options.splitter)) {
-                granit.output("the options property splitter must be an array - check the options object", this.IdString + " -- self.options.splitter");
-            }
-
             var panelOptionsAllowed = [
-                'flexible', 'size', 'minSize', 'maxSize', 'classes', 'padding', 'margin', 'resizable'
+                'size', 'minSize', 'maxSize', 'padding', 'margin', 'flexible', 'resizable', 'classes'
+            ];
+
+            var splitterTemplateOptionsAllowed = [
+                'width', 'length', 'classes'
             ];
 
             var splitterOptionsAllowed = [
-                'width', 'length', 'classes', 'separator'
+                'display', 'width', 'length', 'classes'
             ];
+
+            //check for invalid options
+            if (!granit.findAnyFromObject(this.options, optionsAllowed)) {
+                granit.output("invalid options property found - check the options object", this.IdString + " -- options", 'Warning');
+            }
+
+            //check for invalid panelTemplate options
+            if (self.options.panelTemplate && !granit.findAllFromObject(self.options.panelTemplate, panelOptionsAllowed)) {
+                granit.output("invalid or missing panel template option property found - check the panel template options", self.IdString + " -- options.panelTemplate", 'Warning');
+            }
+
+            //check for invalid splitterTemplate options
+            if (self.options.splitterTemplate && !granit.findAllFromObject(self.options.splitterTemplate, splitterTemplateOptionsAllowed)) {
+                granit.output("invalid or missing splitter template option property found - check the splitter template options", self.IdString + " -- options.splitterTemplate", 'Warning');
+            }
+
+            //check for invalid separatorTemplate options
+            if (self.options.separatorTemplate && !granit.findAllFromObject(self.options.separatorTemplate, splitterTemplateOptionsAllowed)) {
+                granit.output("invalid or missing separator template option property found - check the separator template options", self.IdString + " -- options.separatorTemplate", 'Warning');
+            }
+
+            if (this.options.panel && !Array.isArray(this.options.panel)) {
+                granit.output("the options property panel must be an array - check the options object", this.IdString + " -- options.panel");
+            }
+
+            if (this.options.splitter && !Array.isArray(this.options.splitter)) {
+                granit.output("the options property splitter must be an array - check the options object", this.IdString + " -- options.splitter");
+            }
 
             //validate options.direction
             if (self.options.direction !== "vertical" && self.options.direction !== "horizontal") {
@@ -89,10 +99,6 @@ $(function () {
             //validate options.overflow
             if (self.options.overflow !== "auto" && self.options.overflow !== "hidden" && self.options.overflow !== "scroll") {
                 granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
-            }
-
-            if (self.options.separator && !granit.findAllFromObject(self.options.separator, ['width', 'length', 'classes'])) {
-                granit.output("invalid self.options.separator object property found - check the self.options.separator object", self.IdString + " -- self.options.separator", 'Warning');
             }
 
             this.element.addClass("granitSplitter_Container");
@@ -142,37 +148,38 @@ $(function () {
                 var panel = self.options.panel && self.options.panel[index];
 
                 //check for invalid options
-                if (panel && !granit.findAllFromObject(panel, panelOptionsAllowed)) {
-                    granit.output("invalid panel array item option property found - check the panel array item options", self.IdString + " -- self.options.panel", 'Warning');
+                if (panel && !granit.findAnyFromObject(panel, panelOptionsAllowed)) {
+                    granit.output("invalid panel array item option property found - check the panel array item options", self.IdString + " -- options.panel", 'Warning');
                 }
 
-                //retrieve the resizable option: a value defined on the individual panel level overwrites any global level value
-                var resizable = (panel && panel.resizable) || self.options.panelResizable;
+                //retrieve the resizable option: a value defined individually on panel level overwrites any panel template value
+                var resizable = (panel && panel.resizable) || self.options.panelTemplate && self.options.panelTemplate.resizable;
                 resizable = resizable ? true : false;
 
-                //retrieve the minSize option: a value defined on the individual panel level overwrites any global level value
-                var minSize = (panel && panel.minSize) || self.options.panelMinSize;
+                //retrieve the minSize option: a value defined individually on panel level overwrites any panel template value
+                var minSize = (panel && panel.minSize) || self.options.panelTemplate && self.options.panelTemplate.minSize;
                 minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit("none");
 
-                //retrieve the maxSize option: a value defined on the individual panel level overwrites any global level value
-                var maxSize = (panel && panel.maxSize) || self.options.panelMaxSize;
+                //retrieve the maxSize option: a value defined individually on panel level overwrites any panel template value
+                var maxSize = (panel && panel.maxSize) || self.options.panelTemplate && self.options.panelTemplate.maxSize;
                 maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
 
-                //retrieve the padding option: a value defined on the individual panel level overwrites any global level value
-                var padding = (panel && panel.padding) || self.options.panelPadding;
+                //retrieve the padding option: a value defined individually on panel level overwrites any panel template value
+                var padding = (panel && panel.padding) || self.options.panelTemplate && self.options.panelTemplate.padding;
                 padding = granit.extractFloatUnit(padding, "Q+", /px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel padding");
 
-                //retrieve the margin option: a value defined on the individual panel level overwrites any global level value
-                var margin = (panel && panel.margin) || self.options.panelMargin;
+                //retrieve the margin option: a value defined individually on panel level overwrites any panel template value
+                var margin = (panel && panel.margin) || self.options.panelTemplate && self.options.panelTemplate.margin;
                 margin = granit.extractFloatUnit(margin, "Q+", /px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel margin");
 
-                //retrieve the panelClasses option: the result is a string of class names as a combination of both the individual panel- and the global- level options
-                var panelClasses = ((self.options.panelClasses && (self.options.panelClasses + " ")) || "") + ((panel && panel.classes) || "");  //all provided classes on global level and individual panel level are concatenated
-                panelClasses = granit.uniqueArray(panelClasses.split(" ")).join(" ");     //avoiding duplicate class names
-                panelClasses = "granitSplitter_wrapper" + ((panelClasses && (" " + panelClasses)) || "");     //prefix the class string with the required system class
+                //retrieve the panelClasses option: the result is a string of class names as a combination of both the individual panel- and the global template- level options
+                var panelClasses = ((self.options.panelTemplate && self.options.panelTemplate.classes && (" " + self.options.panelTemplate.classes)) || "") +
+                    ((panel && panel.classes && (" " + panel.classes)) || "");                                       //all provided classes on template level and individual panel level are concatenated
+                panelClasses = granit.uniqueArray(panelClasses.split(" ")).join(" ");       //avoiding duplicate class names
+                panelClasses = "granit_Panel_wrapper" + panelClasses;                       //prefix the class string with the required system class
 
-                //retrieve the flexible option: a value defined on the individual panel level overwrites any global level value
-                var flexible = (panel && panel.flexible) || self.options.flexible;
+                //retrieve the flexible option: a value defined individually on panel level overwrites any panel template value
+                var flexible = (panel && panel.flexible) || self.options.panelTemplate && self.options.panelTemplate.flexible;
                 flexible = flexible ? true : false;
 
                 if (index < children.length - 1) {
@@ -180,49 +187,43 @@ $(function () {
                     var splitter = self.options.splitter && self.options.splitter[index];
 
                     //check for invalid options
-                    if (splitter && !granit.findAllFromObject(splitter, splitterOptionsAllowed)) {
-                        granit.output("invalid splitter array item option property found - check the splitter array item options", self.IdString + " -- self.options.splitter", 'Warning');
+                    if (splitter && !granit.findAnyFromObject(splitter, splitterOptionsAllowed)) {
+                        granit.output("invalid splitter array item option property found - check the splitter array item options", self.IdString + " -- options.splitter", 'Warning');
                     }
 
-                    //retrieve the separator option: a value defined on the individual splitter level overwrites any global level value
-                    var separator = splitter && (splitter.separator === true ? { } : splitter.separator) || false;
-                    if (separator && !granit.findAllFromObject(separator, ['width', 'length', 'classes'])) {
-                        granit.output("invalid splitter.separator object property found - check the splitter.separator object", self.IdString + " -- self.options.splitter.separator", 'Warning');
-                    }
-                    if (separator) {
-                        separator.width = separator.width || self.options.separator && self.options.separator.width;
-                        if (separator.width) { separator.width = granit.extractFloatUnit(separator.width, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Splitter separator width (separator.width)"); }
-                        separator.length = separator.length || self.options.separator && self.options.separator.length;
-                        separator.classes = separator.classes && granit.uniqueArray(splitterClasses.split(" ")).join(" ") || self.options.separator && self.options.separator.classes;
+                    if (splitter && splitter.display && splitter.display !== "splitter" && splitter.display !== "separator") {
+                        granit.output("invalid value '" + self.options.display + "' for the splitter display option", self.IdString + " -- splitter.display", 'Warning');
                     }
 
-                    //retrieve the splitterWidth option: a value defined on the individual splitter level overwrites any global level value
-                    var splitterWidth = (splitter && splitter.width) || self.options.splitterWidth;
-                    splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Splitter width (splitterWidth)");
+                    //retrieve the splitterWidth option: a value defined individually on splitter level overwrites any template value
+                    var splitterWidth = (splitter && splitter.width) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.width : self.options.splitterTemplate && self.options.splitterTemplate.width); 
+                    splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- splitter width (splitter.width)");
 
-                    //retrieve the splitterLength option: a value defined on the individual splitter level overwrites any global level value
-                    var splitterLength = (splitter && splitter.length) || self.options.splitterLength;  //Any css length value is allowed (including calc() statements). No validation needed here, because this value is directly forwarded into the css style definition.
+                    //retrieve the splitterLength option: a value defined individually on splitter level overwrites any template value
+                    var splitterLength = (splitter && splitter.length) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.length : self.options.splitterTemplate && self.options.splitterTemplate.length); 
+                    //Any css length value is allowed (including calc() statements). No validation needed here, because this value is directly forwarded into the css style definition
 
-                    //retrieve the splitterClasses option: the result is a string of class names as a combination of both the individual splitter- and the global- level options
-                    var splitterClasses = ((self.options.splitterClasses && (self.options.splitterClasses + " ")) || "") + ((splitter && splitter.classes) || "");  //all provided classes on global level and individual splitter level are concatenated
+                    //retrieve the splitterClasses option: the result is a string of class names as a combination of both the individual splitter- and the global template- level options
+                    var splitterClasses = (
+                                            splitter && splitter.display === "separator" ?
+                                            ((self.options.separatorTemplate && self.options.separatorTemplate.classes && (" " + self.options.separatorTemplate.classes)) || "") :
+                                            ((self.options.splitterTemplate && self.options.splitterTemplate.classes && (" " + self.options.splitterTemplate.classes)) || "")
+                                        ) +
+                                        ((splitter && splitter.classes && (" " + splitter.classes)) || "");                                       //all provided classes on template level and individual panel level are concatenated
                     splitterClasses = granit.uniqueArray(splitterClasses.split(" ")).join(" ");     //avoiding duplicate class names
-                    //splitterClasses = "granitSplitter_Splitter" + ((splitterClasses && (" " + splitterClasses)) || "");     //prefix the class string with the required system class
+                    splitterClasses = "granitSplitter_Splitter" + splitterClasses;                  //prefix the class string with the required system class
 
-                    var finalOptions = {
-                        width: separator && separator.width || splitterWidth,
-                        length: separator && separator.length || splitterLength,
-                        classes: "granitSplitter_Splitter" + (separator && " granit_Separator" || "") + ((separator && separator.classes && (" " + separator.classes) || "") || (splitterClasses && (" " + splitterClasses) || "")),
-                        cursor: separator ? "default" : self.cursor
-                    }
+                    var cursor = splitter && splitter.display === "separator" ? "default" : self.cursor;
 
+                    var splitterElement;
                     //define the splitter element
                     if (self.options.direction === "vertical") {
-                        var splitter = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='" + finalOptions.classes + "' style='width:" + finalOptions.width.getSize() + ";height:" + finalOptions.length + ";cursor:" + finalOptions.cursor + ";'></div>");
+                        splitterElement = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='" + splitterClasses + "' style='width:" + splitterWidth.getSize() + ";height:" + splitterLength + ";cursor:" + cursor + ";'></div>");
                     } else {
-                        var splitter = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='" + finalOptions.classes + "' style='width:" + finalOptions.length + ";height:" + finalOptions.width.getSize() + ";cursor:" + finalOptions.cursor + ";'></div>");
+                        splitterElement = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='" + splitterClasses + "' style='width:" + splitterLength + ";height:" + splitterWidth.getSize() + ";cursor:" + cursor + ";'></div>");
                     }
-                    splitter.data().__granitData__ = { disabled: separator ? true : false };
-                    self.splitterList[index] = splitter;
+                    splitterElement.data().__granitData__ = { disabled: splitter && splitter.display === "separator" ? true : false };
+                    self.splitterList[index] = splitterElement;
 
                     /*
                      * calculate the current total splitter offset as the n'th part of the total splitter width (where n is the amount of panels)
@@ -256,11 +257,13 @@ $(function () {
                     }
                 }
 
-                var size = panel && panel.size;
-                size = size && granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "%", self.IdString + " -- Panel size (size)");
-
-                if (size && size.Unit !== "%") {
-                    var panelDisplayClass = flexible ? "granitSplitter_Panel" : "granitSplitter_Panel granitSplitter_PanelStatic";
+                //retrieve the size option: a value defined individually on panel level overwrites any panel template value
+                var size = (panel && panel.size) || self.options.panelTemplate && self.options.panelTemplate.size || "auto";
+                if (size !== "auto") {
+                    size = granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "%", self.IdString + " -- Panel size (size)");
+                }
+                if (size !== "auto" && size.Unit !== "%") {
+                    var panelDisplayClass = "granit_Panel" + (flexible ? "" : " granit_Panel_Static");
 
                     //present total static size
                     if (size.Number > 0.0) {
@@ -287,11 +290,11 @@ $(function () {
                  */
                 flexible = true;
 
-                if (!size) {                    
+                if (size === "auto") {                    
                     panelsWithoutSizeTotal++;   //count panels with no size
                 }
 
-                if (size && size.Unit === "%") {                    
+                if (size !== "auto" && size.Unit === "%") {                    
                     panelSizePercentTotal += size.Number;   //update total size of percentage panels
                 }
 
@@ -323,10 +326,10 @@ $(function () {
 
             //apply left percentage panels
             panelsWithoutOrRelativeSize.forEach(function (item) {
-                var proportion = "(" + (item.size ? item.size.Number : panelSizeDistributed) + " / 100)";
+                var proportion = "(" + (item.size !== "auto" ? item.size.Number : panelSizeDistributed) + " / 100)";
                 var size = "calc(" + remainingSpace + " * " + proportion + ")";
 
-                var panelDisplayClass = item.flexible ? "granitSplitter_Panel" : "granitSplitter_Panel granitSplitter_PanelStatic";
+                var panelDisplayClass = "granit_Panel" + (item.flexible ? "" : " granit_Panel_Static");
 
                 //apply splitter
                 item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + item.minSize + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + item.maxSize + ";'></div>");
@@ -408,11 +411,14 @@ $(function () {
              * 2. turn off flexible mode as the mouse-moving strictly controls the size on pixel basis
              */
             this.panels.forEach(function (item, index) {
+                var size = item[0][offsetSizeName];
+
+                item.css("flex", "none");   //while mouse-moving action, the flexbox shrink- or grow- capability is turned off
+                item.css(self.sizePropertyName, size + "px");   //ensure to set the css-size in pixels to support smooth mouse-moving calculation
+
                 if (!item.data().__granitData__.resizable) {
                     return false;    //we do not need to prepare non-resizable panels
                 }
-
-                var size = item[0][offsetSizeName];
 
                 var minSize = pc.getCSSPixel(item[0], minSieName);
                 if (minSize && minSize === "none") {
@@ -423,9 +429,6 @@ $(function () {
                 if (maxSize && maxSize === "none") {
                     maxSize = self.element[0][offsetSizeName];
                 }
-
-                item.css("flex", "none");   //while mouse-moving action, the flexbox shrink- or grow- capability is turned off
-                item.css(self.sizePropertyName, size + "px");   //ensure to set the css-size in pixels to support smooth mouse-moving calculation
 
                 //capture the current limit sizes to support mouse-moving calculation 
                 item.data().__granitData__.minSize = minSize;     //capture current minimum size
