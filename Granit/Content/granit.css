@@ -48,7 +48,7 @@
 }
 
 .granit_Panel_Static {
-    flex: none;
+    flex: none !important;
 }
 
 .granitSplitter_Splitter {

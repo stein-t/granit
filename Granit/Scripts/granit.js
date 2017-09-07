@@ -411,10 +411,22 @@ $(function () {
              * 2. turn off flexible mode as the mouse-moving strictly controls the size on pixel basis
              */
             this.panels.forEach(function (item, index) {
-                var size = item[0][offsetSizeName];
+                var size;
+                if (self.sizePropertyName === "width") {
+                    size = item.width();
+                } else {
+                    size = item.height();
+                }
 
-                item.css("flex", "none");   //while mouse-moving action, the flexbox shrink- or grow- capability is turned off
-                item.css(self.sizePropertyName, size + "px");   //ensure to set the css-size in pixels to support smooth mouse-moving calculation
+                if (!item.hasClass("granit_Panel_Static")) {
+                    item.addClass("granit_Panel_Static");
+                }
+                //item.css(self.sizePropertyName, size + "px");   //ensure to set the css-size in pixels to support smooth mouse-moving calculation
+                if (self.sizePropertyName === "width") {
+                    item.width(size);
+                } else {
+                    item.height(size);
+                }
 
                 if (!item.data().__granitData__.resizable) {
                     return false;    //we do not need to prepare non-resizable panels
@@ -432,7 +444,8 @@ $(function () {
 
                 //capture the current limit sizes to support mouse-moving calculation 
                 item.data().__granitData__.minSize = minSize;     //capture current minimum size
-                item.data().__granitData__.maxSize = maxSize;     //capture current maximum size               
+                item.data().__granitData__.maxSize = maxSize;     //capture current maximum size   
+                item.data().__granitData__.size = size;
             });
 
             pc.destroy();   //destroy the convertion tool
@@ -500,7 +513,7 @@ $(function () {
                     }
 
                     if (item.data().__granitData__.flexible) {
-                        item.css("flex", "auto");   //reset flexbox capabilites
+                        item.removeClass("granit_Panel_Static");
                     }
                 });
 
@@ -540,7 +553,7 @@ $(function () {
                     limitSize = panel.data().__granitData__.minSize;
                 }
 
-                var currentSize = panel[0][granit.prefixSizeName(self.sizePropertyName, "offset", true)];      //offsetWidth, offsetHeight
+                var currentSize = panel.data().__granitData__.size;
 
                 if (modus === 'grow') {
                     newSize = Math.min(currentSize + Math.abs(distance), limitSize);
@@ -598,17 +611,29 @@ $(function () {
 
             if (result1 && result2) {
                 var offset = Math.min(result1.offset, result2.offset);
-                result1.panel.css(this.sizePropertyName, result1.currentSize + offset + "px");
-                if (result1.currentSize + offset >= result1.limitSize) {
-                    result1.panel.data().__granitData__.maximized = true;
-                }
-                result1.panel.data().__granitData__.minimized = false;
 
-                result2.panel.css(this.sizePropertyName, result2.currentSize - offset + "px");
+                if (self.sizePropertyName === "width") {
+                    result2.panel.width(result2.currentSize - offset);
+                } else {
+                    result2.panel.height(result2.currentSize - offset);
+                }
+                result2.panel.data().__granitData__.size = result2.currentSize - offset
                 if (result2.currentSize - offset <= result2.limitSize) {
                     result2.panel.data().__granitData__.minimized = true;
                 }
                 result2.panel.data().__granitData__.maximized = false;
+
+                if (self.sizePropertyName === "width") {
+                    result1.panel.width(result1.currentSize + offset);
+                } else {
+                    result1.panel.height(result1.currentSize + offset);
+                }
+
+                result1.panel.data().__granitData__.size = result1.currentSize + offset;
+                if (result1.currentSize + offset >= result1.limitSize) {
+                    result1.panel.data().__granitData__.maximized = true;
+                }
+                result1.panel.data().__granitData__.minimized = false;
             }
         },
     });
