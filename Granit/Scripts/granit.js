@@ -612,28 +612,28 @@ $(function () {
             if (result1 && result2) {
                 var offset = Math.min(result1.offset, result2.offset);
 
-                if (self.sizePropertyName === "width") {
-                    result2.panel.width(result2.currentSize - offset);
-                } else {
-                    result2.panel.height(result2.currentSize - offset);
+                if (offset >= 1.0) {
+                    if (self.sizePropertyName === "width") {
+                        result2.panel.width(result2.currentSize - offset);
+                        result1.panel.width(result1.currentSize + offset);
+                    } else {
+                        result2.panel.height(result2.currentSize - offset);
+                        result1.panel.height(result1.currentSize + offset);
+                    }
+                    result2.panel.data().__granitData__.size = result2.currentSize - offset;
+                    result2.panel.data().__granitData__.maximized = false;
+
+                    result1.panel.data().__granitData__.size = result1.currentSize + offset;
+                    result1.panel.data().__granitData__.minimized = false;
                 }
-                result2.panel.data().__granitData__.size = result2.currentSize - offset
+
                 if (result2.currentSize - offset <= result2.limitSize) {
                     result2.panel.data().__granitData__.minimized = true;
                 }
-                result2.panel.data().__granitData__.maximized = false;
 
-                if (self.sizePropertyName === "width") {
-                    result1.panel.width(result1.currentSize + offset);
-                } else {
-                    result1.panel.height(result1.currentSize + offset);
-                }
-
-                result1.panel.data().__granitData__.size = result1.currentSize + offset;
                 if (result1.currentSize + offset >= result1.limitSize) {
                     result1.panel.data().__granitData__.maximized = true;
                 }
-                result1.panel.data().__granitData__.minimized = false;
             }
         },
     });
