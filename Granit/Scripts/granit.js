@@ -108,11 +108,13 @@ $(function () {
                 this.element.css("overflow-x", self.options.overflow);
                 this.sizePropertyName = "width";
                 this.cursor = "ew-resize";
+                this.coordinate = "x";
             } else {
                 this.element.addClass("granitSplitter_Container_horizontal");
                 this.element.css("overflow-y", self.options.overflow);
                 this.sizePropertyName = "height";
                 this.cursor = "ns-resize";
+                this.coordinate = "y";
             }
 
             //identify children: only divs or any semantic element are permitted
@@ -458,6 +460,8 @@ $(function () {
                 this.MouseMovement = event.pageY;
             }
 
+            this.mousemoveRAF = granit.requestFrame();
+
             //register events
             this._on($("html"), {
                 "mousemove": "_splitterMouseMove"
@@ -476,17 +480,9 @@ $(function () {
             event.stopImmediatePropagation();
             event.preventDefault();
 
-            var distance;
+            this.currentPosition = { x: event.pageX, y: event.pageY };
 
-            if (this.options.direction === "vertical") {
-                distance = event.pageX - this.MouseMovement;
-                this.MouseMovement = event.pageX;
-            } else {
-                distance = event.pageY - this.MouseMovement;
-                this.MouseMovement = event.pageY;
-            }
-
-            this._processPanelMovement(distance);
+            this.mousemoveRAF(this._processPanelMovement.bind(this));
         },
 
         /*
@@ -522,17 +518,21 @@ $(function () {
                 this._off($("html"), "mousemove");
                 this._off($("html"), "mouseup");
                 this.movedSplitter = undefined;
+
+                granit.cancelFrame(this.mousemoveRAF);
             }
         },
-
 
         /*
          * Author(s):   Thomas Stein, ... <please leave your name>
          * Description: last but not least ... the heart of the dragging algorithm
          */
-        _processPanelMovement: function (distance) {
+        _processPanelMovement: function () {
             var self = this;
             var result1, result2;
+
+            var distance = this.currentPosition[this.coordinate] - this.MouseMovement;
+            this.MouseMovement = this.currentPosition[this.coordinate];
 
             function test(modus, panel) {
                 var newSize, limitSize;
@@ -635,6 +635,6 @@ $(function () {
                     result1.panel.data().__granitData__.maximized = true;
                 }
             }
-        },
+        }
     });
 });

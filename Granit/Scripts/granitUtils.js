@@ -363,6 +363,20 @@ var granit = (function (gt) {
         return CSSPixelProvider;
     })();
 
+    var requestFrame = function () {
+        var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame ||
+            function (fn) { return window.setTimeout(fn, 20); };
+        return function (fn) {
+            return raf(fn);
+        };
+    };
+
+    var cancelFrame = function () {
+        var cancel = window.cancelAnimationFrame || window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame ||
+            window.clearTimeout;
+        return function (id) { return cancel(id); };
+    };
+
     //publish
     gt.extractFloatUnit = extractFloatUnit;
     gt.parseFloatUnit = parseFloatUnit;
@@ -377,6 +391,8 @@ var granit = (function (gt) {
     gt.NumberUnit = NumberUnit;
     gt.CSSPixelProvider = CSSPixelProvider;
     gt.prefixSizeName = prefixSizeName;
+    gt.requestFrame = requestFrame;
+    gt.cancelFrame = cancelFrame;
 
     return gt;
 }(granit || {}));
