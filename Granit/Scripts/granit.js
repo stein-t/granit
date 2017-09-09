@@ -402,7 +402,7 @@ $(function () {
             var pc = new granit.CSSPixelProvider(self.element[0]);
 
             var offsetSizeName = granit.prefixSizeName(self.sizePropertyName, "offset", true),      //offsetWidth, offsetHeight
-                minSieName = granit.prefixSizeName(self.sizePropertyName, "min"),                   //min-width, min-height
+                minSizeName = granit.prefixSizeName(self.sizePropertyName, "min"),                   //min-width, min-height
                 maxSizeName = granit.prefixSizeName(self.sizePropertyName, "max");                  //max-width, max-height
 
             /*
@@ -412,7 +412,7 @@ $(function () {
              */
             this.panels.forEach(function (item, index) {
                 var size;
-                if (self.sizePropertyName === "width") {
+                if (self.options.direction === "vertical") {
                     size = item.width();
                 } else {
                     size = item.height();
@@ -421,8 +421,8 @@ $(function () {
                 if (!item.hasClass("granit_Panel_Static")) {
                     item.addClass("granit_Panel_Static");
                 }
-                //item.css(self.sizePropertyName, size + "px");   //ensure to set the css-size in pixels to support smooth mouse-moving calculation
-                if (self.sizePropertyName === "width") {
+
+                if (self.options.direction === "vertical") {
                     item.width(size);
                 } else {
                     item.height(size);
@@ -432,7 +432,7 @@ $(function () {
                     return false;    //we do not need to prepare non-resizable panels
                 }
 
-                var minSize = pc.getCSSPixel(item[0], minSieName);
+                var minSize = pc.getCSSPixel(item[0], minSizeName);
                 if (minSize && minSize === "none") {
                     minSize = 0.0;
                 }

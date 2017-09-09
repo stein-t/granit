@@ -19,7 +19,7 @@
 .panelLayout7 {
     border: 2px solid green;
     background: lightgreen;
-    overflow: scroll;
+    /*overflow: scroll;*/
 }
 /*.panelLayout7:hover {
     border: 2px solid red;
@@ -47,18 +47,18 @@
 
 .panelLayout4 {
     background: lightyellow;
-    overflow: scroll;
+    /*overflow: scroll;*/
 }
 
 .panelLayout5 {
     border: 15px solid blue;
-    overflow: scroll;
+    /*overflow: scroll;*/
 }
 
 .panelLayout6 {
     border: 5px solid red;
     background: transparent;
-    overflow: scroll;
+    /*overflow: scroll;*/
 }
 
 .splitter_HandleStyle {
