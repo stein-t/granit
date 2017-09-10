@@ -41,7 +41,7 @@ $(function () {
             //console.log("namespace: " + this.namespace);
             //console.log("widgetFullName: " + this.widgetFullName);
             //console.log("widgetName: " + this.widgetName);
-            
+
             var splitterId = self.element[0].getAttribute("id");
 
             //used to identify splitter in error message

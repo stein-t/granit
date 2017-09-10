@@ -46,7 +46,7 @@
                 ],
                 direction: "horizontal",
                 panelTemplate: {
-                    size: "auto", minSize: "3em", maxSize: "none", padding: 0, margin: 0, flexible: false, resizable: false, classes: "granit_Panel_Default"
+                    minSize: "3em", flexible: false, resizable: false
                 },
                 _throttle: "raf"
             });
@@ -64,9 +64,9 @@
                     { width: 7, length: "10ch", classes: "splitter_HandleStyle" }
                 ],
                 panelTemplate: {
-                    size: "auto", minSize: "3em", maxSize: "none", padding: "2em", margin: "0.1cm", flexible: false, resizable: true, classes: "panelLayout7 panelLayout7"
+                    minSize: "3em", padding: "2em", margin: "0.1cm", flexible: false, classes: "panelLayout7 panelLayout7"
                 },
-                splitterTemplate: { width: "7px", length: "calc(100% - 10px)", classes: "granit_Splitter_Default" },
+                splitterTemplate: { width: "7px", length: "calc(100% - 10px)" },
                 //direction: "horizontal",
                 direction: "vertical",
                 _throttle: "none"
