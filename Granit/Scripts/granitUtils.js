@@ -363,14 +363,112 @@ var granit = (function (gt) {
         return CSSPixelProvider;
     })();
 
-    var requestFrame = (function () {
-        var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
-        return function (fn) { return raf(fn); };
-    })();
 
-    var cancelFrame = (function () {
-        var cancel = window.cancelAnimationFrame || window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame;
-        return function (id) { return cancel(id); };
+    /*
+     * Author(s):   Thomas Stein
+     * Description: helper object for debounce and throttle
+     */
+    var EventTimeController = (function () {
+        var self = this;
+        var last, timeout;
+        this.modus = undefined;
+        this.threshold = undefined;
+        this.raf = undefined;
+        this.context = undefined;
+
+        //contructor
+        function EventTimeController(modus, context, threshold) {
+            modus = modus || "raf";
+            if (modus !== "raf" && modus !== "throttle" && modus !== "debounce") {
+                output("the modus parameter value '" + modus + "' is invalid. Allowd values are 'raf', 'throttle', 'debounce'", "granit.eventTimeController");
+            }
+            self.modus = modus;
+            self.threshold = threshold || 20;
+            self.context = context;
+        }
+
+        EventTimeController.prototype.process = function (fn, context, threshold) {
+            threshold = threshold || self.threshold;
+            context = context || self.context;
+
+            if (self.modus === "raf") {
+                EventTimeController.prototype.requestFrame.call(self, fn, context, threshold);
+            }
+            if (self.modus === "throttle") {
+                EventTimeController.prototype.throttle.call(self, fn, context, threshold);
+            }
+            if (self.modus === "debounce") {
+                EventTimeController.prototype.debounce.call(self, fn, context, threshold);
+            }
+        }
+
+        EventTimeController.prototype.cancel = function () {
+            if (self.modus === "raf") {
+                EventTimeController.prototype.cancelFrame.call(self);
+            }
+            if (self.modus === "throttle") {
+                EventTimeController.prototype.cancelThrottle.call(self);
+            }
+            if (self.modus === "debounce") {
+                EventTimeController.prototype.cancelDebounce.call(self);
+            }
+        }
+
+        EventTimeController.prototype.debounce = function (func, context, wait) {
+            var args = arguments;
+            var later = function () {
+                timeout = null;
+                context && func.apply(context, args) || func(args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+
+        EventTimeController.prototype.cancelDebounce = function () {
+            clearTimeout(timeout);
+        }
+
+        EventTimeController.prototype.throttle = function (fn, context, threshold) {
+            var now = + new Date, args = arguments;
+
+            if (last && now < last + threshold) {
+                // Hold on to it
+                clearTimeout(timeout);
+                timeout = setTimeout(function () {
+                    last = now;
+                    context && fn.apply(context, args) || fn(args);
+                }, threshold);
+            } else {
+                last = now;
+                context && fn.apply(context, args) || fn(args);
+            }
+        };
+
+        EventTimeController.prototype.cancelThrottle = function () {
+            clearTimeout(timeout);
+            last = undefined;
+        }
+
+        EventTimeController.prototype.requestFrame = function (fn, context, threshold) {
+            var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+            if (raf) {
+                self.raf = raf(fn.bind(context));
+            } else {
+                EventTimeController.prototype.throttle.call(self, fn, context, threshold);
+            }
+        };
+
+        EventTimeController.prototype.cancelFrame = function () {
+            var cancel = window.cancelAnimationFrame || window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame;
+            if (cancel) {
+                cancel(self.raf);
+                self.raf = undefined;
+            } else {
+                EventTimeController.prototype.cancelThrottle.call(self);
+            }
+        };
+
+        return EventTimeController;
     })();
 
     //publish
@@ -387,8 +485,7 @@ var granit = (function (gt) {
     gt.NumberUnit = NumberUnit;
     gt.CSSPixelProvider = CSSPixelProvider;
     gt.prefixSizeName = prefixSizeName;
-    gt.requestFrame = requestFrame;
-    gt.cancelFrame = cancelFrame;
+    gt.EventTimeController = EventTimeController;
 
     return gt;
 }(granit || {}));

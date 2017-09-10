@@ -359,12 +359,14 @@ $(function () {
                 });
             }
 
-            this.panels.forEach(function (item, index) {
-                if (item.data().__granitData__.originalUnit === "em") {
-                    item.resize($.proxy(self._elementOnResize, self, item[0])); 
-                    item.fontResize($.proxy(self._elementOnFontResize, self, item[0]));
-                }
-            });
+            this.EventTimeController = new granit.EventTimeController('throttle', this, 10);
+
+            //this.panels.forEach(function (item, index) {
+            //    if (item.data().__granitData__.originalUnit === "em") {
+            //        item.resize($.proxy(self._elementOnResize, self, item[0])); 
+            //        item.fontResize($.proxy(self._elementOnFontResize, self, item[0]));
+            //    }
+            //});
         },
 
 
@@ -483,8 +485,10 @@ $(function () {
 
             this.currentMousePosition = { x: event.pageX, y: event.pageY };
 
-            this.mousemoveRAF = granit.requestFrame(this._processPanelMovement.bind(this));     //throttle
-            //this._processPanelMovement();
+            //this.mousemoveRAF = granit.eventTimeController.requestFrame(this._processPanelMovement.bind(this));   //1. throttle per requestAnimationFrame
+            //granit.eventTimeController.throttle(this._processPanelMovement, 10, this);                              //2. throttle
+            this.EventTimeController.process(this._processPanelMovement);
+            //this._processPanelMovement();                                                                         //3. direct call
         },
 
         /*
@@ -520,7 +524,9 @@ $(function () {
                 this._off($("html"), "mousemove");
                 this._off($("html"), "mouseup");
 
-                granit.cancelFrame(this.mousemoveRAF);    //cancel throttle
+                //granit.eventTimeController.cancelFrame(this.mousemoveRAF);    //cancel throttle
+                //granit.eventTimeController.clear();
+                this.EventTimeController.cancel();
                 this.movedSplitter = undefined;
             }
         },
