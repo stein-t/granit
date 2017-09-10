@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  *
- * Contributor(s): Thomas Stein, ... <please leave your name>
+ * Contributor(s): Thomas Stein
  * Description:    Granit jQuery-ui widget control for creating a splitter layout with Flexbox
  * License:        MPL 2.0
  */
@@ -25,7 +25,7 @@ $(function () {
             separatorTemplate: { width: 3, length: "100%", classes: "granit_Separator_Default" }
         },
         /*
-         * Author(s):   Thomas Stein, ... <please leave your name>
+         * Author(s):   Thomas Stein
          * Description: The _create() method is the widget's constructor.
          *              The options are retrieved, the DOM is manipulated accordingly, and more ...
          */
@@ -359,12 +359,12 @@ $(function () {
                 });
             }
 
-            //this.panels.forEach(function (item, index) {
-            //    if (item.data().__granitData__.originalUnit === "em") {
-            //        item.resize($.proxy(self._elementOnResize, self, item[0])); 
-            //        item.fontResize($.proxy(self._elementOnFontResize, self, item[0]));
-            //    }
-            //});
+            this.panels.forEach(function (item, index) {
+                if (item.data().__granitData__.originalUnit === "em") {
+                    item.resize($.proxy(self._elementOnResize, self, item[0])); 
+                    item.fontResize($.proxy(self._elementOnFontResize, self, item[0]));
+                }
+            });
         },
 
 
@@ -380,7 +380,7 @@ $(function () {
         },
 
         /*
-         * Author(s):   Thomas Stein, ... <please leave your name>
+         * Author(s):   Thomas Stein
          * Description: EventHandler of the MouseDown event -- Preparation actions to support the mouse-moving algorithm
          */
         _splitterMouseDown: function (event) {
@@ -424,11 +424,12 @@ $(function () {
                     item.addClass("granit_Panel_Static");
                 }
 
-                if (self.options.direction === "vertical") {
-                    item.width(size);
-                } else {
-                    item.height(size);
-                }
+                //if (self.options.direction === "vertical") {
+                //    item.width(size);
+                //} else {
+                //    item.height(size);
+                //}
+                item.css(self.sizePropertyName, size + "px");
 
                 if (!item.data().__granitData__.resizable) {
                     return false;    //we do not need to prepare non-resizable panels
@@ -454,13 +455,11 @@ $(function () {
 
             if (this.options.direction === "vertical") {
                 $("html").css("cursor", "ew-resize");
-                this.MouseMovement = event.pageX;
+                this.movedSplitter.data().__granitData__.position = event.pageX;
             } else {
                 $("html").css("cursor", "ns-resize");
-                this.MouseMovement = event.pageY;
+                this.movedSplitter.data().__granitData__.position = event.pageY;
             }
-
-            this.mousemoveRAF = granit.requestFrame();
 
             //register events
             this._on($("html"), {
@@ -472,7 +471,7 @@ $(function () {
         },
 
         /*
-         * Author(s):   Thomas Stein, ... <please leave your name>
+         * Author(s):   Thomas Stein
          * Description: EventHandler of the MouseMove event -- logic to be processes with every mouse move event
          */
         _splitterMouseMove: function (event) {
@@ -480,13 +479,16 @@ $(function () {
             event.stopImmediatePropagation();
             event.preventDefault();
 
-            this.currentPosition = { x: event.pageX, y: event.pageY };
+            if (!this.movedSplitter) { return; }
 
-            this.mousemoveRAF(this._processPanelMovement.bind(this));
+            this.currentMousePosition = { x: event.pageX, y: event.pageY };
+
+            this.mousemoveRAF = granit.requestFrame(this._processPanelMovement.bind(this));     //throttle
+            //this._processPanelMovement();
         },
 
         /*
-         * Author(s):   Thomas Stein, ... <please leave your name>
+         * Author(s):   Thomas Stein
          * Description: EventHandler of the MouseUp event -- final cleaning-up actions for the drag & drop process
          */
         _splitterMouseUp: function (event) {
@@ -517,22 +519,24 @@ $(function () {
                 $("html").css("cursor", "default");
                 this._off($("html"), "mousemove");
                 this._off($("html"), "mouseup");
-                this.movedSplitter = undefined;
 
-                granit.cancelFrame(this.mousemoveRAF);
+                granit.cancelFrame(this.mousemoveRAF);    //cancel throttle
+                this.movedSplitter = undefined;
             }
         },
 
         /*
-         * Author(s):   Thomas Stein, ... <please leave your name>
+         * Author(s):   Thomas Stein
          * Description: last but not least ... the heart of the dragging algorithm
          */
         _processPanelMovement: function () {
+            if (!this.movedSplitter) { return; }
+
             var self = this;
             var result1, result2;
 
-            var distance = this.currentPosition[this.coordinate] - this.MouseMovement;
-            this.MouseMovement = this.currentPosition[this.coordinate];
+            var distance = this.currentMousePosition[this.coordinate] - this.movedSplitter.data().__granitData__.position;
+            this.movedSplitter.data().__granitData__.position = this.currentMousePosition[this.coordinate];
 
             function test(modus, panel) {
                 var newSize, limitSize;
@@ -613,13 +617,16 @@ $(function () {
                 var offset = Math.min(result1.offset, result2.offset);
 
                 if (offset >= 1.0) {
-                    if (self.sizePropertyName === "width") {
-                        result2.panel.width(result2.currentSize - offset);
-                        result1.panel.width(result1.currentSize + offset);
-                    } else {
-                        result2.panel.height(result2.currentSize - offset);
-                        result1.panel.height(result1.currentSize + offset);
-                    }
+                    //if (self.sizePropertyName === "width") {
+                    //    result2.panel.width(result2.currentSize - offset);
+                    //    result1.panel.width(result1.currentSize + offset);
+                    //} else {
+                    //    result2.panel.height(result2.currentSize - offset);
+                    //    result1.panel.height(result1.currentSize + offset);
+                    //}
+                    result2.panel.css(self.sizePropertyName, result2.currentSize - offset + "px");
+                    result1.panel.css(self.sizePropertyName, result1.currentSize + offset + "px");
+
                     result2.panel.data().__granitData__.size = result2.currentSize - offset;
                     result2.panel.data().__granitData__.maximized = false;
 

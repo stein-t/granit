@@ -1,5 +1,5 @@
 ﻿/*
- * Contributor(s): Thomas Stein, ... <please leave your name>
+ * Contributor(s): Thomas Stein
  * Description:    Javascript library with properties, methods, classes that are used by the Granit splitter layout control
  * License:        MIT
  */
@@ -7,7 +7,7 @@ var granit = (function (gt) {
     var self = this;
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: Manages ouput errors (as exceptions) and warnings (as console output). Optionally alerts the output.
      */
     var output = function (message, errorObject, type, alert) {
@@ -38,7 +38,7 @@ var granit = (function (gt) {
     };
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: Help function to validate the input.
      */
     var parseFloatUnit = function (size, numberSet, unitFormat, errorObject, math) {
@@ -72,7 +72,7 @@ var granit = (function (gt) {
     };
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: the NumberUnit class -- Instances of this class are very heavily used in granit to transfer not only numbers but also associated units.
      */
     var NumberUnit = (function () {
@@ -87,7 +87,7 @@ var granit = (function (gt) {
     })();
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: function to validate the given size as a float number and an optional unit. As a result a NumberUnit object is returned.
      */
     var extractFloatUnit = function (size, numberSet, unitFormat, defaultUnit, errorObject, math) {
@@ -140,7 +140,7 @@ var granit = (function (gt) {
     };
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: eliminates duplicates from the list
      */
     var uniqueArray = function (list) {
@@ -152,7 +152,7 @@ var granit = (function (gt) {
     }
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: checks if the item can be found in the haystack
      */
     var findOne = function (item, haystack) {
@@ -162,7 +162,7 @@ var granit = (function (gt) {
     };
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: checks if the property can be found in the object
      */
     var findOneInObject = function (item, object) {
@@ -171,7 +171,7 @@ var granit = (function (gt) {
     };
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: checks if all items of arr can be found in haystack: https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
      */
     var findAll = function (arr, haystack) {
@@ -181,7 +181,7 @@ var granit = (function (gt) {
     };
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: checks if all property names of the object can be found in the haystack string array: https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
      */
     var findAnyFromObject = function (object, haystack) {
@@ -198,7 +198,7 @@ var granit = (function (gt) {
     };
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: checks if any item in the haystack string array exactly matches one associated property name of the object : https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
      */
     var findAllFromObject = function (object, haystack) {
@@ -218,7 +218,7 @@ var granit = (function (gt) {
     };
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: creates a helper list of NumberUnit objects used in order to sum up items with equal units.
      *              as a final goal this very specific array joins values together (toString) into a string to be used in css-calc statements
      */
@@ -309,7 +309,7 @@ var granit = (function (gt) {
     }
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: prefixes the sizename "width" or "height" accordingly to get "min-width", "min-height", "max-width," "max-height", "offsetWidth", "offsetHeight"
      */
     var prefixSizeName = function(sizeName, prefix, camelCase) {
@@ -320,7 +320,7 @@ var granit = (function (gt) {
     }
 
     /*
-     * Author(s):   Thomas Stein, ... <please leave your name>
+     * Author(s):   Thomas Stein
      * Description: Provides any css length property value in pixels for max-width, min-width, max-height, min-height
      */
     var CSSPixelProvider = (function () {
@@ -363,19 +363,15 @@ var granit = (function (gt) {
         return CSSPixelProvider;
     })();
 
-    var requestFrame = function () {
-        var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame ||
-            function (fn) { return window.setTimeout(fn, 20); };
-        return function (fn) {
-            return raf(fn);
-        };
-    };
+    var requestFrame = (function () {
+        var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+        return function (fn) { return raf(fn); };
+    })();
 
-    var cancelFrame = function () {
-        var cancel = window.cancelAnimationFrame || window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame ||
-            window.clearTimeout;
+    var cancelFrame = (function () {
+        var cancel = window.cancelAnimationFrame || window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame;
         return function (id) { return cancel(id); };
-    };
+    })();
 
     //publish
     gt.extractFloatUnit = extractFloatUnit;
