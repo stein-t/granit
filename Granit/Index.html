@@ -28,7 +28,7 @@
                     { width: 10 }
                 ],
                 direction: "vertical",
-                overflow: "hidden"
+                overflow: "hidden",
             });
 
             $("#splitterInner").splitter({
@@ -47,7 +47,8 @@
                 direction: "horizontal",
                 panelTemplate: {
                     size: "auto", minSize: "3em", maxSize: "none", padding: 0, margin: 0, flexible: false, resizable: false, classes: "granit_Panel_Default"
-                }
+                },
+                _throttle: "raf"
             });
 
             $("#splitterOuter").splitter({
@@ -67,7 +68,8 @@
                 },
                 splitterTemplate: { width: "7px", length: "calc(100% - 10px)", classes: "granit_Splitter_Default" },
                 //direction: "horizontal",
-                direction: "vertical"
+                direction: "vertical",
+                _throttle: "none"
             });
         });
     </script>

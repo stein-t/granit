@@ -22,7 +22,8 @@ $(function () {
                 size: "auto", minSize: 5, maxSize: "none", padding: 0, margin: 0, flexible: false, resizable: true, classes: "granit_Panel_Default"
             },
             splitterTemplate: { width: 5, length: "100%", classes: "granit_Splitter_Default" },
-            separatorTemplate: { width: 3, length: "100%", classes: "granit_Separator_Default" }
+            separatorTemplate: { width: 3, length: "100%", classes: "granit_Separator_Default" },
+            _throttle: 10       //the keywords 'none', 'raf' or a positive integer number
         },
         /*
          * Author(s):   Thomas Stein
@@ -48,7 +49,8 @@ $(function () {
 
             var optionsAllowed = [
                 'classes', 'disabled', 'create', 'hide', 'show',    //base widget properties
-                'direction', 'overflow', 'flexible', 'panel', 'splitter', 'panelTemplate', 'splitterTemplate', 'separatorTemplate'
+                'direction', 'overflow', 'flexible', 'panel', 'splitter',
+                'panelTemplate', 'splitterTemplate', 'separatorTemplate', '_throttle'
             ];
 
             var panelOptionsAllowed = [
@@ -64,22 +66,22 @@ $(function () {
             ];
 
             //check for invalid options
-            if (!granit.findAnyFromObject(this.options, optionsAllowed)) {
+            if (!granit.listCompare.objectToArray(this.options, optionsAllowed)) {
                 granit.output("invalid options property found - check the options object", this.IdString + " -- options", 'Warning');
             }
 
             //check for invalid panelTemplate options
-            if (self.options.panelTemplate && !granit.findAllFromObject(self.options.panelTemplate, panelOptionsAllowed)) {
+            if (self.options.panelTemplate && !granit.listCompare.objectToArray(self.options.panelTemplate, panelOptionsAllowed, true)) {
                 granit.output("invalid panel template option property found - check the panel template options", self.IdString + " -- options.panelTemplate", 'Warning');
             }
 
             //check for invalid splitterTemplate options
-            if (self.options.splitterTemplate && !granit.findAllFromObject(self.options.splitterTemplate, splitterTemplateOptionsAllowed)) {
+            if (self.options.splitterTemplate && !granit.listCompare.objectToArray(self.options.splitterTemplate, splitterTemplateOptionsAllowed, true)) {
                 granit.output("invalid splitter template option property found - check the splitter template options", self.IdString + " -- options.splitterTemplate", 'Warning');
             }
 
             //check for invalid separatorTemplate options
-            if (self.options.separatorTemplate && !granit.findAllFromObject(self.options.separatorTemplate, splitterTemplateOptionsAllowed)) {
+            if (self.options.separatorTemplate && !granit.listCompare.objectToArray(self.options.separatorTemplate, splitterTemplateOptionsAllowed, true)) {
                 granit.output("invalid separator template option property found - check the separator template options", self.IdString + " -- options.separatorTemplate", 'Warning');
             }
 
@@ -150,7 +152,7 @@ $(function () {
                 var panel = self.options.panel && self.options.panel[index];
 
                 //check for invalid options
-                if (panel && !granit.findAnyFromObject(panel, panelOptionsAllowed)) {
+                if (panel && !granit.listCompare.objectToArray(panel, panelOptionsAllowed)) {
                     granit.output("invalid panel array item option property found - check the panel array item options", self.IdString + " -- options.panel", 'Warning');
                 }
 
@@ -189,7 +191,7 @@ $(function () {
                     var splitter = self.options.splitter && self.options.splitter[index];
 
                     //check for invalid options
-                    if (splitter && !granit.findAnyFromObject(splitter, splitterOptionsAllowed)) {
+                    if (splitter && !granit.listCompare.objectToArray(splitter, splitterOptionsAllowed)) {
                         granit.output("invalid splitter array item option property found - check the splitter array item options", self.IdString + " -- options.splitter", 'Warning');
                     }
 
@@ -342,6 +344,23 @@ $(function () {
                 self.splitterList[item.index] && self.splitterList[item.index].insertAfter(item.wrappedElement.parent());
             });
 
+            //throttle mouse move events
+            this.options._throttle = this.options._throttle || 10;
+            if (this.options._throttle !== "none") {
+                var throttle = {};
+                if (this.options._throttle === "raf") {
+                    throttle.modus = "raf";
+                    throttle.threshold = 20;        //threshold to be taken for the native throttle process if requestAnimationFrame does not exist
+                } else {
+                    throttle.modus = "throttle";
+                    throttle.threshold = parseInt(this.options._throttle);
+                    if (!throttle.threshold || throttle.threshold <= 0) {
+                        granit.output("throttle threshold value '" + this.options._throttle + "' is invalid. Allowed are the terms 'none', 'raf' or a positive integer number", this.IdString + " -- options._throttle");
+                    }
+                }
+                this.MousemoveEventController = new granit.EventTimeController(throttle.modus, this, throttle.threshold);
+            }
+
             //we attach drag & drop support
             if (
                 this.panels.some(function (item, index) {
@@ -358,8 +377,6 @@ $(function () {
                     }
                 });
             }
-
-            this.EventTimeController = new granit.EventTimeController('throttle', this, 10);
 
             //this.panels.forEach(function (item, index) {
             //    if (item.data().__granitData__.originalUnit === "em") {
@@ -426,11 +443,6 @@ $(function () {
                     item.addClass("granit_Panel_Static");
                 }
 
-                //if (self.options.direction === "vertical") {
-                //    item.width(size);
-                //} else {
-                //    item.height(size);
-                //}
                 item.css(self.sizePropertyName, size + "px");
 
                 if (!item.data().__granitData__.resizable) {
@@ -485,10 +497,8 @@ $(function () {
 
             this.currentMousePosition = { x: event.pageX, y: event.pageY };
 
-            //this.mousemoveRAF = granit.eventTimeController.requestFrame(this._processPanelMovement.bind(this));   //1. throttle per requestAnimationFrame
-            //granit.eventTimeController.throttle(this._processPanelMovement, 10, this);                              //2. throttle
-            this.EventTimeController.process(this._processPanelMovement);
-            //this._processPanelMovement();                                                                         //3. direct call
+            //throttle or direct call
+            this.MousemoveEventController && this.MousemoveEventController.process(this._processPanelMovement) || this._processPanelMovement();
         },
 
         /*
@@ -524,9 +534,7 @@ $(function () {
                 this._off($("html"), "mousemove");
                 this._off($("html"), "mouseup");
 
-                //granit.eventTimeController.cancelFrame(this.mousemoveRAF);    //cancel throttle
-                //granit.eventTimeController.clear();
-                this.EventTimeController.cancel();
+                this.MousemoveEventController && this.MousemoveEventController.cancel();
                 this.movedSplitter = undefined;
             }
         },
@@ -623,13 +631,6 @@ $(function () {
                 var offset = Math.min(result1.offset, result2.offset);
 
                 if (offset >= 1.0) {
-                    //if (self.sizePropertyName === "width") {
-                    //    result2.panel.width(result2.currentSize - offset);
-                    //    result1.panel.width(result1.currentSize + offset);
-                    //} else {
-                    //    result2.panel.height(result2.currentSize - offset);
-                    //    result1.panel.height(result1.currentSize + offset);
-                    //}
                     result2.panel.css(self.sizePropertyName, result2.currentSize - offset + "px");
                     result1.panel.css(self.sizePropertyName, result1.currentSize + offset + "px");
 

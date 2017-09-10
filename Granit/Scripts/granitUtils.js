@@ -75,16 +75,14 @@ var granit = (function (gt) {
      * Author(s):   Thomas Stein
      * Description: the NumberUnit class -- Instances of this class are very heavily used in granit to transfer not only numbers but also associated units.
      */
-    var NumberUnit = (function () {
-        function NumberUnit(number, unit) {
-            this.Number = number;
-            this.Unit = unit || "";
-        }
-        NumberUnit.prototype.getSize = function () {
+    var NumberUnit = function (number, unit) {
+        this.Number = number;
+        this.Unit = unit || "";
+
+        this.getSize = function () {
             return this.Number + this.Unit;
         }
-        return NumberUnit;
-    })();
+    };
 
     /*
      * Author(s):   Thomas Stein
@@ -153,69 +151,45 @@ var granit = (function (gt) {
 
     /*
      * Author(s):   Thomas Stein
-     * Description: checks if the item can be found in the haystack
+     * Description: helper methods for searching and comparing in objects and arrays
      */
-    var findOne = function (item, haystack) {
-        return haystack.any(function () {
-            return haystack.indexOf(item) >= 0;
-        });
-    };
-
-    /*
-     * Author(s):   Thomas Stein
-     * Description: checks if the property can be found in the object
-     */
-    var findOneInObject = function (item, object) {
-        var arr = Object.getOwnPropertyNames(object);
-        return arr.indexOf(item) >= 0;
-    };
-
-    /*
-     * Author(s):   Thomas Stein
-     * Description: checks if all items of arr can be found in haystack: https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
-     */
-    var findAll = function (arr, haystack) {
-        return arr.every(function (v) {
-            return haystack.indexOf(v) >= 0;
-        });
-    };
-
-    /*
-     * Author(s):   Thomas Stein
-     * Description: checks if all property names of the object can be found in the haystack string array: https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
-     */
-    var findAnyFromObject = function (object, haystack) {
-        if (!object || !haystack) {
-            return undefined;
-        }
-        var arr = Object.getOwnPropertyNames(object);
-        return arr.every(function (v) {
-            if (object.hasOwnProperty(v)) {
-                return haystack.indexOf(v) >= 0;
+    var listCompare = {
+        /*
+         * Author(s):   Thomas Stein
+         * Description: checks if all items in the array can be found in haystack.
+         *              Additionally, if all = true, checks if all items in the haystack are represented in the array.
+         */
+        arrayToArray: function (arr, haystack, all) {
+            if (all && arr.length !== haystack.length) {
+                return false;                       //same amount of items
             }
-            return true;
-        });
-    };
 
-    /*
-     * Author(s):   Thomas Stein
-     * Description: checks if any item in the haystack string array exactly matches one associated property name of the object : https://stackoverflow.com/questions/16312528/check-if-an-array-contains-any-element-of-another-array-in-javascript
-     */
-    var findAllFromObject = function (object, haystack) {
-        if (!object || !haystack) {
-            return undefined;
-        }
-        var arr = Object.getOwnPropertyNames(object);
-        if (arr.length !== haystack.length) {
-            return false;                       //same amount of items
-        }
-        return arr.every(function (v) {
-            if (object.hasOwnProperty(v)) {
+            return arr.every(function (v) {
                 return haystack.indexOf(v) >= 0;
+            });
+        },
+
+        /*
+         * Author(s):   Thomas Stein
+         * Description: checks if all property names in the object can be found in haystack.
+         *              Additionally, if all = true, checks if all items in the haystack are represented in the propert-name list of the object.
+         */
+        objectToArray: function (object, haystack, all) {
+            if (!object || !haystack) {
+                return undefined;
             }
-            return true;
-        });
-    };
+            var arr = Object.getOwnPropertyNames(object);
+            if (all && arr.length !== haystack.length) {
+                return false;                       //same amount of items
+            }
+            return arr.every(function (v) {
+                if (object.hasOwnProperty(v)) {
+                    return haystack.indexOf(v) >= 0;
+                }
+                return true;
+            });
+        }
+    }
 
     /*
      * Author(s):   Thomas Stein
@@ -323,23 +297,18 @@ var granit = (function (gt) {
      * Author(s):   Thomas Stein
      * Description: Provides any css length property value in pixels for max-width, min-width, max-height, min-height
      */
-    var CSSPixelProvider = (function () {
-        var element, testElement;
+    var CSSPixelProvider = function (target) {
+        var element = target,
+            testElement = document.createElement("div");  //Create a temporary sibling div to resolve units into pixels.
+       
+        testElement.style.cssText = "overflow: hidden; visibility: hidden; position: absolute; top: 0; left: 0;";
+        element.appendChild(testElement);
 
-        //Constructor
-        function CSSPixelProvider(target) {
-            //Create a temporary sibling div to resolve units into pixels.
-            testElement = document.createElement("div");
-            testElement.style.cssText = "overflow: hidden; visibility: hidden; position: absolute; top: 0; left: 0;"; 
-            element = target;
-            element.appendChild(testElement);
-        }
-
-        CSSPixelProvider.prototype.destroy = function () {
+        this.destroy = function () {
             element.removeChild(testElement);
-        }
+        };
 
-        CSSPixelProvider.prototype.getCSSPixel = function (target, hyphenProp) {
+        this.getCSSPixel = function (target, hyphenProp) {
             //get CSS value
             var value = getComputedStyle(target, null).getPropertyValue(hyphenProp);
 
@@ -358,77 +327,66 @@ var granit = (function (gt) {
 
             testElement.style[sizePropertyName] = value;
             return testElement[offsetSize];
-        }
-
-        return CSSPixelProvider;
-    })();
+        };
+    };
 
 
     /*
      * Author(s):   Thomas Stein
-     * Description: helper object for debounce and throttle
+     * Description: controller for debounce and throttle methods
      */
-    var EventTimeController = (function () {
+    var EventTimeController = function (modus, context, threshold) {
         var self = this;
-        var last, timeout;
-        this.modus = undefined;
-        this.threshold = undefined;
-        this.raf = undefined;
-        this.context = undefined;
 
-        //contructor
-        function EventTimeController(modus, context, threshold) {
-            modus = modus || "raf";
-            if (modus !== "raf" && modus !== "throttle" && modus !== "debounce") {
-                output("the modus parameter value '" + modus + "' is invalid. Allowd values are 'raf', 'throttle', 'debounce'", "granit.eventTimeController");
-            }
-            self.modus = modus;
-            self.threshold = threshold || 20;
-            self.context = context;
+        modus = modus || "raf";
+        if (modus !== "raf" && modus !== "throttle" && modus !== "debounce") {
+            output("the modus parameter value '" + modus + "' is invalid. Allowd values are 'raf', 'throttle', 'debounce'", "granit.eventTimeController");
         }
+        context = context || this;
+        threshold = threshold || 20;
 
-        EventTimeController.prototype.process = function (fn, context, threshold) {
-            threshold = threshold || self.threshold;
-            context = context || self.context;
+        var last, timeout, raf;
 
-            if (self.modus === "raf") {
-                EventTimeController.prototype.requestFrame.call(self, fn, context, threshold);
+        this.process = function (fn) {
+
+            if (modus === "raf") {
+                requestFrame(fn);
             }
-            if (self.modus === "throttle") {
-                EventTimeController.prototype.throttle.call(self, fn, context, threshold);
+            if (modus === "throttle") {
+                throttle(fn);
             }
-            if (self.modus === "debounce") {
-                EventTimeController.prototype.debounce.call(self, fn, context, threshold);
+            if (modus === "debounce") {
+                debounce(fn);
             }
         }
 
-        EventTimeController.prototype.cancel = function () {
-            if (self.modus === "raf") {
-                EventTimeController.prototype.cancelFrame.call(self);
+        this.cancel = function () {
+            if (modus === "raf") {
+                cancelFrame();
             }
-            if (self.modus === "throttle") {
-                EventTimeController.prototype.cancelThrottle.call(self);
+            if (modus === "throttle") {
+                cancelThrottle();
             }
-            if (self.modus === "debounce") {
-                EventTimeController.prototype.cancelDebounce.call(self);
+            if (modus === "debounce") {
+                cancelDebounce();
             }
         }
 
-        EventTimeController.prototype.debounce = function (func, context, wait) {
+        var debounce = function (func) {
             var args = arguments;
             var later = function () {
                 timeout = null;
                 context && func.apply(context, args) || func(args);
             };
             clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
+            timeout = setTimeout(later, threshold);
         };
 
-        EventTimeController.prototype.cancelDebounce = function () {
+        var cancelDebounce = function () {
             clearTimeout(timeout);
         }
 
-        EventTimeController.prototype.throttle = function (fn, context, threshold) {
+        var throttle = function (fn) {
             var now = + new Date, args = arguments;
 
             if (last && now < last + threshold) {
@@ -444,43 +402,37 @@ var granit = (function (gt) {
             }
         };
 
-        EventTimeController.prototype.cancelThrottle = function () {
+        var cancelThrottle = function () {
             clearTimeout(timeout);
             last = undefined;
         }
 
-        EventTimeController.prototype.requestFrame = function (fn, context, threshold) {
-            var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
-            if (raf) {
-                self.raf = raf(fn.bind(context));
+        var requestFrame = function (fn) {
+            var frame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
+            if (frame) {
+                raf = frame(fn.bind(context));
             } else {
-                EventTimeController.prototype.throttle.call(self, fn, context, threshold);
+                throttle(fn);
             }
         };
 
-        EventTimeController.prototype.cancelFrame = function () {
+        var cancelFrame = function () {
             var cancel = window.cancelAnimationFrame || window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame;
             if (cancel) {
-                cancel(self.raf);
-                self.raf = undefined;
+                cancel(raf);
+                raf = undefined;
             } else {
-                EventTimeController.prototype.cancelThrottle.call(self);
+                cancelThrottle();
             }
         };
-
-        return EventTimeController;
-    })();
+    };
 
     //publish
     gt.extractFloatUnit = extractFloatUnit;
     gt.parseFloatUnit = parseFloatUnit;
     gt.output = output;
     gt.uniqueArray = uniqueArray;
-    gt.findOne = findOne;
-    gt.findOneInObject = findOneInObject;
-    gt.findAll = findAll;
-    gt.findAnyFromObject = findAnyFromObject;
-    gt.findAllFromObject = findAllFromObject;
+    gt.listCompare = listCompare;
     gt.NumberUnitArray = numberUnitArray;
     gt.NumberUnit = NumberUnit;
     gt.CSSPixelProvider = CSSPixelProvider;
