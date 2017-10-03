@@ -1,0 +1,26 @@
+[
+  {
+    "outputFileName": "Content/granit.min.css",
+    "inputFiles": [
+      "Content/granit.css"
+    ]
+  },
+  {
+    "outputFileName": "Scripts/granit.min.js",
+    "inputFiles": [
+      "Scripts/granit.js"
+    ]
+  },
+  {
+    "outputFileName": "Scripts/granitUtils.min.js",
+    "inputFiles": [
+      "Scripts/granitUtils.js"
+    ]
+  },
+  {
+    "outputFileName": "Scripts/jquery.resize.min.js",
+    "inputFiles": [
+      "Scripts/jquery.resize.js"
+    ]
+  }
+]
