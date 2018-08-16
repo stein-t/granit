@@ -3,18 +3,7 @@
     height: 100%;
     width: auto;
     background: #F0F0F0;
-    /*overflow: hidden;*/
 }
-
-/*.stein_Content {
-    overflow: hidden;
-    background: lightgreen;
-}*/
-
-/*.stein_PanelStyle:hover {
-    border: 2px solid orange;
-    background: lightyellow;
-}*/
 
 .panelLayout7 {
     border: 2px solid green;
@@ -70,6 +59,5 @@
 .splitter_HandleStyle:hover {
     border: 2px solid darkgrey;
     background: grey;
-    /*border-radius: 20px;*/
 }
 
