@@ -386,7 +386,6 @@ $(function () {
             //});
         },
 
-
         _elementOnResize: function (element) {
             var id = this.IdString;
             console.log(id + " Change x: " + element.offsetWidth + ", Change y: " + element.offsetHeight);
