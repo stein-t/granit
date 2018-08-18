@@ -11,6 +11,17 @@
  * License:        MPL 2.0
  */
 
+html {
+    /*font-size: 10px;    /* for accurate em calculation in IE and Edge Browsers */*/
+    font-size: 62.5%;
+}
+
+html, body {
+    margin: 0;
+    height: 100%;
+    width: auto;
+}
+
 .granit_Panel_wrapper {
     display: block !important;
     float: none !important;

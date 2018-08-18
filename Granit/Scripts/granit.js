@@ -21,8 +21,8 @@ $(function () {
             panelTemplate: {
                 size: "auto", minSize: 5, maxSize: "none", padding: 0, margin: 0, flexible: true, resizable: true, classes: "granit_Panel_Default"
             },
-            splitterTemplate: { width: 5, length: "100%", classes: "granit_Splitter_Default" },
-            separatorTemplate: { width: 3, length: "100%", classes: "granit_Separator_Default" },
+            splitterTemplate: { width: "0.5em", length: "100%", classes: "granit_Splitter_Default" },
+            separatorTemplate: { width: "0.5em", length: "100%", classes: "granit_Separator_Default" },
             relativeSizeBasedOnRemainingSpace: false,    //The group of percentage panels may be isolated from other unit-sized panels. Their relative (percentage) size is always relative to the remaining space of all non-percentage sized panels
             _throttle: 10       //the keywords 'none', 'raf' or a positive integer number
         },
@@ -521,20 +521,35 @@ $(function () {
                 event.stopPropagation();
                 event.preventDefault();
 
+                var self = this;
+
                 //release mouse capture
                 if (event.target.releaseCapture) { event.target.releaseCapture(); }
 
-                var self = this;
+                //create the convertion tool in order to transfer any panel length pixel values into the associated original units
+                var pc = new granit.PixelConverter(self.element[0]),
+                    size, originalUnit;
 
                 // iterating the panels for re-converting
                 this.panels.forEach(function (item, index) {
                     item.data().__granitData__.minimized = false;
                     item.data().__granitData__.maximized = false;
 
+                    //reconvert to original unit
+                    size = item.data().__granitData__.size;                     //current size in pixels
+                    originalUnit = item.data().__granitData__.originalUnit;     //current original unit
+                    var originalSize = pc.convertFromPixel(size, originalUnit, self.sizePropertyName);
+
+                    if (originalUnit === "em" || originalUnit === "rem") {
+                        item.css(self.sizePropertyName, originalSize);
+                    }
+
                     if (item.data().__granitData__.originalUnit !== "%") {
                         //TODO switch different length units
                     }
                 });
+
+                pc.destroy();   //destroy the convertion tool
 
                 // set back to flexible
                 this.panels.forEach(function (item, index) {

@@ -1,9 +1,9 @@
 ﻿html, body {
-    margin: 0;
-    height: 100%;
-    width: auto;
     background: #F0F0F0;
-    /*font-size: 200%;*/
+}
+
+.stein_content {
+    font-size: 1em;
 }
 
 .panelLayout7 {

@@ -329,6 +329,64 @@ var granit = (function (gt) {
             return testElement[offsetSize];
         };
     };
+
+    /*
+     * Author(s):   Thomas Stein
+     * Description: 
+     */
+    var PixelConverter = function (target) {
+        var element = target,
+            testElement = document.createElement("div");  //Create a temporary sibling div to resolve units into pixels.
+
+        testElement.textContent = "&nbsp;";  //space content
+        testElement.style.cssText = "overflow: hidden; visibility: hidden; position: absolute; top: 0; left: 0; border: 0; margin: 0; padding: 0; width: auto; height: auto; font-size: 1em; line-height: 1;";
+
+        element.appendChild(testElement);
+
+        this.destroy = function () {
+            element.removeChild(testElement);
+        };
+
+        this.convertToPixel = function (target, hyphenProp) {
+            //get CSS value
+            var value = getComputedStyle(target, null).getPropertyValue(hyphenProp);
+
+            //if the value is a string ("none") we simply return it
+            if (!parseFloat(value)) {
+                return value;
+            }
+
+            //We can return pixels directly, but not other units
+            if (value.slice(-2) == "px") {
+                return parseFloat(value.slice(0, -2));
+            }
+
+            var sizePropertyName = hyphenProp.slice(4);
+            var offsetSizeName = prefixSizeName(sizePropertyName, "offset", true);
+
+            testElement.style[sizePropertyName] = value;
+            return testElement[offsetSizeName];
+        };
+
+        //convert any pixel length to target unit related to the constructed target element
+        this.convertFromPixel = function (pixelSize, targetUnit, sizePropertyName) {
+            if (targetUnit == "em") {
+                testElement.style.fontSize = "1.0em";
+            } else if (targetUnit == "rem") {
+                testElement.style.fontSize = "1.0rem";
+            }
+            var pixelBase = testElement.offsetHeight;
+
+            var dh = new DeviceHelper();
+            //check for IE browsers (including Edge)
+            if (dh.isMicrosoftBrowser()) {
+                return (pixelSize / pixelBase).toFixed(2) + targetUnit; //round 2 decimal digits: Microsoft browser only render 2 decimal digits
+            }
+
+            return (pixelSize / pixelBase).toFixed(8) + targetUnit; //return full float
+        };
+    };
+
     /*
      * Author(s):   Thomas Stein
      * Description: Provides some methods to detect Internet Explorer devices
@@ -463,6 +521,7 @@ var granit = (function (gt) {
     gt.prefixSizeName = prefixSizeName;
     gt.EventTimeController = EventTimeController;
     gt.DeviceHelper = DeviceHelper;
+    gt.PixelConverter = PixelConverter;
 
     return gt;
 }(granit || {}));
