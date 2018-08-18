@@ -329,7 +329,31 @@ var granit = (function (gt) {
             return testElement[offsetSize];
         };
     };
+    /*
+     * Author(s):   Thomas Stein
+     * Description: Provides some methods to detect Internet Explorer devices
+     *              https://stackoverflow.com/questions/31757852/how-can-i-detect-internet-explorer-ie-and-microsoft-edge-using-javascript/36688806#36688806
+     */
+    var DeviceHelper = function (_navigator) {
+        this.navigator = _navigator || navigator;
+        this.isIE = function () {
+            if (!this.navigator.userAgent) {
+                return false;
+            }
 
+            var IE10 = Boolean(this.navigator.userAgent.match(/(MSIE)/i)),
+                IE11 = Boolean(this.navigator.userAgent.match(/(Trident)/i));
+            return IE10 || IE11;
+        };
+
+        this.isEdge = function () {
+            return !!this.navigator.userAgent && this.navigator.userAgent.indexOf("Edge") > -1;
+        };
+
+        this.isMicrosoftBrowser = function () {
+            return this.isEdge() || this.isIE();
+        };
+    };
 
     /*
      * Author(s):   Thomas Stein
@@ -438,6 +462,7 @@ var granit = (function (gt) {
     gt.CSSPixelProvider = CSSPixelProvider;
     gt.prefixSizeName = prefixSizeName;
     gt.EventTimeController = EventTimeController;
+    gt.DeviceHelper = DeviceHelper;
 
     return gt;
 }(granit || {}));

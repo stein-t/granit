@@ -19,10 +19,11 @@ $(function () {
             panel: [],
             splitter: [],
             panelTemplate: {
-                size: "auto", minSize: 5, maxSize: "none", padding: 0, margin: 0, flexible: false, resizable: true, classes: "granit_Panel_Default"
+                size: "auto", minSize: 5, maxSize: "none", padding: 0, margin: 0, flexible: true, resizable: true, classes: "granit_Panel_Default"
             },
             splitterTemplate: { width: 5, length: "100%", classes: "granit_Splitter_Default" },
             separatorTemplate: { width: 3, length: "100%", classes: "granit_Separator_Default" },
+            relativeSizeBasedOnRemainingSpace: false,    //The group of percentage panels may be isolated from other unit-sized panels. Their relative (percentage) size is always relative to the remaining space of all non-percentage sized panels
             _throttle: 10       //the keywords 'none', 'raf' or a positive integer number
         },
         /*
@@ -50,7 +51,8 @@ $(function () {
             var optionsAllowed = [
                 'classes', 'disabled', 'create', 'hide', 'show',    //base widget properties
                 'direction', 'overflow', 'flexible', 'panel', 'splitter',
-                'panelTemplate', 'splitterTemplate', 'separatorTemplate', '_throttle'
+                'panelTemplate', 'splitterTemplate', 'separatorTemplate',
+                'relativeSizeBasedOnRemainingSpace', '_throttle'
             ];
 
             var panelOptionsAllowed = [
@@ -259,6 +261,28 @@ $(function () {
                     } else {
                         wrappedElement.css("height", "100%");
                     }
+                } else {
+                    /* 
+                     * --> see Issue #1: IE11 Flexbox Column Children width problem 
+                     * https://github.com/stein-t/granit/issues/1
+                     * There is a known bug in IE11 (and older):
+                     * ... when there is a vertical panel overflow inside a horizontal splitter container panel (the addition of the vertically arranged children panels height overflows overall vertical splitter space),
+                     * ... when overflow = auto
+                     * ... when children panels width = 100% (default)
+                     * --> the vertical scrollbar appears for the panel container, but the width 100% of its children panels is ignored
+                     */
+                    if (
+                        self.options.direction === "horizontal" &&
+                        self.element.css("overflow-y") === "auto"
+                    ) {
+                        var dh = new granit.DeviceHelper();
+                        //check for IE browsers (excluding Edge)
+                        if (dh.isIE()) {
+                            //... I (stein-t) decided to set overflow-y = hidden in this case to ensure proper children widths rendering
+                            self.element.css("overflow-y", "hidden");
+                            granit.output("Due to a known but unresolved bug in IE11 and older (Issue #1: IE11 Flexbox Column Children width problem) overflow-y is set to hidden for those Flexbox container columns in order to ensure proper width rendering of its verically arranged children panels", self.IdString + " -- options.overflow", 'Warning');
+                        }
+                    }
                 }
 
                 //retrieve the size option: a value defined individually on panel level overwrites any panel template value
@@ -266,7 +290,8 @@ $(function () {
                 if (size !== "auto") {
                     size = granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "%", self.IdString + " -- Panel size (size)");
                 }
-                if (size !== "auto" && size.Unit !== "%") {
+
+                if (size !== "auto" && (!self.options.relativeSizeBasedOnRemainingSpace || size.Unit !== "%")) {
                     var panelDisplayClass = "granit_Panel" + (flexible ? "" : " granit_Panel_Static");
 
                     //present total static size
@@ -285,20 +310,10 @@ $(function () {
                     return true; //leave loop
                 }
 
-                /*
-                 * for percentage panels flexible is true anyways, the option is ignored
-                 * The main reason why I decided not to support unflexible behaviour for percentage panels is the similarity between both modes:
-                 * Both modes (unflexible, flexible) are assumed to behave similar according their stretch- and shrink- behaviour.
-                 * Obviously there are huge difficulties in converting the value back in percentages after the dragging operation.
-                 * So after the mouse-move process I actually leave the size in pixels and let Flebox do the job of establishing the typical stretch- and shrink- behaviour that we would expect to see from percentage sized panels.  
-                 */
-                flexible = true;
-
                 if (size === "auto") {                    
                     panelsWithoutSizeTotal++;   //count panels with no size
                 }
-
-                if (size !== "auto" && size.Unit === "%") {                    
+                else if (size.Unit === "%") {                    
                     panelSizePercentTotal += size.Number;   //update total size of percentage panels
                 }
 
@@ -314,35 +329,32 @@ $(function () {
                 });
             });
 
-            /*
-             * The group of percentage panels are isolated from other unit-sized panels.
-             * Their percentage size is always relative to the remaining space of all non-percentage sized panels.
-             */
+            if (panelsWithoutOrRelativeSize.length > 0) {
+                //the total remaining space 
+                var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(splitterOffset, "-").toString() + ")";
 
-            //the total remaining space 
-            var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(splitterOffset, "-").toString() + ")";
+                //calculate remaining relative space 
+                var panelSizeDistributed = (100.0 - panelSizePercentTotal) / panelsWithoutSizeTotal;
+                if (panelSizeDistributed < 0.0) {
+                    panelSizeDistributed = 0.0;
+                }
 
-            //calculate remaining relative space 
-            var panelSizeDistributed = (100.0 - panelSizePercentTotal) / panelsWithoutSizeTotal;
-            if (panelSizeDistributed < 0.0) {
-                panelSizeDistributed = 0.0;
+                //apply left percentage panels
+                panelsWithoutOrRelativeSize.forEach(function (item) {
+                    var proportion = "(" + (item.size !== "auto" ? item.size.Number : panelSizeDistributed) + " / 100)";
+                    var size = "calc(" + remainingSpace + " * " + proportion + ")";
+
+                    var panelDisplayClass = "granit_Panel" + (item.flexible ? "" : " granit_Panel_Static");
+
+                    //apply splitter
+                    item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + item.minSize + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + item.maxSize + ";'></div>");
+
+                    item.wrappedElement.parent().data().__granitData__ = { index: item.index, flexible: item.flexible, originalUnit: "%", resizable: item.resizable };
+                    self.panels.splice(item.index, 0, item.wrappedElement.parent());
+
+                    self.splitterList[item.index] && self.splitterList[item.index].insertAfter(item.wrappedElement.parent());
+                });
             }
-
-            //apply left percentage panels
-            panelsWithoutOrRelativeSize.forEach(function (item) {
-                var proportion = "(" + (item.size !== "auto" ? item.size.Number : panelSizeDistributed) + " / 100)";
-                var size = "calc(" + remainingSpace + " * " + proportion + ")";
-
-                var panelDisplayClass = "granit_Panel" + (item.flexible ? "" : " granit_Panel_Static");
-
-                //apply splitter
-                item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + item.minSize + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + item.maxSize + ";'></div>");
-
-                item.wrappedElement.parent().data().__granitData__ = { index: item.index, flexible: item.flexible, originalUnit: "%", resizable: item.resizable };
-                self.panels.splice(item.index, 0, item.wrappedElement.parent());
-
-                self.splitterList[item.index] && self.splitterList[item.index].insertAfter(item.wrappedElement.parent());
-            });
 
             //throttle mouse move events
             this.options._throttle = this.options._throttle || 10;

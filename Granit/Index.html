@@ -38,9 +38,9 @@
                 panel: [
                     { size: "5em", classes: "panelLayout1", padding: 10, resizable: true },
                     { size: "30%", classes: "panelLayout2", resizable: true },
-                    { size: 30, margin: "5vmin", resizable: true },
+                    { size: 30, margin: "5vmin", resizable: true, flexible: true },
                     { size: "20%", classes: "panelLayout3 panelLayout5", margin: "5pt" },
-                    { resizable: true }
+                    { resizable: true, flexible: true }
                 ],
                 splitter: [
                     { width: "3%" },
@@ -51,15 +51,16 @@
                 panelTemplate: {
                     minSize: "3em", flexible: false, resizable: false
                 },
+                relativeSizeBasedOnRemainingSpace: true,
                 _throttle: "raf"
             });
 
             $("#splitterOuter").splitter({
                 panel: [
-                    { minSize: "2%", classes: "panelLayout2 panelLayout7 panelLayout7" },
-                    { size: "200px", classes: "panelLayout4", maxSize: "50%" },
-                    { size: "300px", classes: "panelLayout5", maxSize: "400px", resizable: true },
-                    { size: "40", classes: "panelLayout6", padding: 20, resizable: true }
+                    { size: "20", minSize: "2%", classes: "panelLayout2 panelLayout7 panelLayout7" },
+                    { size: "200px", classes: "panelLayout4", maxSize: "50%", flexible: true },
+                    { classes: "panelLayout5", maxSize: "400px", resizable: true, flexible: true },
+                    { size: "20", classes: "panelLayout6", padding: 20, resizable: true }
                 ],
                 splitter: [
                     {},
@@ -67,9 +68,10 @@
                     { width: 7, length: "10ch", classes: "splitter_HandleStyle" }
                 ],
                 panelTemplate: {
-                    minSize: "3em", padding: "2em", margin: "0.1cm", flexible: false, classes: "panelLayout7 panelLayout7"
+                    minSize: "1em", padding: "2em", margin: "0.2cm", flexible: false, classes: "panelLayout7 panelLayout7"
                 },
                 splitterTemplate: { width: "7px", length: "calc(100% - 10px)" },
+                //relativeSizeBasedOnRemainingSpace: true,
                 //direction: "horizontal",
                 direction: "vertical",
                 _throttle: "none"
