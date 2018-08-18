@@ -534,7 +534,10 @@ $(function () {
                     if (item.data().__granitData__.originalUnit !== "%") {
                         //TODO switch different length units
                     }
+                });
 
+                // set back to flexible
+                this.panels.forEach(function (item, index) {
                     if (item.data().__granitData__.flexible) {
                         item.removeClass("granit_Panel_Static");
                     }
