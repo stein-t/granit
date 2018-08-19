@@ -295,95 +295,108 @@ var granit = (function (gt) {
 
     /*
      * Author(s):   Thomas Stein
-     * Description: Provides any css length property value in pixels for max-width, min-width, max-height, min-height
-     */
-    var CSSPixelProvider = function (target) {
-        var element = target,
-            testElement = document.createElement("div");  //Create a temporary sibling div to resolve units into pixels.
-       
-        testElement.style.cssText = "overflow: hidden; visibility: hidden; position: absolute; top: 0; left: 0;";
-        element.appendChild(testElement);
-
-        this.destroy = function () {
-            element.removeChild(testElement);
-        };
-
-        this.getCSSPixel = function (target, hyphenProp) {
-            //get CSS value
-            var value = getComputedStyle(target, null).getPropertyValue(hyphenProp);
-
-            //if the value is a string ("none") we simply return it
-            if (!parseFloat(value)) {
-                return value;
-            }
-
-            //We can return pixels directly, but not other units
-            if (value.slice(-2) == "px") {
-                return parseFloat(value.slice(0, -2));
-            }
-
-            var sizePropertyName = hyphenProp.slice(4);
-            var offsetSize = prefixSizeName(sizePropertyName, "offset", true);
-
-            testElement.style[sizePropertyName] = value;
-            return testElement[offsetSize];
-        };
-    };
-
-    /*
-     * Author(s):   Thomas Stein
      * Description: 
      */
-    var PixelConverter = function (target) {
-        var element = target,
-            testElement = document.createElement("div");  //Create a temporary sibling div to resolve units into pixels.
+    var PixelConverter = function (targetParent) {
+        var element = targetParent,
+            testElement = document.createElement("div");  //Create a temporary sibling for the target
 
-        testElement.textContent = "&nbsp;";  //space content
-        testElement.style.cssText = "overflow: hidden; visibility: hidden; position: absolute; top: 0; left: 0; border: 0; margin: 0; padding: 0; width: auto; height: auto; font-size: 1em; line-height: 1;";
+        testElement.style.cssText = "overflow: hidden; visibility: hidden; position: absolute; top: 0; left: 0; border: 0; margin: 0; padding: 0;";
 
         element.appendChild(testElement);
 
+        //destroy test element
         this.destroy = function () {
             element.removeChild(testElement);
         };
 
-        this.convertToPixel = function (target, hyphenProp) {
+        //reset test element
+        this.reset = function () {            
+            $(testElement).contents().remove(); //remove all children
+
+            var dh = new DeviceHelper();
+
+            //the initial keyword does not work for Internet Explorer
+            if (!dh.isIE) {
+                testElement.style.fontSize = "initial";
+                testElement.style.lineHeight = "initial";
+                testElement.style.width = "initial";
+                testElement.style.height = "initial";
+                testElement.style.minWidth = "initial";
+                testElement.style.minHeight = "initial";
+                testElement.style.maxWidth = "initial";
+                testElement.style.maxHeight = "initial";
+            } else {
+                testElement.style.fontSize = "medium";
+                testElement.style.lineHeight = "normal";
+                testElement.style.width = "auto";
+                testElement.style.height = "auto";
+                testElement.style.minWidth = 0;
+                testElement.style.minHeight = 0;
+                testElement.style.maxWidth = "none";
+                testElement.style.maxHeight = "none";
+            }
+        }
+
+        var self = this;
+
+        /*
+         * Converts some css Property values into pixel
+         * Supported properties are min-width, min-height, max-width, max-height
+         */
+        this.convertToPixel = function (target, cssPropertyName, destroy) {
+            self.reset();
+
+            var result;
+
             //get CSS value
-            var value = getComputedStyle(target, null).getPropertyValue(hyphenProp);
+            var value = getComputedStyle(target, null).getPropertyValue(cssPropertyName);
 
             //if the value is a string ("none") we simply return it
             if (!parseFloat(value)) {
-                return value;
+                result = value;
             }
-
             //We can return pixels directly, but not other units
-            if (value.slice(-2) == "px") {
-                return parseFloat(value.slice(0, -2));
+            else if (value.slice(-2) == "px") {
+                result = parseFloat(value.slice(0, -2));
+            }
+            else {
+                cssPropertyName = cssPropertyName.slice(4);
+                var offsetSizeName = prefixSizeName(cssPropertyName, "offset", true);
+
+                testElement.style[cssPropertyName] = value;
+                result = testElement[offsetSizeName];
             }
 
-            var sizePropertyName = hyphenProp.slice(4);
-            var offsetSizeName = prefixSizeName(sizePropertyName, "offset", true);
+            if (destroy) {
+                self.destroy();
+            }
 
-            testElement.style[sizePropertyName] = value;
-            return testElement[offsetSizeName];
+            return result;
         };
 
-        //convert any pixel length to target unit related to the constructed target element
-        this.convertFromPixel = function (pixelSize, targetUnit, sizePropertyName) {
-            if (targetUnit == "em") {
-                testElement.style.fontSize = "1.0em";
-            } else if (targetUnit == "rem") {
-                testElement.style.fontSize = "1.0rem";
+        //convert any pixel length to target unit
+        this.convertFromPixel = function (value, targetUnit, cssPropertyName, destroy) {
+            self.reset();
+
+            if (targetUnit === "em" || targetUnit === "rem") {
+                testElement.textContent = "&nbsp;";  //space content
+                testElement.style.fontSize = "1.0" + targetUnit;
+                testElement.style.lineHeight = "1";
             }
             var pixelBase = testElement.offsetHeight;
+
+            if (destroy) {
+                self.destroy();
+            }
 
             var dh = new DeviceHelper();
             //check for IE browsers (including Edge)
             if (dh.isMicrosoftBrowser()) {
-                return (pixelSize / pixelBase).toFixed(2) + targetUnit; //round 2 decimal digits: Microsoft browser only render 2 decimal digits
+                return (value / pixelBase).toFixed(2) + targetUnit; //round 2 decimal digits: Microsoft browser only render 2 decimal digits
             }
 
-            return (pixelSize / pixelBase).toFixed(8) + targetUnit; //return full float
+            return (value / pixelBase).toFixed(8) + targetUnit; //return full float
         };
     };
 
@@ -517,7 +530,6 @@ var granit = (function (gt) {
     gt.listCompare = listCompare;
     gt.NumberUnitArray = numberUnitArray;
     gt.NumberUnit = NumberUnit;
-    gt.CSSPixelProvider = CSSPixelProvider;
     gt.prefixSizeName = prefixSizeName;
     gt.EventTimeController = EventTimeController;
     gt.DeviceHelper = DeviceHelper;

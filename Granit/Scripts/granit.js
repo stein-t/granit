@@ -431,7 +431,7 @@ $(function () {
             }
 
             //create the convertion tool in order to transfer any limit-size css length value into pixel (max-width, min-width, max-height, min-height)
-            var pc = new granit.CSSPixelProvider(self.element[0]);
+            var pc = new granit.PixelConverter(self.element[0]);
 
             var offsetSizeName = granit.prefixSizeName(self.sizePropertyName, "offset", true),      //offsetWidth, offsetHeight
                 minSizeName = granit.prefixSizeName(self.sizePropertyName, "min"),                   //min-width, min-height
@@ -460,12 +460,12 @@ $(function () {
                     return false;    //we do not need to prepare non-resizable panels
                 }
 
-                var minSize = pc.getCSSPixel(item[0], minSizeName);
+                var minSize = pc.convertToPixel(item[0], minSizeName);
                 if (minSize && minSize === "none") {
                     minSize = 0.0;
                 }
 
-                var maxSize = pc.getCSSPixel(item[0], maxSizeName);
+                var maxSize = pc.convertToPixel(item[0], maxSizeName);
                 if (maxSize && maxSize === "none") {
                     maxSize = self.element[0][offsetSizeName];
                 }
@@ -527,8 +527,8 @@ $(function () {
                 if (event.target.releaseCapture) { event.target.releaseCapture(); }
 
                 //create the convertion tool in order to transfer any panel length pixel values into the associated original units
-                var pc = new granit.PixelConverter(self.element[0]),
-                    size, originalUnit;
+                var pc = new granit.PixelConverter(self.element[0]);
+                var size, originalUnit;
 
                 // iterating the panels for re-converting
                 this.panels.forEach(function (item, index) {
@@ -538,10 +538,13 @@ $(function () {
                     //reconvert to original unit
                     size = item.data().__granitData__.size;                     //current size in pixels
                     originalUnit = item.data().__granitData__.originalUnit;     //current original unit
-                    var originalSize = pc.convertFromPixel(size, originalUnit, self.sizePropertyName);
 
-                    if (originalUnit === "em" || originalUnit === "rem") {
-                        item.css(self.sizePropertyName, originalSize);
+                    if (originalUnit !== "px") {
+                        var originalSize = pc.convertFromPixel(size, originalUnit, self.sizePropertyName);
+
+                        if (originalUnit === "em" || originalUnit === "rem") {
+                            item.css(self.sizePropertyName, originalSize);
+                        }
                     }
 
                     if (item.data().__granitData__.originalUnit !== "%") {
