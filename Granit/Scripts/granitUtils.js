@@ -418,12 +418,20 @@ var granit = (function (gt) {
         };
 
         this.isEdge = function () {
-            return !!this.navigator.userAgent && this.navigator.userAgent.indexOf("Edge") > -1;
+            return !!this.navigator.userAgent && this.navigator.userAgent.toLowerCase().indexOf("edge") > -1;
         };
 
         this.isMicrosoftBrowser = function () {
             return this.isEdge() || this.isIE();
         };
+
+        this.isFirefox = function () {
+            return !!this.navigator.userAgent && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+        }
+
+        this.isChrome = function () {
+            return !!this.navigator.userAgent && navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
+        }
     };
 
     /*

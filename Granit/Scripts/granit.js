@@ -471,8 +471,8 @@ $(function () {
                 }
 
                 //capture the current limit sizes to support mouse-moving calculation 
-                item.data().__granitData__.minSize = minSize;     //capture current minimum size
-                item.data().__granitData__.maxSize = maxSize;     //capture current maximum size   
+                item.data().__granitData__.minSize = Math.floor(minSize + 1);       //round slightly up to egalize (percent) convertion errors (in firefox and chrome)
+                item.data().__granitData__.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
                 item.data().__granitData__.size = size;
             });
 
