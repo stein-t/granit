@@ -12,12 +12,16 @@
  */
 
 html {
-    /*font-size: 10px;    /* for accurate em calculation in IE and Edge Browsers */*/
-    font-size: 62.5%;
+    /*font-size: 62.5%;   /* IE has problems with em calculation with percentage font-size */
+    font-size: 10px;
+    margin: 0;
+    height: 100%;
+    width: auto;
 }
 
-html, body {
+.granit_splitter_parent {
     margin: 0;
+    box-sizing: border-box;
     height: 100%;
     width: auto;
 }
@@ -30,6 +34,10 @@ html, body {
     overflow: auto;
     position: relative;
     height: 100%;
+}
+
+.granit_Panel_margin_wrapper {
+    overflow: hidden;
 }
 
 .granitSplitter_Container {

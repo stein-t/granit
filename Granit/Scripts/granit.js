@@ -49,7 +49,7 @@ $(function () {
             this.IdString = "#" + splitterId;
 
             var optionsAllowed = [
-                'classes', 'disabled', 'create', 'hide', 'show',    //base widget properties
+                'classes', 'disabled', 'create', 'hide', 'show',
                 'direction', 'overflow', 'flexible', 'panel', 'splitter',
                 'panelTemplate', 'splitterTemplate', 'separatorTemplate',
                 'relativeSizeBasedOnRemainingSpace', '_throttle'
@@ -105,6 +105,7 @@ $(function () {
                 granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
             }
 
+            this.element.parent().addClass("granit_splitter_parent");
             this.element.addClass("granitSplitter_Container");
 
             if (self.options.direction === "vertical") {
@@ -172,11 +173,11 @@ $(function () {
 
                 //retrieve the padding option: a value defined individually on panel level overwrites any panel template value
                 var padding = (panel && panel.padding) || self.options.panelTemplate && self.options.panelTemplate.padding;
-                padding = granit.extractFloatUnit(padding, "Q+", /px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel padding");
+                padding = granit.extractFloatUnit(padding, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel padding");
 
                 //retrieve the margin option: a value defined individually on panel level overwrites any panel template value
                 var margin = (panel && panel.margin) || self.options.panelTemplate && self.options.panelTemplate.margin;
-                margin = granit.extractFloatUnit(margin, "Q+", /px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel margin");
+                margin = granit.extractFloatUnit(margin, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel margin");
 
                 //retrieve the panelClasses option: the result is a string of class names as a combination of both the individual panel- and the global template- level options
                 var panelClasses = ((self.options.panelTemplate && self.options.panelTemplate.classes && (" " + self.options.panelTemplate.classes)) || "") +
@@ -253,14 +254,21 @@ $(function () {
                     wrappedElement.wrap("<div class='" + panelClasses + "'></div>");
                     wrappedElement = wrappedElement.parent();
                     wrappedElement.css("padding", padding.getSize());
-                    wrappedElement.css("margin", margin.getSize());
+                    wrappedElement.css("margin", 0);
 
-                    //because the margin is not part of the border-box model, we have to subtract it from the overall height
-                    if (margin.Number > 0.0) {
-                        wrappedElement.css("height", "calc(100% - " + (2 * margin.Number) + margin.Unit + ")");
-                    } else {
-                        wrappedElement.css("height", "100%");
+                    if (margin.Number) {
+                        wrappedElement.wrap("<div class='granit_Panel_wrapper granit_Panel_margin_wrapper'></div>");
+                        wrappedElement = wrappedElement.parent();
+                        wrappedElement.css("padding", margin.getSize());
+                        wrappedElement.css("margin", 0);
                     }
+
+                    ////because the margin is not part of the border-box model, we have to subtract it from the overall height
+                    //if (margin.Number > 0.0) {
+                    //    wrappedElement.css("height", "calc(100% - " + (2 * margin.Number) + margin.Unit + ")");
+                    //} else {
+                    //    wrappedElement.css("height", "100%");
+                    //}
                 } else {
                     /* 
                      * --> see Issue #1: IE11 Flexbox Column Children width problem 
