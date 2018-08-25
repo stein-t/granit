@@ -19,11 +19,10 @@ $(function () {
             panel: [],
             splitter: [],
             panelTemplate: {
-                size: "auto", minSize: 5, maxSize: "none", margin: 0, flexible: true, resizable: true, classes: "granit_Panel_Default"
+                size: "auto", minSize: 5, maxSize: "none", padding: 0, margin: 0, flexible: false, resizable: true, classes: "granit_Panel_Default"
             },
-            splitterTemplate: { width: "0.5em", length: "100%", classes: "granit_Splitter_Default" },
-            separatorTemplate: { width: "0.5em", length: "100%", classes: "granit_Separator_Default" },
-            relativeSizeBasedOnRemainingSpace: false,    //The group of percentage panels may be isolated from other unit-sized panels. Their relative (percentage) size is always relative to the remaining space of all non-percentage sized panels
+            splitterTemplate: { width: 5, length: "100%", classes: "granit_Splitter_Default" },
+            separatorTemplate: { width: 3, length: "100%", classes: "granit_Separator_Default" },
             _throttle: 10       //the keywords 'none', 'raf' or a positive integer number
         },
         /*
@@ -49,14 +48,13 @@ $(function () {
             this.IdString = "#" + splitterId;
 
             var optionsAllowed = [
-                'classes', 'disabled', 'create', 'hide', 'show',
+                'classes', 'disabled', 'create', 'hide', 'show',    //base widget properties
                 'direction', 'overflow', 'flexible', 'panel', 'splitter',
-                'panelTemplate', 'splitterTemplate', 'separatorTemplate',
-                'relativeSizeBasedOnRemainingSpace', '_throttle'
+                'panelTemplate', 'splitterTemplate', 'separatorTemplate', '_throttle'
             ];
 
             var panelOptionsAllowed = [
-                'size', 'minSize', 'maxSize', 'margin', 'flexible', 'resizable', 'classes'
+                'size', 'minSize', 'maxSize', 'padding', 'margin', 'flexible', 'resizable', 'classes'
             ];
 
             var splitterTemplateOptionsAllowed = [
@@ -159,7 +157,7 @@ $(function () {
                 }
 
                 //retrieve the resizable option: a value defined individually on panel level overwrites any panel template value
-                var resizable = (panel && (granit.IsBooleanType(panel.resizable) || panel.resizable)) || self.options.panelTemplate && self.options.panelTemplate.resizable;
+                var resizable = (panel && panel.resizable) || self.options.panelTemplate && self.options.panelTemplate.resizable;
                 resizable = resizable ? true : false;
 
                 //retrieve the minSize option: a value defined individually on panel level overwrites any panel template value
@@ -170,9 +168,13 @@ $(function () {
                 var maxSize = (panel && panel.maxSize) || self.options.panelTemplate && self.options.panelTemplate.maxSize;
                 maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
 
+                //retrieve the padding option: a value defined individually on panel level overwrites any panel template value
+                var padding = (panel && panel.padding) || self.options.panelTemplate && self.options.panelTemplate.padding;
+                padding = granit.extractFloatUnit(padding, "Q+", /px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel padding");
+
                 //retrieve the margin option: a value defined individually on panel level overwrites any panel template value
                 var margin = (panel && panel.margin) || self.options.panelTemplate && self.options.panelTemplate.margin;
-                margin = granit.extractFloatUnit(margin, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel margin");
+                margin = granit.extractFloatUnit(margin, "Q+", /px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel margin");
 
                 //retrieve the panelClasses option: the result is a string of class names as a combination of both the individual panel- and the global template- level options
                 var panelClasses = ((self.options.panelTemplate && self.options.panelTemplate.classes && (" " + self.options.panelTemplate.classes)) || "") +
@@ -181,7 +183,7 @@ $(function () {
                 panelClasses = "granit_Panel_wrapper" + panelClasses;                       //prefix the class string with the required system class
 
                 //retrieve the flexible option: a value defined individually on panel level overwrites any panel template value
-                var flexible = (panel && (granit.IsBooleanType(panel.flexible) || panel.flexible)) || self.options.panelTemplate && self.options.panelTemplate.flexible;
+                var flexible = (panel && panel.flexible) || self.options.panelTemplate && self.options.panelTemplate.flexible;
                 flexible = flexible ? true : false;
 
                 if (index < children.length - 1) {
@@ -198,20 +200,20 @@ $(function () {
                     }
 
                     //retrieve the splitterWidth option: a value defined individually on splitter level overwrites any template value
-                    var splitterWidth = (splitter && splitter.width) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.width : self.options.splitterTemplate && self.options.splitterTemplate.width); 
+                    var splitterWidth = (splitter && splitter.width) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.width : self.options.splitterTemplate && self.options.splitterTemplate.width);
                     splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- splitter width (splitter.width)");
 
                     //retrieve the splitterLength option: a value defined individually on splitter level overwrites any template value
-                    var splitterLength = (splitter && splitter.length) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.length : self.options.splitterTemplate && self.options.splitterTemplate.length); 
+                    var splitterLength = (splitter && splitter.length) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.length : self.options.splitterTemplate && self.options.splitterTemplate.length);
                     //Any css length value is allowed (including calc() statements). No validation needed here, because this value is directly forwarded into the css style definition
 
                     //retrieve the splitterClasses option: the result is a string of class names as a combination of both the individual splitter- and the global template- level options
                     var splitterClasses = (
-                                            splitter && splitter.display === "separator" ?
-                                            ((self.options.separatorTemplate && self.options.separatorTemplate.classes && (" " + self.options.separatorTemplate.classes)) || "") :
-                                            ((self.options.splitterTemplate && self.options.splitterTemplate.classes && (" " + self.options.splitterTemplate.classes)) || "")
-                                        ) +
-                                        ((splitter && splitter.classes && (" " + splitter.classes)) || "");                                       //all provided classes on template level and individual panel level are concatenated
+                        splitter && splitter.display === "separator" ?
+                            ((self.options.separatorTemplate && self.options.separatorTemplate.classes && (" " + self.options.separatorTemplate.classes)) || "") :
+                            ((self.options.splitterTemplate && self.options.splitterTemplate.classes && (" " + self.options.splitterTemplate.classes)) || "")
+                    ) +
+                        ((splitter && splitter.classes && (" " + splitter.classes)) || "");                                       //all provided classes on template level and individual panel level are concatenated
                     splitterClasses = granit.uniqueArray(splitterClasses.split(" ")).join(" ");     //avoiding duplicate class names
                     splitterClasses = "granitSplitter_Splitter" + splitterClasses;                  //prefix the class string with the required system class
 
@@ -248,28 +250,14 @@ $(function () {
                 if (!wrappedElement.is(":data('granit-splitter')")) {                   //test if the element is a nested splitter
                     wrappedElement.wrap("<div class='" + panelClasses + "'></div>");
                     wrappedElement = wrappedElement.parent();
-                    //wrappedElement.css("margin", margin.getSize());
-                } else {
-                    /* 
-                     * --> see Issue #1: IE11 Flexbox Column Children width problem 
-                     * https://github.com/stein-t/granit/issues/1
-                     * There is a known bug in IE11 (and older):
-                     * ... when there is a vertical panel overflow inside a horizontal splitter container panel (the addition of the vertically arranged children panels height overflows overall vertical splitter space),
-                     * ... when overflow = auto
-                     * ... when children panels width = 100% (default)
-                     * --> the vertical scrollbar appears for the panel container, but the width 100% of its children panels is ignored
-                     */
-                    if (
-                        self.options.direction === "horizontal" &&
-                        self.element.css("overflow-y") === "auto"
-                    ) {
-                        var dh = new granit.DeviceHelper();
-                        //check for IE browsers (excluding Edge)
-                        if (dh.isIE()) {
-                            //... I (stein-t) decided to set overflow-y = hidden in this case to ensure proper children widths rendering
-                            self.element.css("overflow-y", "hidden");
-                            granit.output("Due to a known but unresolved bug in IE11 and older (Issue #1: IE11 Flexbox Column Children width problem) overflow-y is set to hidden for those Flexbox container columns in order to ensure proper width rendering of its verically arranged children panels", self.IdString + " -- options.overflow", 'Warning');
-                        }
+                    wrappedElement.css("padding", padding.getSize());
+                    wrappedElement.css("margin", margin.getSize());
+
+                    //because the margin is not part of the border-box model, we have to subtract it from the overall height
+                    if (margin.Number > 0.0) {
+                        wrappedElement.css("height", "calc(100% - " + (2 * margin.Number) + margin.Unit + ")");
+                    } else {
+                        wrappedElement.css("height", "100%");
                     }
                 }
 
@@ -278,8 +266,7 @@ $(function () {
                 if (size !== "auto") {
                     size = granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "%", self.IdString + " -- Panel size (size)");
                 }
-
-                if (size !== "auto" && (!self.options.relativeSizeBasedOnRemainingSpace || size.Unit !== "%")) {
+                if (size !== "auto" && size.Unit !== "%") {
                     var panelDisplayClass = "granit_Panel" + (flexible ? "" : " granit_Panel_Static");
 
                     //present total static size
@@ -298,10 +285,20 @@ $(function () {
                     return true; //leave loop
                 }
 
-                if (size === "auto") {                    
+                /*
+                 * for percentage panels flexible is true anyways, the option is ignored
+                 * The main reason why I decided not to support unflexible behaviour for percentage panels is the similarity between both modes:
+                 * Both modes (unflexible, flexible) are assumed to behave similar according their stretch- and shrink- behaviour.
+                 * Obviously there are huge difficulties in converting the value back in percentages after the dragging operation.
+                 * So after the mouse-move process I actually leave the size in pixels and let Flebox do the job of establishing the typical stretch- and shrink- behaviour that we would expect to see from percentage sized panels.  
+                 */
+                flexible = true;
+
+                if (size === "auto") {
                     panelsWithoutSizeTotal++;   //count panels with no size
                 }
-                else if (size.Unit === "%") {                    
+
+                if (size !== "auto" && size.Unit === "%") {
                     panelSizePercentTotal += size.Number;   //update total size of percentage panels
                 }
 
@@ -317,32 +314,35 @@ $(function () {
                 });
             });
 
-            if (panelsWithoutOrRelativeSize.length > 0) {
-                //the total remaining space 
-                var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(splitterOffset, "-").toString() + ")";
+            /*
+             * The group of percentage panels are isolated from other unit-sized panels.
+             * Their percentage size is always relative to the remaining space of all non-percentage sized panels.
+             */
 
-                //calculate remaining relative space 
-                var panelSizeDistributed = (100.0 - panelSizePercentTotal) / panelsWithoutSizeTotal;
-                if (panelSizeDistributed < 0.0) {
-                    panelSizeDistributed = 0.0;
-                }
+            //the total remaining space 
+            var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(splitterOffset, "-").toString() + ")";
 
-                //apply left percentage panels
-                panelsWithoutOrRelativeSize.forEach(function (item) {
-                    var proportion = "(" + (item.size !== "auto" ? item.size.Number : panelSizeDistributed) + " / 100)";
-                    var size = "calc(" + remainingSpace + " * " + proportion + ")";
-
-                    var panelDisplayClass = "granit_Panel" + (item.flexible ? "" : " granit_Panel_Static");
-
-                    //apply splitter
-                    item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + item.minSize + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + item.maxSize + ";'></div>");
-
-                    item.wrappedElement.parent().data().__granitData__ = { index: item.index, flexible: item.flexible, originalUnit: "%", resizable: item.resizable };
-                    self.panels.splice(item.index, 0, item.wrappedElement.parent());
-
-                    self.splitterList[item.index] && self.splitterList[item.index].insertAfter(item.wrappedElement.parent());
-                });
+            //calculate remaining relative space 
+            var panelSizeDistributed = (100.0 - panelSizePercentTotal) / panelsWithoutSizeTotal;
+            if (panelSizeDistributed < 0.0) {
+                panelSizeDistributed = 0.0;
             }
+
+            //apply left percentage panels
+            panelsWithoutOrRelativeSize.forEach(function (item) {
+                var proportion = "(" + (item.size !== "auto" ? item.size.Number : panelSizeDistributed) + " / 100)";
+                var size = "calc(" + remainingSpace + " * " + proportion + ")";
+
+                var panelDisplayClass = "granit_Panel" + (item.flexible ? "" : " granit_Panel_Static");
+
+                //apply splitter
+                item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + item.minSize + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + item.maxSize + ";'></div>");
+
+                item.wrappedElement.parent().data().__granitData__ = { index: item.index, flexible: item.flexible, originalUnit: "%", resizable: item.resizable };
+                self.panels.splice(item.index, 0, item.wrappedElement.parent());
+
+                self.splitterList[item.index] && self.splitterList[item.index].insertAfter(item.wrappedElement.parent());
+            });
 
             //throttle mouse move events
             this.options._throttle = this.options._throttle || 10;
@@ -368,7 +368,7 @@ $(function () {
                 })
             ) {
                 //... if at least there is one resizable panel
-                this.splitterList.forEach(function (item, index) {                    
+                this.splitterList.forEach(function (item, index) {
                     if (!item.data().__granitData__.disabled) {
                         //... and if the associated splitter is enabled
                         self._on(item, {
@@ -419,7 +419,7 @@ $(function () {
             }
 
             //create the convertion tool in order to transfer any limit-size css length value into pixel (max-width, min-width, max-height, min-height)
-            var pc = new granit.PixelConverter(self.element[0]);
+            var pc = new granit.CSSPixelProvider(self.element[0]);
 
             var offsetSizeName = granit.prefixSizeName(self.sizePropertyName, "offset", true),      //offsetWidth, offsetHeight
                 minSizeName = granit.prefixSizeName(self.sizePropertyName, "min"),                   //min-width, min-height
@@ -448,19 +448,19 @@ $(function () {
                     return false;    //we do not need to prepare non-resizable panels
                 }
 
-                var minSize = pc.convertToPixel(item[0], minSizeName);
+                var minSize = pc.getCSSPixel(item[0], minSizeName);
                 if (minSize && minSize === "none") {
                     minSize = 0.0;
                 }
 
-                var maxSize = pc.convertToPixel(item[0], maxSizeName);
+                var maxSize = pc.getCSSPixel(item[0], maxSizeName);
                 if (maxSize && maxSize === "none") {
                     maxSize = self.element[0][offsetSizeName];
                 }
 
                 //capture the current limit sizes to support mouse-moving calculation 
-                item.data().__granitData__.minSize = Math.floor(minSize + 1);       //round slightly up to egalize (percent) convertion errors (in firefox and chrome)
-                item.data().__granitData__.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
+                item.data().__granitData__.minSize = minSize;     //capture current minimum size
+                item.data().__granitData__.maxSize = maxSize;     //capture current maximum size   
                 item.data().__granitData__.size = size;
             });
 
@@ -515,10 +515,10 @@ $(function () {
                 if (event.target.releaseCapture) { event.target.releaseCapture(); }
 
                 //create the convertion tool in order to transfer any panel length pixel values into the associated original units
-                var pc = new granit.PixelConverter(self.element[0]);
-                var size, originalUnit;
+                var pc = new granit.CSSPixelProvider(self.element[0]),
+                    size, originalUnit;
 
-                // iterating the panels for re-converting
+                // iterating the panels for re-setting
                 this.panels.forEach(function (item, index) {
                     item.data().__granitData__.minimized = false;
                     item.data().__granitData__.maximized = false;
@@ -526,13 +526,14 @@ $(function () {
                     //reconvert to original unit
                     size = item.data().__granitData__.size;                     //current size in pixels
                     originalUnit = item.data().__granitData__.originalUnit;     //current original unit
+                    var originalSize = pc.convertFromPixel(size, originalUnit, self.sizePropertyName);
 
-                    if (originalUnit !== "px") {
-                        var originalSize = pc.convertFromPixel(size, originalUnit, self.sizePropertyName);
+                    if (originalUnit === "em" || originalUnit === "rem") {
+                        item.css(self.sizePropertyName, originalSize);
+                    }
 
-                        if (originalUnit === "em" || originalUnit === "rem") {
-                            item.css(self.sizePropertyName, originalSize);
-                        }
+                    if (item.data().__granitData__.flexible) {
+                        item.removeClass("granit_Panel_Static");
                     }
 
                     if (item.data().__granitData__.originalUnit !== "%") {
@@ -541,13 +542,6 @@ $(function () {
                 });
 
                 pc.destroy();   //destroy the convertion tool
-
-                // set back to flexible
-                this.panels.forEach(function (item, index) {
-                    if (item.data().__granitData__.flexible) {
-                        item.removeClass("granit_Panel_Static");
-                    }
-                });
 
                 //clean up
                 $("html").css("cursor", "default");

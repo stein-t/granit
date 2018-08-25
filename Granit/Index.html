@@ -5,8 +5,8 @@
     <meta charset="utf-8" />
     <link rel="shortcut icon" href="favicon.ico">
     <link href="Content/jquery-ui.min.css" rel="stylesheet" />
-    <!--<link href="Content/granit.css" rel="stylesheet" />-->
-    <link href="Content/granit.min.css" rel="stylesheet" />
+    <link href="Content/granit.css" rel="stylesheet" />
+    <!--<link href="Content/granit.min.css" rel="stylesheet" />-->
     <link href="Content/custom.css" rel="stylesheet" />
     <script src="Scripts/jquery-3.1.1.min.js"></script>
     <script src="Scripts/jquery-ui-1.12.1.min.js"></script>
@@ -16,14 +16,15 @@
     <script src="Scripts/granit.min.js"></script>
     <!--<script src="Scripts/jquery.resize.js"></script>-->
     <!--<script src="Scripts/jquery.resize.min.js"></script>-->
+
     <script>
         $(document).ready(function () {
             $("#splitterInner2").splitter({
                 panel: [
-                    { size: "200px", classes: "panelLayout1", padding: 10 },
+                    { size: "200px", classes: "panelLayout1", margin: "5%", flexible: true, resizable: true },
                     { size: "100px", classes: "panelLayout2" },
                     { size: "200px", margin: "5vmin" },
-                    { classes: "panelLayout3 panelLayout5", margin: "5pt"}
+                    { classes: "panelLayout3 panelLayout5", margin: "5pt" }
                 ],
                 splitter: [
                     { width: 10 },
@@ -31,15 +32,15 @@
                     { width: 10 }
                 ],
                 direction: "vertical",
-                overflow: "hidden",
+                overflow: "hidden"
             });
 
             $("#splitterInner").splitter({
                 panel: [
-                    { size: "5em", classes: "panelLayout1", padding: 10, resizable: true },
-                    { size: "30%", classes: "panelLayout2", resizable: true },
-                    { size: 30, margin: "5vmin", resizable: true },
-                    { size: "20%", classes: "panelLayout3 panelLayout5", margin: "5pt" },
+                    { size: "10em", classes: "panelLayout1", resizable: true },
+                    { size: "30%", maxSize: "20%", classes: "panelLayout2", resizable: true },
+                    { size: "10em", maxSize: "20%", margin: "5vmin", resizable: true },
+                    { size: "10em", classes: "panelLayout3 panelLayout5", margin: "5pt" },
                     { resizable: true }
                 ],
                 splitter: [
@@ -49,27 +50,29 @@
                 ],
                 direction: "horizontal",
                 panelTemplate: {
-                    minSize: "3em", flexible: false, resizable: false
+                    minSize: "2em", flexible: true, resizable: true
                 },
+                relativeSizeBasedOnRemainingSpace: false,
                 _throttle: "raf"
             });
 
             $("#splitterOuter").splitter({
                 panel: [
-                    { minSize: "2%", classes: "panelLayout2 panelLayout7 panelLayout7" },
-                    { size: "200px", classes: "panelLayout4", maxSize: "50%" },
-                    { size: "300px", classes: "panelLayout5", maxSize: "400px", resizable: true },
-                    { size: "40", classes: "panelLayout6", padding: 20, resizable: true }
+                    { size: "20.1em", minSize: "5%", classes: "panelLayout2 panelLayout7 panelLayout7", resizable: true, flexible: true },
+                    { classes: "panelLayout4", maxSize: "30%", resizable: true, flexible: true },
+                    { size: "20.1em", maxSize: "30%", classes: "panelLayout5", resizable: true, flexible: false },
+                    { size: "20.1em", classes: "panelLayout6", resizable: true, flexible: true }
                 ],
                 splitter: [
                     {},
                     { display: "separator", length: "80%" },
-                    { width: 7, length: "10ch", classes: "splitter_HandleStyle" }
+                    { length: "30ch", classes: "splitter_HandleStyle" }
                 ],
                 panelTemplate: {
-                    minSize: "3em", padding: "2em", margin: "0.1cm", flexible: false, classes: "panelLayout7 panelLayout7"
+                    minSize: "20em", margin: "5em", flexible: false, resizable: false, classes: "panelLayout7 panelLayout7"
                 },
-                splitterTemplate: { width: "7px", length: "calc(100% - 10px)" },
+                splitterTemplate: { width: "1em", length: "calc(100% - 10px)" },
+                //relativeSizeBasedOnRemainingSpace: true,
                 //direction: "horizontal",
                 direction: "vertical",
                 _throttle: "none"
@@ -79,49 +82,49 @@
 </head>
 
 <body>
-    <!--<div style="width:300px;height:400px;">-->
-        <div id="splitterOuter">
-            <div id="OuterPanel1" style="width:auto;height:100%;">
-                Contentfhfjhfhjfjhfjhfjhg
-            </div>
-            <!--<div id="OuterPanel2" style="width:auto;height:100%;">
-                Contentfhfjhfhjfjhfjhfjhg
-            </div>-->
-            <div id="splitterInner">
-                <div id="InnerPanel1" style="width:1200px;height:1200px;">
-                    Content
-                </div>
-                <div id="InnerPanel2" style="width:auto;height:100%;">
-                    Contentfhgfjhhgfjhhjfhjjhjhg
-                </div>
-                <div id="InnerPanel3" style="width:auto;height:200px;">
-                    Content
-                </div>
-                <div id="splitterInner2">
-                    <div id="InnerPanelB1" style="width:1200px;height:1200px;">
-                        Content
-                    </div>
-                    <div id="InnerPanelB2" style="width:auto;height:100%;">
-                        Contentfhgfjhhgfjhhjfhjjhjhg
-                    </div>
-                    <div id="InnerPanelB3" style="width:auto;height:200px;">
-                        Content
-                    </div>
-                    <div id="InnerPanelB4" style="width:1200px;height:100%;">
-                        Content
-                    </div>
-                </div>
-                <div id="InnerPanel4" style="width:1200px;height:100%;">
-                    Content
-                </div>
-            </div>
-            <div id="OuterPanel3" style="width:1200px;height:1200px;">
+    <!--<div class="stein_container">-->
+    <div id="splitterOuter">
+        <div id="OuterPanel1" class="stein_content">
+            Contentfhfjhfhjfjhfjhfjhg
+        </div>
+        <!--<div id="OuterPanel2" style="width:auto;height:100%;">
+            Contentfhfjhfhjfjhfjhfjhg
+        </div>-->
+        <div id="splitterInner">
+            <div id="InnerPanel1" class="stein_content" style="width:1200px;height:1200px;">
                 Content
             </div>
-            <div id="OuterPanel4">
-                Contentsdfgsdfg
+            <div id="InnerPanel2" class="stein_content" style="width:auto;height:100%;">
+                Contentfhgfjhhgfjhhjfhjjhjhg
+            </div>
+            <div id="InnerPanel3" class="stein_content" style="width:auto;height:200px;">
+                Content
+            </div>
+            <div id="splitterInner2">
+                <div id="InnerPanelB1" class="stein_content" style="width:1200px;height:1200px;">
+                    Content
+                </div>
+                <div id="InnerPanelB2" class="stein_content" style="width:auto;height:100%;">
+                    Contentfhgfjhhgfjhhjfhjjhjhg
+                </div>
+                <div id="InnerPanelB3" class="stein_content" style="width:auto;height:200px;">
+                    Content
+                </div>
+                <div id="InnerPanelB4" class="stein_content" style="width:1200px;height:100%;">
+                    Content
+                </div>
+            </div>
+            <div id="InnerPanel4" class="stein_content" style="width:1200px;height:100%;">
+                Content
             </div>
         </div>
+        <div id="OuterPanel3" class="stein_content" style="width:1200px;height:1200px;">
+            Content
+        </div>
+        <div id="OuterPanel4" class="stein_content">
+            Contentsdfgsdfg
+        </div>
+    </div>
     <!--</div>-->
 </body>
 </html>

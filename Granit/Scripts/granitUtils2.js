@@ -84,10 +84,6 @@ var granit = (function (gt) {
         }
     };
 
-    var isBooleanType = function (value) {
-        return value === true || value === false;
-    }
-
     /*
      * Author(s):   Thomas Stein
      * Description: function to validate the given size as a float number and an optional unit. As a result a NumberUnit object is returned.
@@ -222,7 +218,7 @@ var granit = (function (gt) {
                 if (item.Unit === el.Unit) {
                     element = el;
                     return true;
-                }                
+                }
             });
 
             if (element) {
@@ -249,7 +245,7 @@ var granit = (function (gt) {
             }
             else {
                 item.Operation = operation;
-                return this.push(item);                
+                return this.push(item);
             }
 
             return arr;
@@ -290,7 +286,7 @@ var granit = (function (gt) {
      * Author(s):   Thomas Stein
      * Description: prefixes the sizename "width" or "height" accordingly to get "min-width", "min-height", "max-width," "max-height", "offsetWidth", "offsetHeight"
      */
-    var prefixSizeName = function(sizeName, prefix, camelCase) {
+    var prefixSizeName = function (sizeName, prefix, camelCase) {
         if (camelCase) {
             return prefix + sizeName.charAt(0).toUpperCase() + sizeName.slice(1);
         }
@@ -299,144 +295,59 @@ var granit = (function (gt) {
 
     /*
      * Author(s):   Thomas Stein
-     * Description: 
+     * Description: Provides any css length property value in pixels for max-width, min-width, max-height, min-height
      */
-    var PixelConverter = function (targetParent) {
-        var element = targetParent,
-            testElement = document.createElement("div");  //Create a temporary sibling for the target
+    var CSSPixelProvider = function (target) {
+        var element = target,
+            testElement = document.createElement("div");  //Create a temporary sibling div to resolve units into pixels.
 
-        testElement.style.cssText = "overflow: hidden; visibility: hidden; position: absolute; top: 0; left: 0; border: 0; margin: 0; padding: 0;";
+        testElement.textContent = "&nbsp;";  //space content
+        testElement.style.cssText = "overflow: hidden; visibility: hidden; position: absolute; top: 0; left: 0; border: 0; margin: 0; padding: 0; width: auto; height: auto; font-size: 1em; line-height: 1;";
 
         element.appendChild(testElement);
 
-        //destroy test element
         this.destroy = function () {
             element.removeChild(testElement);
         };
 
-        //reset test element
-        this.reset = function () {            
-            $(testElement).contents().remove(); //remove all children
-
-            var dh = new DeviceHelper();
-
-            //the initial keyword does not work for Internet Explorer
-            if (!dh.isIE) {
-                testElement.style.fontSize = "initial";
-                testElement.style.lineHeight = "initial";
-                testElement.style.width = "initial";
-                testElement.style.height = "initial";
-                testElement.style.minWidth = "initial";
-                testElement.style.minHeight = "initial";
-                testElement.style.maxWidth = "initial";
-                testElement.style.maxHeight = "initial";
-            } else {
-                testElement.style.fontSize = "medium";
-                testElement.style.lineHeight = "normal";
-                testElement.style.width = "auto";
-                testElement.style.height = "auto";
-                testElement.style.minWidth = 0;
-                testElement.style.minHeight = 0;
-                testElement.style.maxWidth = "none";
-                testElement.style.maxHeight = "none";
-            }
-        }
-
-        var self = this;
-
-        /*
-         * Converts some css Property values into pixel
-         * Supported properties are min-width, min-height, max-width, max-height
-         */
-        this.convertToPixel = function (target, cssPropertyName, destroy) {
-            self.reset();
-
-            var result;
-
+        this.getCSSPixel = function (target, hyphenProp) {
             //get CSS value
-            var value = getComputedStyle(target, null).getPropertyValue(cssPropertyName);
+            var value = getComputedStyle(target, null).getPropertyValue(hyphenProp);
 
             //if the value is a string ("none") we simply return it
             if (!parseFloat(value)) {
-                result = value;
+                return value;
             }
+
             //We can return pixels directly, but not other units
-            else if (value.slice(-2) == "px") {
-                result = parseFloat(value.slice(0, -2));
-            }
-            else {
-                cssPropertyName = cssPropertyName.slice(4);
-                var offsetSizeName = prefixSizeName(cssPropertyName, "offset", true);
-
-                testElement.style[cssPropertyName] = value;
-                result = testElement[offsetSizeName];
+            if (value.slice(-2) == "px") {
+                return parseFloat(value.slice(0, -2));
             }
 
-            if (destroy) {
-                self.destroy();
-            }
+            var sizePropertyName = hyphenProp.slice(4);
+            var offsetSizeName = prefixSizeName(sizePropertyName, "offset", true);
 
-            return result;
+            testElement.style[sizePropertyName] = value;
+            return testElement[offsetSizeName];
         };
 
-        //convert any pixel length to target unit
-        this.convertFromPixel = function (value, targetUnit, cssPropertyName, destroy) {
-            self.reset();
-
-            if (targetUnit === "em" || targetUnit === "rem") {
-                testElement.textContent = "&nbsp;";  //space content
-                testElement.style.fontSize = "1.0" + targetUnit;
-                testElement.style.lineHeight = "1";
+        //convert any pixel length to target unit related to the constructed target element
+        this.convertFromPixel = function (pixelSize, targetUnit, sizePropertyName) {
+            var pixelBase = 1.0;
+            if (targetUnit == "em") {
+                testElement.style.fontSize = "1.0em";
+            } else if (targetUnit == "rem") {
+                testElement.style.fontSize = "1.0rem";
             }
-            var pixelBase = testElement.offsetHeight;
+            var offsetSizeName = prefixSizeName(sizePropertyName, "offset", true);
+            pixelBase = testElement.offsetHeight;
+            //pixelBase = $(testElement).innerHeight();
 
-            if (destroy) {
-                self.destroy();
-            }
-
-            var dh = new DeviceHelper();
-            //check for IE browsers (including Edge)
-            if (dh.isMicrosoftBrowser()) {
-                return (value / pixelBase).toFixed(2) + targetUnit; //round 2 decimal digits: Microsoft browser only render 2 decimal digits
-            }
-
-            return (value / pixelBase).toFixed(8) + targetUnit; //return full float
+            return (pixelSize / pixelBase).toFixed(2) + targetUnit;
+            return (Math.floor(pixelSize / pixelBase * 100) / 100) + targetUnit;
         };
     };
 
-    /*
-     * Author(s):   Thomas Stein
-     * Description: Provides some methods to detect Internet Explorer devices
-     *              https://stackoverflow.com/questions/31757852/how-can-i-detect-internet-explorer-ie-and-microsoft-edge-using-javascript/36688806#36688806
-     */
-    var DeviceHelper = function (_navigator) {
-        this.navigator = _navigator || navigator;
-        this.isIE = function () {
-            if (!this.navigator.userAgent) {
-                return false;
-            }
-
-            var IE10 = Boolean(this.navigator.userAgent.match(/(MSIE)/i)),
-                IE11 = Boolean(this.navigator.userAgent.match(/(Trident)/i));
-            return IE10 || IE11;
-        };
-
-        this.isEdge = function () {
-            return !!this.navigator.userAgent && this.navigator.userAgent.toLowerCase().indexOf("edge") > -1;
-        };
-
-        this.isMicrosoftBrowser = function () {
-            return this.isEdge() || this.isIE();
-        };
-
-        this.isFirefox = function () {
-            return !!this.navigator.userAgent && navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-        }
-
-        this.isChrome = function () {
-            return !!this.navigator.userAgent && navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
-        }
-    };
 
     /*
      * Author(s):   Thomas Stein
@@ -542,11 +453,9 @@ var granit = (function (gt) {
     gt.listCompare = listCompare;
     gt.NumberUnitArray = numberUnitArray;
     gt.NumberUnit = NumberUnit;
+    gt.CSSPixelProvider = CSSPixelProvider;
     gt.prefixSizeName = prefixSizeName;
     gt.EventTimeController = EventTimeController;
-    gt.DeviceHelper = DeviceHelper;
-    gt.PixelConverter = PixelConverter;
-    gt.IsBooleanType = isBooleanType;
 
     return gt;
 }(granit || {}));
