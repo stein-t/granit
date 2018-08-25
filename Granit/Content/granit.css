@@ -11,12 +11,15 @@
  * License:        MPL 2.0
  */
 
+/************************************************************************* 
+ * the provided html and body css especially is necessary for the splitter 
+ * to work properly on full screen stretch level (as a direct body child) 
+ */
 html {
     /* IE has problems with em calculation with percentage font-size */
     /*font-size: 62.5%; */
     font-size: 10px;
 
-    margin: 0;
     height: 100%;
     width: auto;
 }
@@ -26,6 +29,8 @@ body {
     height: 100%;
     width: auto;
 }
+
+/*******************************************************************/
 
 .granit_Panel_wrapper {
     display: block !important;
