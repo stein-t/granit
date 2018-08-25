@@ -9,8 +9,8 @@
 .stein_container {
     width: 800px;
     height: 400px;
-    /*padding: 20px;
-    border: 2px solid red;*/
+    padding: 20px;
+    border: 2px solid red;
 
     /* eighter leave margin unset (= 0) or set position absolute in order to render the splitter layout properly */
     /*margin: 10px;
