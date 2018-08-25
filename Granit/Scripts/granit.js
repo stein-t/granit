@@ -19,7 +19,7 @@ $(function () {
             panel: [],
             splitter: [],
             panelTemplate: {
-                size: "auto", minSize: 5, maxSize: "none", padding: 0, margin: 0, flexible: true, resizable: true, classes: "granit_Panel_Default"
+                size: "auto", minSize: 5, maxSize: "none", margin: 0, flexible: true, resizable: true, classes: "granit_Panel_Default"
             },
             splitterTemplate: { width: "0.5em", length: "100%", classes: "granit_Splitter_Default" },
             separatorTemplate: { width: "0.5em", length: "100%", classes: "granit_Separator_Default" },
@@ -56,7 +56,7 @@ $(function () {
             ];
 
             var panelOptionsAllowed = [
-                'size', 'minSize', 'maxSize', 'padding', 'margin', 'flexible', 'resizable', 'classes'
+                'size', 'minSize', 'maxSize', 'margin', 'flexible', 'resizable', 'classes'
             ];
 
             var splitterTemplateOptionsAllowed = [
@@ -105,7 +105,6 @@ $(function () {
                 granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
             }
 
-            this.element.parent().addClass("granit_splitter_parent");
             this.element.addClass("granitSplitter_Container");
 
             if (self.options.direction === "vertical") {
@@ -160,7 +159,7 @@ $(function () {
                 }
 
                 //retrieve the resizable option: a value defined individually on panel level overwrites any panel template value
-                var resizable = (panel && panel.resizable) || self.options.panelTemplate && self.options.panelTemplate.resizable;
+                var resizable = (panel && (granit.IsBooleanType(panel.resizable) || panel.resizable)) || self.options.panelTemplate && self.options.panelTemplate.resizable;
                 resizable = resizable ? true : false;
 
                 //retrieve the minSize option: a value defined individually on panel level overwrites any panel template value
@@ -170,10 +169,6 @@ $(function () {
                 //retrieve the maxSize option: a value defined individually on panel level overwrites any panel template value
                 var maxSize = (panel && panel.maxSize) || self.options.panelTemplate && self.options.panelTemplate.maxSize;
                 maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
-
-                //retrieve the padding option: a value defined individually on panel level overwrites any panel template value
-                var padding = (panel && panel.padding) || self.options.panelTemplate && self.options.panelTemplate.padding;
-                padding = granit.extractFloatUnit(padding, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel padding");
 
                 //retrieve the margin option: a value defined individually on panel level overwrites any panel template value
                 var margin = (panel && panel.margin) || self.options.panelTemplate && self.options.panelTemplate.margin;
@@ -186,7 +181,7 @@ $(function () {
                 panelClasses = "granit_Panel_wrapper" + panelClasses;                       //prefix the class string with the required system class
 
                 //retrieve the flexible option: a value defined individually on panel level overwrites any panel template value
-                var flexible = (panel && panel.flexible) || self.options.panelTemplate && self.options.panelTemplate.flexible;
+                var flexible = (panel && (granit.IsBooleanType(panel.flexible) || panel.flexible)) || self.options.panelTemplate && self.options.panelTemplate.flexible;
                 flexible = flexible ? true : false;
 
                 if (index < children.length - 1) {
@@ -253,22 +248,7 @@ $(function () {
                 if (!wrappedElement.is(":data('granit-splitter')")) {                   //test if the element is a nested splitter
                     wrappedElement.wrap("<div class='" + panelClasses + "'></div>");
                     wrappedElement = wrappedElement.parent();
-                    wrappedElement.css("padding", padding.getSize());
-                    wrappedElement.css("margin", 0);
-
-                    if (margin.Number) {
-                        wrappedElement.wrap("<div class='granit_Panel_wrapper granit_Panel_margin_wrapper'></div>");
-                        wrappedElement = wrappedElement.parent();
-                        wrappedElement.css("padding", margin.getSize());
-                        wrappedElement.css("margin", 0);
-                    }
-
-                    ////because the margin is not part of the border-box model, we have to subtract it from the overall height
-                    //if (margin.Number > 0.0) {
-                    //    wrappedElement.css("height", "calc(100% - " + (2 * margin.Number) + margin.Unit + ")");
-                    //} else {
-                    //    wrappedElement.css("height", "100%");
-                    //}
+                    //wrappedElement.css("margin", margin.getSize());
                 } else {
                     /* 
                      * --> see Issue #1: IE11 Flexbox Column Children width problem 

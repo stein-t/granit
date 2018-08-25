@@ -21,7 +21,7 @@
         $(document).ready(function () {
             $("#splitterInner2").splitter({
                 panel: [
-                    { size: "200px", classes: "panelLayout1", margin: "5%", padding: "5%", flexible: true, resizable: true },
+                    { size: "200px", classes: "panelLayout1", margin: "5%", flexible: true, resizable: true },
                     { size: "100px", classes: "panelLayout2" },
                     { size: "200px", margin: "5vmin" },
                     { classes: "panelLayout3 panelLayout5", margin: "5pt" }
@@ -32,12 +32,12 @@
                     { width: 10 }
                 ],
                 direction: "vertical",
-                overflow: "hidden",
+                overflow: "hidden"
             });
 
             $("#splitterInner").splitter({
                 panel: [
-                    { size: "10em", classes: "panelLayout1", padding: 10, resizable: true },
+                    { size: "10em", classes: "panelLayout1", resizable: true },
                     { size: "30%", maxSize: "20%", classes: "panelLayout2", resizable: true },
                     { size: "10em", maxSize: "20%", margin: "5vmin", resizable: true },
                     { size: "10em", classes: "panelLayout3 panelLayout5", margin: "5pt" },
@@ -61,7 +61,7 @@
                     { size: "20.1em", minSize: "5%", classes: "panelLayout2 panelLayout7 panelLayout7", resizable: true, flexible: true },
                     { classes: "panelLayout4", maxSize: "30%", resizable: true, flexible: true },
                     { size: "20.1em", maxSize: "30%", classes: "panelLayout5", resizable: true, flexible: false },
-                    { size: "20.1em", classes: "panelLayout6", padding: "10%", resizable: true, flexible: true }
+                    { size: "20.1em", classes: "panelLayout6", resizable: true, flexible: true }
                 ],
                 splitter: [
                     {},
@@ -69,7 +69,7 @@
                     { length: "30ch", classes: "splitter_HandleStyle" }
                 ],
                 panelTemplate: {
-                    minSize: "20em", padding: "5em", margin: "5em", flexible: false, resizable: false, classes: "panelLayout7 panelLayout7"
+                    minSize: "20em", margin: "5em", flexible: false, resizable: false, classes: "panelLayout7 panelLayout7"
                 },
                 splitterTemplate: { width: "1em", length: "calc(100% - 10px)" },
                 //relativeSizeBasedOnRemainingSpace: true,
@@ -82,7 +82,7 @@
 </head>
 
 <body>
-    <!--<div style="width:600px;height:500px;padding:10px;border:2px solid red;">-->
+    <!--<div class="stein_container">-->
     <div id="splitterOuter">
         <div id="OuterPanel1" class="stein_content">
             Contentfhfjhfhjfjhfjhfjhg

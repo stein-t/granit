@@ -6,9 +6,24 @@
     font-size: 3em;
 }
 
+.stein_container {
+    width: 800px;
+    height: 400px;
+    /*padding: 20px;
+    border: 2px solid red;*/
+
+    /* eighter leave margin unset (= 0) or set position absolute in order to render the splitter layout properly */
+    /*margin: 10px;
+    position: absolute;
+    left: 0;
+    top: 0;*/
+}
+
 .panelLayout7 {
     border: 2px solid green;
     background: lightgreen;
+    padding: 5%;
+    margin: 5%;
     /*overflow: scroll;*/
 }
 /*.panelLayout7:hover {
@@ -24,6 +39,8 @@
 .panelLayout1 {
     border: 10px solid blue;
     background: lightyellow;
+    padding: 5%;
+    margin: 5%;
 }
 
 .panelLayout2 {
@@ -57,8 +74,10 @@
     border-radius: 20px;
 }
 
-.splitter_HandleStyle:hover {
-    border: 2px solid darkgrey;
-    background: grey;
-}
+    .splitter_HandleStyle:hover {
+        border: 2px solid darkgrey;
+        background: grey;
+        padding: 5%;
+        margin: 5%;
+    }
 

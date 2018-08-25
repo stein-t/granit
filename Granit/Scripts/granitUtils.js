@@ -84,6 +84,10 @@ var granit = (function (gt) {
         }
     };
 
+    var isBooleanType = function (value) {
+        return value === true || value === false;
+    }
+
     /*
      * Author(s):   Thomas Stein
      * Description: function to validate the given size as a float number and an optional unit. As a result a NumberUnit object is returned.
@@ -542,6 +546,7 @@ var granit = (function (gt) {
     gt.EventTimeController = EventTimeController;
     gt.DeviceHelper = DeviceHelper;
     gt.PixelConverter = PixelConverter;
+    gt.IsBooleanType = isBooleanType;
 
     return gt;
 }(granit || {}));
