@@ -75,8 +75,9 @@ var granit = (function (gt) {
      * Author(s):   Thomas Stein
      * Description: the NumberUnit class -- Instances of this class are very heavily used in granit to transfer not only numbers but also associated units.
      */
-    var NumberUnit = function (number, unit) {
-        this.Number = number;
+    var NumberUnit = function (number, unit, fixedDecimals) {
+        fixedDecimals = fixedDecimals || 2;
+        this.Number = number.toFixed ? number.toFixed(fixedDecimals) : number;        //we round 2 decimals
         this.Unit = unit || "";
 
         this.getSize = function () {
@@ -84,6 +85,7 @@ var granit = (function (gt) {
         }
     };
 
+    //check if value is of type boolean
     var isBooleanType = function (value) {
         return value === true || value === false;
     }
@@ -380,8 +382,19 @@ var granit = (function (gt) {
         };
 
         //convert any pixel length to target unit
-        this.convertFromPixel = function (value, targetUnit, cssPropertyName, destroy) {
+        this.convertFromPixel = function (value, targetUnit, cssPropertyName, fixedDecimals, destroy) {
             self.reset();
+
+            fixedDecimals = fixedDecimals || 2;
+
+            if (targetUnit === "px") {
+                return value + targetUnit;
+            }
+
+            if (targetUnit === "%") {
+                var offsetSizeName = prefixSizeName(cssPropertyName, "offset", true);
+                return ((value / element[offsetSizeName]) * 100.00).toFixed(fixedDecimals) + targetUnit;
+            }
 
             if (targetUnit === "em" || targetUnit === "rem") {
                 testElement.textContent = "&nbsp;";  //space content
@@ -394,13 +407,7 @@ var granit = (function (gt) {
                 self.destroy();
             }
 
-            var dh = new DeviceHelper();
-            //check for IE browsers (including Edge)
-            if (dh.isMicrosoftBrowser()) {
-                return (value / pixelBase).toFixed(2) + targetUnit; //round 2 decimal digits: Microsoft browser only render 2 decimal digits
-            }
-
-            return (value / pixelBase).toFixed(8) + targetUnit; //return full float
+            return (value / pixelBase).toFixed(fixedDecimals) + targetUnit; //return full float
         };
     };
 
