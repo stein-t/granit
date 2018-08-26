@@ -75,28 +75,28 @@ var granit = (function (gt) {
      * Author(s):   Thomas Stein
      * Description: the NumberUnit class -- Instances of this class are very heavily used in granit to transfer not only numbers but also associated units.
      */
-    var NumberUnit = function (number, unit, fixedDecimals) {
-        number = number || 0;
+    var NumberUnit = function (value, unit, fixedDecimals) {
+        value = value || 0;
         fixedDecimals = fixedDecimals || 2;
-        this.Number = number.toFixed ? number.toFixed(fixedDecimals) : number;        //we round 2 decimals
+        this.Value = value.toFixed ? value.toFixed(fixedDecimals) : value;        //we round 2 decimals
         this.Unit = unit || "";
 
         this.getSize = function () {
-            return this.Number + this.Unit;
+            return this.Value + this.Unit;
         }
     };
 
-    var Size = function (value, isAuto) {
-        this.isAuto = value === "auto" || isAuto ? true : false;
+    var Size = function (number, isAuto) {
+        this.isAuto = number === "auto" || isAuto ? true : false;
 
-        if (!value || value === "auto") {
-            value = new NumberUnit();
+        if (!number || number === "auto") {
+            number = new NumberUnit();
         }
-        this.Value = value;
+        this.Number = number;
         this.Pixel = 0;
 
         this.getSize = function () {
-            return this.Value.getSize();
+            return this.Number.getSize();
         }
     }
 
@@ -233,7 +233,7 @@ var granit = (function (gt) {
                 item = new NumberUnit(number, unit);
             }
 
-            var itemNumber = parseFloat(item.Number);
+            var itemNumber = parseFloat(item.Value);
             var element;
             arr.forEach(function (el) {
                 if (item.Unit === el.Unit) {
@@ -243,7 +243,7 @@ var granit = (function (gt) {
             });
 
             if (element) {
-                var elementNumber = parseFloat(element.Operation + element.Number);
+                var elementNumber = parseFloat(element.Operation + element.Value);
                 switch (operation) {
                     case "+":
                         elementNumber = elementNumber + itemNumber;
@@ -255,10 +255,10 @@ var granit = (function (gt) {
                         break;
                 }
                 if (elementNumber >= 0) {
-                    element.Number = elementNumber;
+                    element.Value = elementNumber;
                     element.Operation = "+";
                 } else {
-                    element.Number = Math.abs(elementNumber);
+                    element.Value = Math.abs(elementNumber);
                     element.Operation = "-";
                 }
 
@@ -292,7 +292,7 @@ var granit = (function (gt) {
          */
         arr.toString = function () {
             var result = arr.reduce(function (total, item) {
-                return total + " " + item.Operation + " " + item.Number + item.Unit;
+                return total + " " + item.Operation + " " + item.Value + item.Unit;
             }, "");
 
             return result;
