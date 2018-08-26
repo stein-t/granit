@@ -135,11 +135,12 @@ $(function () {
             var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a non-percentage size under consideration of different units 
             var panelSizePercentTotal = 0.0;                            //the total percentage size of percentage panels
             var panelsWithoutSizeTotal = 0;                             //amount of panels without size
-            var splitterOffset = granit.NumberUnitArray();              //the total width of splitters under consideration different units 
 
             //global
             this.panels = [];               //reference to the panels (or final panel wrappers)
             this.splitterList = [];         //reference to the splitters
+            this.splitterOffset = granit.NumberUnitArray();     //the total width of splitters under consideration different units 
+            this.splitterPixelOffset = 0;                       //the total width of splitters in pixels 
 
             /*
              * iterate the children in order to ...
@@ -231,7 +232,7 @@ $(function () {
                      * calculate the current total splitter offset as the n'th part of the total splitter width (where n is the amount of panels)
                      */
                     if (splitterWidth.Number > 0) {
-                        splitterOffset.add(splitterWidth, "-");
+                        self.splitterOffset.add(splitterWidth, "-");
                     }
                 }
 
@@ -319,7 +320,7 @@ $(function () {
 
             if (panelsWithoutOrRelativeSize.length > 0) {
                 //the total remaining space 
-                var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(splitterOffset, "-").toString() + ")";
+                var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(self.splitterOffset, "-").toString() + ")";
 
                 //calculate remaining relative space 
                 var panelSizeDistributed = (100.0 - panelSizePercentTotal) / panelsWithoutSizeTotal;
@@ -361,6 +362,8 @@ $(function () {
                 this.MousemoveEventController = new granit.EventTimeController(throttle.modus, this, throttle.threshold);
             }
 
+
+            var attachDragDrop = false;
             //we attach drag & drop support
             if (
                 this.panels.some(function (item, index) {
@@ -368,15 +371,24 @@ $(function () {
                 })
             ) {
                 //... if at least there is one resizable panel
-                this.splitterList.forEach(function (item, index) {                    
-                    if (!item.data().__granitData__.disabled) {
-                        //... and if the associated splitter is enabled
-                        self._on(item, {
-                            "mousedown": "_splitterMouseDown"
-                        });
-                    }
-                });
+                attachDragDrop = true;
             }
+
+            this.splitterList.forEach(function (item, index) {
+                //calculate total splitter pixel size
+                if (self.options.direction === "vertical") {
+                    self.splitterPixelOffset += item.width();
+                } else {
+                    self.splitterPixelOffset += item.height();
+                }
+
+                //attach mousedown if the associated splitter is enabled
+                if (attachDragDrop && !item.data().__granitData__.disabled) {
+                    self._on(item, {
+                        "mousedown": "_splitterMouseDown"
+                    });
+                }
+            });
 
             //this.panels.forEach(function (item, index) {
             //    if (item.data().__granitData__.size.Unit === "em") {

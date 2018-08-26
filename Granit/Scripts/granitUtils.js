@@ -77,13 +77,26 @@ var granit = (function (gt) {
      */
     var NumberUnit = function (number, unit, fixedDecimals) {
         fixedDecimals = fixedDecimals || 2;
-        this.Number = number.toFixed ? number.toFixed(fixedDecimals) : number;        //we round 2 decimals
+        this.Number = number.toFixed ? number.toFixed(fixedDecimals) : number || 0;        //we round 2 decimals
         this.Unit = unit || "";
 
         this.getSize = function () {
             return this.Number + this.Unit;
         }
     };
+
+    var Size = function (number, isAuto) {
+        if (!number) {
+            number = new NumberUnit();
+        }
+        this.Number = number;
+        this.Pixel = 0;
+        this.isAuto = isAuto;
+
+        this.getSize = function () {
+            return this.Number.getSize();
+        }
+    }
 
     //check if value is of type boolean
     var isBooleanType = function (value) {
@@ -549,6 +562,7 @@ var granit = (function (gt) {
     gt.listCompare = listCompare;
     gt.NumberUnitArray = numberUnitArray;
     gt.NumberUnit = NumberUnit;
+    gt.Size = Size;
     gt.prefixSizeName = prefixSizeName;
     gt.EventTimeController = EventTimeController;
     gt.DeviceHelper = DeviceHelper;
