@@ -76,8 +76,9 @@ var granit = (function (gt) {
      * Description: the NumberUnit class -- Instances of this class are very heavily used in granit to transfer not only numbers but also associated units.
      */
     var NumberUnit = function (number, unit, fixedDecimals) {
+        number = number || 0;
         fixedDecimals = fixedDecimals || 2;
-        this.Number = number.toFixed ? number.toFixed(fixedDecimals) : number || 0;        //we round 2 decimals
+        this.Number = number.toFixed ? number.toFixed(fixedDecimals) : number;        //we round 2 decimals
         this.Unit = unit || "";
 
         this.getSize = function () {
@@ -85,16 +86,17 @@ var granit = (function (gt) {
         }
     };
 
-    var Size = function (number, isAuto) {
-        if (!number) {
-            number = new NumberUnit();
+    var Size = function (value, isAuto) {
+        this.isAuto = value === "auto" || isAuto ? true : false;
+
+        if (!value || value === "auto") {
+            value = new NumberUnit();
         }
-        this.Number = number;
+        this.Value = value;
         this.Pixel = 0;
-        this.isAuto = isAuto;
 
         this.getSize = function () {
-            return this.Number.getSize();
+            return this.Value.getSize();
         }
     }
 

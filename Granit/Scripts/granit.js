@@ -279,13 +279,14 @@ $(function () {
                 if (size !== "auto") {
                     size = granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "%", self.IdString + " -- Panel size (size)");
                 }
+                size = new granit.Size(size);
 
-                if (size !== "auto" && (!self.options.relativeSizeBasedOnRemainingSpace || size.Unit !== "%")) {
+                if (!size.isAuto && (!self.options.relativeSizeBasedOnRemainingSpace || size.Value.Unit !== "%")) {
                     var panelDisplayClass = "granit_Panel" + (flexible ? "" : " granit_Panel_Static");
 
                     //present total static size
-                    if (size.Number > 0.0) {
-                        panelSizeTotalOffset.add(size, "-");
+                    if (size.Value.Number > 0.0) {
+                        panelSizeTotalOffset.add(size.Value, "-");
                     }
 
                     //apply splitter
@@ -299,11 +300,11 @@ $(function () {
                     return true; //leave loop
                 }
 
-                if (size === "auto") {                    
+                if (size.isAuto) {                    
                     panelsWithoutSizeTotal++;   //count panels with no size
                 }
-                else if (size.Unit === "%") {                    
-                    panelSizePercentTotal += size.Number;   //update total size of percentage panels
+                else if (size.Value.Unit === "%") {                    
+                    panelSizePercentTotal += size.Value.Number;   //update total size of percentage panels
                 }
 
                 //remember panels without size or percentage size
@@ -330,7 +331,7 @@ $(function () {
 
                 //apply left percentage panels
                 panelsWithoutOrRelativeSize.forEach(function (item) {
-                    var proportion = "(" + (item.size !== "auto" ? item.size.Number : panelSizeDistributed) + " / 100)";
+                    var proportion = "(" + (!item.size.isAuto ? item.size.Value.Number : panelSizeDistributed) + " / 100)";
                     var size = "calc(" + remainingSpace + " * " + proportion + ")";
 
                     var panelDisplayClass = "granit_Panel" + (item.flexible ? "" : " granit_Panel_Static");
@@ -338,7 +339,7 @@ $(function () {
                     //apply splitter
                     item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + item.minSize + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + item.maxSize + ";'></div>");
 
-                    item.wrappedElement.parent().data().__granitData__ = { index: item.index, flexible: item.flexible, unit: item.size.Unit || "auto", resizable: item.resizable };
+                    item.wrappedElement.parent().data().__granitData__ = { index: item.index, flexible: item.flexible, unit: item.size.Value.Unit || "auto", resizable: item.resizable };
                     self.panels.splice(item.index, 0, item.wrappedElement.parent());
 
                     self.splitterList[item.index] && self.splitterList[item.index].insertAfter(item.wrappedElement.parent());
@@ -391,7 +392,7 @@ $(function () {
             });
 
             //this.panels.forEach(function (item, index) {
-            //    if (item.data().__granitData__.size.Unit === "em") {
+            //    if (item.data().__granitData__.unit === "em") {
             //        item.resize($.proxy(self._elementOnResize, self, item[0])); 
             //        item.fontResize($.proxy(self._elementOnFontResize, self, item[0]));
             //    }
