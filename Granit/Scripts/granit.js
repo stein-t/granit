@@ -131,13 +131,15 @@ $(function () {
             }
 
             //local help variables
-            var panelsWithoutOrRelativeSize = [];                       //holds panels without size or percentage size
             var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a non-percentage size under consideration of different units 
             var panelSizePercentTotal = 0.0;                            //the total percentage size of percentage panels
             var panelsWithoutSizeTotal = 0;                             //amount of panels without size
 
             //global
             this.panels = [];               //reference to the panels (or final panel wrappers)
+            this.relativePanels = [];                                    //holds panels without size or percentage size based on remaining space
+            this.staticPanels = [];                                      //holds panels with definit size
+
             this.splitterList = [];         //reference to the splitters
             this.splitterOffset = granit.NumberUnitArray();     //the total width of splitters under consideration different units 
             this.splitterPixelOffset = 0;                       //the total width of splitters in pixels 
@@ -281,21 +283,25 @@ $(function () {
                 }
                 size = new granit.Size(size);
 
-                if (!size.autoSized && (!self.options.relativeSizeBasedOnRemainingSpace || size.Number.Unit !== "%")) {
-                    var panelDisplayClass = "granit_Panel" + (flexible ? "" : " granit_Panel_Static");
+                var panelDisplayClass = "granit_Panel" + (flexible ? "" : " granit_Panel_Static");
 
+                //apply splitter
+                wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelDisplayClass + "' style='" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + maxSize.getSize() + ";'></div>");
+
+                wrappedElement.parent().data().__granitData__ = { index: index, flexible: flexible, Size: size, resizable: resizable };
+                self.panels.splice(index, 0, wrappedElement.parent());
+
+                self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
+
+                if (!size.autoSized && (!self.options.relativeSizeBasedOnRemainingSpace || size.Number.Unit !== "%")) {
                     //present total static size
                     if (size.Number.Value > 0.0) {
                         panelSizeTotalOffset.add(size.Number, "-");
                     }
 
-                    //apply splitter
-                    wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + maxSize.getSize() + ";'></div>");
+                    wrappedElement.parent().css(self.sizePropertyName, size.getSize());
 
-                    wrappedElement.parent().data().__granitData__ = { index: index, flexible: flexible, unit: size.Unit, resizable: resizable };
-                    self.panels.splice(index, 0, wrappedElement.parent());
-
-                    self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
+                    self.staticPanels.push(wrappedElement.parent());
 
                     return true; //leave loop
                 }
@@ -308,18 +314,10 @@ $(function () {
                 }
 
                 //remember panels without size or percentage size
-                panelsWithoutOrRelativeSize.push({
-                    size: size,
-                    index: index,
-                    flexible: flexible,
-                    wrappedElement: wrappedElement,
-                    minSize: minSize.getSize(),
-                    maxSize: maxSize.getSize(),
-                    resizable: resizable
-                });
+                self.relativePanels.push(wrappedElement.parent());
             });
 
-            if (panelsWithoutOrRelativeSize.length > 0) {
+            if (self.relativePanels.length > 0) {
                 //the total remaining space 
                 var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(self.splitterOffset, "-").toString() + ")";
 
@@ -330,19 +328,18 @@ $(function () {
                 }
 
                 //apply left percentage panels
-                panelsWithoutOrRelativeSize.forEach(function (item) {
-                    var proportion = "(" + (!item.size.autoSized ? item.size.Number.Value : panelSizeDistributed) + " / 100)";
+                self.relativePanels.forEach(function (item) {
+                    var itemData = item.data().__granitData__;
+
+                    var proportion = "(" + (!itemData.Size.autoSized ? itemData.Size.Number.Value : panelSizeDistributed) + " / 100)";
                     var size = "calc(" + remainingSpace + " * " + proportion + ")";
 
-                    var panelDisplayClass = "granit_Panel" + (item.flexible ? "" : " granit_Panel_Static");
+                    if (itemData.Size.autoSized) {
+                        itemData.Size.Number.Value = proportion;
+                        itemData.Size.Number.Unit = '%';
+                    }
 
-                    //apply splitter
-                    item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + item.minSize + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + item.maxSize + ";'></div>");
-
-                    item.wrappedElement.parent().data().__granitData__ = { index: item.index, flexible: item.flexible, unit: item.size.Number.Unit || "auto", resizable: item.resizable };
-                    self.panels.splice(item.index, 0, item.wrappedElement.parent());
-
-                    self.splitterList[item.index] && self.splitterList[item.index].insertAfter(item.wrappedElement.parent());
+                    item.css(self.sizePropertyName, size);
                 });
             }
 
@@ -392,7 +389,8 @@ $(function () {
             });
 
             //this.panels.forEach(function (item, index) {
-            //    if (item.data().__granitData__.unit === "em") {
+            //    var unit = item.data().__granitData__.Size.Number.Unit;
+            //    if (unit === "em" || unit === "rem") {
             //        item.resize($.proxy(self._elementOnResize, self, item[0])); 
             //        item.fontResize($.proxy(self._elementOnFontResize, self, item[0]));
             //    }
@@ -476,7 +474,7 @@ $(function () {
                 //capture the current limit sizes to support mouse-moving calculation 
                 item.data().__granitData__.minSize = Math.floor(minSize + 1);       //round slightly up to egalize (percent) convertion errors (in firefox and chrome)
                 item.data().__granitData__.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
-                item.data().__granitData__.size = size;
+                item.data().__granitData__.Size.Pixel = size;
             });
 
             pc.destroy();   //destroy the convertion tool
@@ -540,8 +538,8 @@ $(function () {
                     item.data().__granitData__.maximized = false;
 
                     //reconvert to original unit
-                    size = item.data().__granitData__.size;                             //current size in pixels
-                    unit = item.data().__granitData__.unit;
+                    size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
+                    unit = item.data().__granitData__.Size.Number.Unit;
 
                     if (unit !== "px") {
                         if (self.options.relativeSizeBasedOnRemainingSpace && unit === "%" || unit === "auto") {
@@ -607,7 +605,7 @@ $(function () {
                     limitSize = panel.data().__granitData__.minSize;
                 }
 
-                var currentSize = panel.data().__granitData__.size;
+                var currentSize = panel.data().__granitData__.Size.Pixel;
 
                 if (modus === 'grow') {
                     newSize = Math.min(currentSize + Math.abs(distance), limitSize);
@@ -670,10 +668,10 @@ $(function () {
                     result2.panel.css(self.sizePropertyName, result2.currentSize - offset + "px");
                     result1.panel.css(self.sizePropertyName, result1.currentSize + offset + "px");
 
-                    result2.panel.data().__granitData__.size = result2.currentSize - offset;
+                    result2.panel.data().__granitData__.Size.Pixel = result2.currentSize - offset;
                     result2.panel.data().__granitData__.maximized = false;
 
-                    result1.panel.data().__granitData__.size = result1.currentSize + offset;
+                    result1.panel.data().__granitData__.Size.Pixel = result1.currentSize + offset;
                     result1.panel.data().__granitData__.minimized = false;
                 }
 
