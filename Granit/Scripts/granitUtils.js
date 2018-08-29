@@ -86,8 +86,12 @@ var granit = (function (gt) {
         }
     };
 
-    var Size = function (number, isAuto) {
-        this.isAuto = number === "auto" || isAuto ? true : false;
+    /*
+     * Author(s):   Thomas Stein
+     * Description: NumberUnit wrapper with additional properties in order to express width and height lenghts
+     */
+    var Size = function (number, autoSized) {
+        this.autoSized = number === "auto" || autoSized ? true : false;
 
         if (!number || number === "auto") {
             number = new NumberUnit();

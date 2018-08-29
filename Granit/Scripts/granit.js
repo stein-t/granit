@@ -281,7 +281,7 @@ $(function () {
                 }
                 size = new granit.Size(size);
 
-                if (!size.isAuto && (!self.options.relativeSizeBasedOnRemainingSpace || size.Number.Unit !== "%")) {
+                if (!size.autoSized && (!self.options.relativeSizeBasedOnRemainingSpace || size.Number.Unit !== "%")) {
                     var panelDisplayClass = "granit_Panel" + (flexible ? "" : " granit_Panel_Static");
 
                     //present total static size
@@ -300,7 +300,7 @@ $(function () {
                     return true; //leave loop
                 }
 
-                if (size.isAuto) {                    
+                if (size.autoSized) {                    
                     panelsWithoutSizeTotal++;   //count panels with no size
                 }
                 else if (size.Number.Unit === "%") {                    
@@ -331,7 +331,7 @@ $(function () {
 
                 //apply left percentage panels
                 panelsWithoutOrRelativeSize.forEach(function (item) {
-                    var proportion = "(" + (!item.size.isAuto ? item.size.Number.Value : panelSizeDistributed) + " / 100)";
+                    var proportion = "(" + (!item.size.autoSized ? item.size.Number.Value : panelSizeDistributed) + " / 100)";
                     var size = "calc(" + remainingSpace + " * " + proportion + ")";
 
                     var panelDisplayClass = "granit_Panel" + (item.flexible ? "" : " granit_Panel_Static");
