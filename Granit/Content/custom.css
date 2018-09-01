@@ -23,13 +23,13 @@
     border: 2px solid green;
     background: lightgreen;
     padding: 5%;
-    margin: 5%;
+    /*margin: 10px 0;*/
     /*overflow: scroll;*/
 }
-/*.panelLayout7:hover {
+.panelLayout7:hover {
     border: 2px solid red;
     background: lightyellow;
-}*/
+}
 
 .panelLayout8 {
     border: 5px solid grey;
@@ -74,10 +74,16 @@
     border-radius: 20px;
 }
 
-    .splitter_HandleStyle:hover {
-        border: 2px solid darkgrey;
-        background: grey;
-        padding: 5%;
-        margin: 5%;
-    }
+.splitter_HandleStyle:hover {
+    border: 2px solid darkgrey;
+    background: grey;
+}
+
+.splitter_Layout1 {
+    background: darkgrey;
+    margin: 0 10px;
+}
+.splitter_Layout1:hover {
+    background: grey;
+}
 

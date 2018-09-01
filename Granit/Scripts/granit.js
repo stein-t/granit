@@ -21,8 +21,8 @@ $(function () {
             panelTemplate: {
                 size: "auto", minSize: 5, maxSize: "none", margin: 0, flexible: true, resizable: true, class: "granit_panel_default"
             },
-            splitterTemplate: { width: "0.5em", length: "100%", class: "granit_splitter_default" },
-            separatorTemplate: { width: "0.5em", length: "100%", class: "granit_separator_default" },
+            splitterTemplate: { width: "2em", length: "100%", class: "granit_splitter_default" },
+            separatorTemplate: { width: "1em", length: "100%", class: "granit_separator_default" },
             relativeSizeBasedOnRemainingSpace: false,    //The group of percentage panels may be isolated from other unit-sized panels. Their relative (percentage) size is always relative to the remaining space of all non-percentage sized panels
             _throttle: 10       //the keywords 'none', 'raf' or a positive integer number
         },
@@ -215,16 +215,20 @@ $(function () {
                                         ) +
                                         ((splitter && splitter.class && (" " + splitter.class)) || "");                                       //all provided classes on template level and individual panel level are concatenated
                     splitterClasses = granit.uniqueArray(splitterClasses.split(" ")).join(" ");     //avoiding duplicate class names
-                    splitterClasses = "granit_splitter" + splitterClasses;                  //prefix the class string with the required system class
+                    splitterClasses = "granit_splitter_wrapper" + splitterClasses;                  //prefix the class string with the required system class
 
                     var cursor = splitter && splitter.display === "separator" ? "default" : self.cursor;
 
-                    var splitterElement;
+                    var splitterElement = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='granit_splitter' style='cursor:" + cursor + ";'></div>");
+                    splitterElement.append("<div class='" + splitterClasses + "'></div>");  //embed the div with custom splitter styles 
+                    
                     //define the splitter element
                     if (self.options.direction === "vertical") {
-                        splitterElement = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='" + splitterClasses + "' style='width:" + splitterWidth.getSize() + ";height:" + splitterLength + ";cursor:" + cursor + ";'></div>");
+                        splitterElement.css("width", splitterWidth.getSize());
+                        splitterElement.css("height", splitterLength);
                     } else {
-                        splitterElement = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='" + splitterClasses + "' style='width:" + splitterLength + ";height:" + splitterWidth.getSize() + ";cursor:" + cursor + ";'></div>");
+                        splitterElement.css("height", splitterWidth.getSize());
+                        splitterElement.css("width", splitterLength);
                     }
                     splitterElement.data().__granitData__ = { disabled: splitter && splitter.display === "separator" ? true : false };
                     self.splitterList[index] = splitterElement;
@@ -409,7 +413,7 @@ $(function () {
 
             var self = this;
 
-            this.movedSplitter = $(event.target);
+            this.movedSplitter = $(event.currentTarget);
 
             //capture the mouse event
             if (event.target.setCapture) {
@@ -461,6 +465,7 @@ $(function () {
                 //capture the current limit sizes to support mouse-moving calculation 
                 item.data().__granitData__.minSize = Math.floor(minSize + 1);       //round slightly up to egalize (percent) convertion errors (in firefox and chrome)
                 item.data().__granitData__.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
+
                 item.data().__granitData__.Size.Pixel = size;
             });
 
