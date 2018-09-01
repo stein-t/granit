@@ -19,10 +19,10 @@ $(function () {
             panel: [],
             splitter: [],
             panelTemplate: {
-                size: "auto", minSize: 5, maxSize: "none", margin: 0, flexible: true, resizable: true, class: "granit_Panel_Default"
+                size: "auto", minSize: 5, maxSize: "none", margin: 0, flexible: true, resizable: true, class: "granit_panel_default"
             },
-            splitterTemplate: { width: "0.5em", length: "100%", class: "granit_Splitter_Default" },
-            separatorTemplate: { width: "0.5em", length: "100%", class: "granit_Separator_Default" },
+            splitterTemplate: { width: "0.5em", length: "100%", class: "granit_splitter_default" },
+            separatorTemplate: { width: "0.5em", length: "100%", class: "granit_separator_default" },
             relativeSizeBasedOnRemainingSpace: false,    //The group of percentage panels may be isolated from other unit-sized panels. Their relative (percentage) size is always relative to the remaining space of all non-percentage sized panels
             _throttle: 10       //the keywords 'none', 'raf' or a positive integer number
         },
@@ -105,16 +105,16 @@ $(function () {
                 granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
             }
 
-            this.element.addClass("granitSplitter_Container");
+            this.element.addClass("granit_container");
 
             if (self.options.direction === "vertical") {
-                this.element.addClass("granitSplitter_Container_vertical");
+                this.element.addClass("granit_container_vertical");
                 this.element.css("overflow-x", self.options.overflow);
                 this.sizePropertyName = "width";
                 this.cursor = "ew-resize";
                 this.coordinate = "x";
             } else {
-                this.element.addClass("granitSplitter_Container_horizontal");
+                this.element.addClass("granit_container_horizontal");
                 this.element.css("overflow-y", self.options.overflow);
                 this.sizePropertyName = "height";
                 this.cursor = "ns-resize";
@@ -180,7 +180,7 @@ $(function () {
                 var panelClasses = ((self.options.panelTemplate && self.options.panelTemplate.class && (" " + self.options.panelTemplate.class)) || "") +
                     ((panel && panel.class && (" " + panel.class)) || "");                                       //all provided classes on template level and individual panel level are concatenated
                 panelClasses = granit.uniqueArray(panelClasses.split(" ")).join(" ");       //avoiding duplicate class names
-                panelClasses = "granit_Panel_wrapper" + panelClasses;                       //prefix the class string with the required system class
+                panelClasses = "granit_panel_wrapper" + panelClasses;                       //prefix the class string with the required system class
 
                 //retrieve the flexible option: a value defined individually on panel level overwrites any panel template value
                 var flexible = (panel && (granit.IsBooleanType(panel.flexible) || panel.flexible)) || self.options.panelTemplate && self.options.panelTemplate.flexible;
@@ -215,7 +215,7 @@ $(function () {
                                         ) +
                                         ((splitter && splitter.class && (" " + splitter.class)) || "");                                       //all provided classes on template level and individual panel level are concatenated
                     splitterClasses = granit.uniqueArray(splitterClasses.split(" ")).join(" ");     //avoiding duplicate class names
-                    splitterClasses = "granitSplitter_Splitter" + splitterClasses;                  //prefix the class string with the required system class
+                    splitterClasses = "granit_splitter" + splitterClasses;                  //prefix the class string with the required system class
 
                     var cursor = splitter && splitter.display === "separator" ? "default" : self.cursor;
 
@@ -282,7 +282,7 @@ $(function () {
                 }
                 size = new granit.Size(size);
 
-                var panelDisplayClass = "granit_Panel" + (flexible ? "" : " granit_Panel_Static");
+                var panelDisplayClass = "granit_panel" + (flexible ? "" : " granit_panel_static");
 
                 //apply splitter
                 wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelDisplayClass + "' style='" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + maxSize.getSize() + ";'></div>");
@@ -438,8 +438,8 @@ $(function () {
                     size = item.height();
                 }
 
-                if (!item.hasClass("granit_Panel_Static")) {
-                    item.addClass("granit_Panel_Static");
+                if (!item.hasClass("granit_panel_static")) {
+                    item.addClass("granit_panel_static");
                 }
 
                 item.css(self.sizePropertyName, size + "px");
@@ -601,7 +601,7 @@ $(function () {
                 // set back to flexible
                 this.panels.forEach(function (item, index) {
                     if (item.data().__granitData__.flexible) {
-                        item.removeClass("granit_Panel_Static");
+                        item.removeClass("granit_panel_static");
                     }
                 });
 
