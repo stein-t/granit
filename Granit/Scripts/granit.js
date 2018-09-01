@@ -180,7 +180,7 @@ $(function () {
                 var panelClasses = ((self.options.panelTemplate && self.options.panelTemplate.class && (" " + self.options.panelTemplate.class)) || "") +
                     ((panel && panel.class && (" " + panel.class)) || "");                                       //all provided classes on template level and individual panel level are concatenated
                 panelClasses = granit.uniqueArray(panelClasses.split(" ")).join(" ");       //avoiding duplicate class names
-                panelClasses = "granit_panel_wrapper" + panelClasses;                       //prefix the class string with the required system class
+                panelClasses = "granit_panel" + panelClasses;                       //prefix the class string with the required system class
 
                 //retrieve the flexible option: a value defined individually on panel level overwrites any panel template value
                 var flexible = (panel && (granit.IsBooleanType(panel.flexible) || panel.flexible)) || self.options.panelTemplate && self.options.panelTemplate.flexible;
@@ -215,11 +215,11 @@ $(function () {
                                         ) +
                                         ((splitter && splitter.class && (" " + splitter.class)) || "");                                       //all provided classes on template level and individual panel level are concatenated
                     splitterClasses = granit.uniqueArray(splitterClasses.split(" ")).join(" ");     //avoiding duplicate class names
-                    splitterClasses = "granit_splitter_wrapper" + splitterClasses;                  //prefix the class string with the required system class
+                    splitterClasses = "granit_splitter" + splitterClasses;                  //prefix the class string with the required system class
 
                     var cursor = splitter && splitter.display === "separator" ? "default" : self.cursor;
 
-                    var splitterElement = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='granit_splitter' style='cursor:" + cursor + ";'></div>");
+                    var splitterElement = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='granit_splitter_wrapper' style='cursor:" + cursor + ";'></div>");
                     splitterElement.append("<div class='" + splitterClasses + "'></div>");  //embed the div with custom splitter styles 
                     
                     //define the splitter element
@@ -286,7 +286,7 @@ $(function () {
                 }
                 size = new granit.Size(size);
 
-                var panelDisplayClass = "granit_panel" + (flexible ? "" : " granit_panel_static");
+                var panelDisplayClass = "granit_panel_wrapper" + (flexible ? "" : " granit_panel_static");
 
                 //apply splitter
                 wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelDisplayClass + "' style='" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + maxSize.getSize() + ";'></div>");
@@ -415,6 +415,8 @@ $(function () {
 
             this.movedSplitter = $(event.currentTarget);
 
+            $(".granit_splitter_wrapper, .granit_panel_wrapper").not(this.movedSplitter).addClass("granit_suppressMouseEvents");
+
             //capture the mouse event
             if (event.target.setCapture) {
                 event.target.setCapture();
@@ -518,6 +520,8 @@ $(function () {
 
                 //release mouse capture
                 if (event.target.releaseCapture) { event.target.releaseCapture(); }
+
+                $(".granit_splitter_wrapper, .granit_panel_wrapper").removeClass("granit_suppressMouseEvents");
 
                 //create the convertion tool in order to transfer any panel length pixel values into the associated original units
                 var pc = new granit.PixelConverter(self.element[0]);

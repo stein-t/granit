@@ -68,22 +68,21 @@
     /*overflow: scroll;*/
 }
 
+.granit_splitter_wrapper:hover > .splitter_HandleStyle, .granit_splitter_wrapper:active > .splitter_HandleStyle {
+    border: 2px solid darkgrey;
+    background: grey;
+}
 .splitter_HandleStyle {
     border: 2px solid black;
     background: darkgrey;
     border-radius: 20px;
 }
 
-.splitter_HandleStyle:hover {
-    border: 2px solid darkgrey;
+.granit_splitter_wrapper:hover > .splitter_Layout1, .granit_splitter_wrapper:active > .splitter_Layout1 {
     background: grey;
 }
-
 .splitter_Layout1 {
     background: darkgrey;
     margin: 0 10px;
-}
-.splitter_Layout1:hover {
-    background: grey;
 }
 
