@@ -540,12 +540,7 @@ $(function () {
                         item.data().__granitData__.maximized = false;
 
                         //reconvert to original unit
-                        //size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
-                        if (self.options.direction === "vertical") {
-                            size = item.width();
-                        } else {
-                            size = item.height();
-                        }
+                        size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
                         unit = item.data().__granitData__.Size.Number.Unit;
 
                         if (unit === "px") {
@@ -592,11 +587,6 @@ $(function () {
 
                         //reconvert to original unit
                         size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
-                        //if (self.options.direction === "vertical") {
-                        //    size = item.width();
-                        //} else {
-                        //    size = item.height();
-                        //}
                         var proportion = (size / remainingPixelSpace);
 
                         var result = "calc(" + remainingSpace + " * " + proportion + ")";
