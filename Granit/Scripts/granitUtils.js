@@ -407,12 +407,12 @@ var granit = (function (gt) {
             fixedDecimals = fixedDecimals || 2;
 
             if (targetUnit === "px") {
-                return value + targetUnit;
+                return value;
             }
 
             if (targetUnit === "%") {
                 var offsetSizeName = prefixSizeName(cssPropertyName, "offset", true);
-                return ((value / element[offsetSizeName]) * 100.00).toFixed(fixedDecimals) + targetUnit;
+                return ((value / element[offsetSizeName]) * 100.00).toFixed(fixedDecimals);
             }
 
             if (targetUnit === "em" || targetUnit === "rem") {
@@ -426,7 +426,7 @@ var granit = (function (gt) {
                 self.destroy();
             }
 
-            return (value / pixelBase).toFixed(fixedDecimals) + targetUnit; //return full float
+            return (value / pixelBase).toFixed(fixedDecimals); //return full float
         };
     };
 

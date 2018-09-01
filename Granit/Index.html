@@ -23,7 +23,7 @@
                 panel: [
                     { size: "200px", class: "panelLayout1", margin: "5%", flexible: true, resizable: true },
                     { size: "100px", class: "panelLayout2" },
-                    { size: "200px", margin: "5vmin" },
+                    { margin: "5vmin" },
                     { class: "panelLayout3 panelLayout5", margin: "5pt" }
                 ],
                 splitter: [
@@ -31,6 +31,7 @@
                     { width: 5, length: "200rem" },
                     { width: 10 }
                 ],
+                //direction: "horizontal",
                 direction: "vertical",
                 overflow: "hidden"
             });
@@ -39,8 +40,8 @@
                 panel: [
                     { size: "10rem", class: "panelLayout1", resizable: true },
                     { size: "19.513567%", maxSize: "20%", class: "panelLayout2", resizable: true },
-                    { size: "10rem", maxSize: "20%", margin: "5vmin", resizable: true },
-                    { size: "10rem", class: "panelLayout3 panelLayout5", margin: "5pt" },
+                    { maxSize: "20%", resizable: true },
+                    { size: "10rem", class: "panelLayout3 panelLayout5" },
                     { resizable: true }
                 ],
                 splitter: [
@@ -49,6 +50,7 @@
                     { width: "2rem" }
                 ],
                 direction: "horizontal",
+                //direction: "vertical",
                 panelTemplate: {
                     minSize: "1em", flexible: true, resizable: true
                 },
@@ -60,7 +62,7 @@
                 panel: [
                     { size: "20.1em", minSize: "5%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true, flexible: true },
                     { class: "panelLayout4", resizable: true, flexible: true },
-                    { size: "20.1em", maxSize: "30%", class: "panelLayout5", resizable: true, flexible: false },
+                    { maxSize: "30%", class: "panelLayout5", resizable: true, flexible: false },
                     { size: "20.1em", class: "panelLayout6", resizable: true, flexible: true }
                 ],
                 splitter: [
