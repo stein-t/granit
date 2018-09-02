@@ -112,10 +112,14 @@ body {
     align-self: center !important;
     margin: 0 !important;
     padding: 0 !important;
+    pointer-events: auto;
 }
 
 .granit_suppressMouseEvents {
     pointer-events: none;
+}
+.granit_splitter_active, .granit_splitter_hover {
+    pointer-events: auto !important;
 }
 
 /*custom default panel layout styles*/
@@ -126,13 +130,16 @@ body {
 }
 
 /*custom default splitter layout styles*/
-.granit_splitter_wrapper:hover > .granit_splitter_default, .granit_splitter_wrapper:active > .granit_splitter_default {
-    background: grey;
-}
 .granit_splitter_default {
     background: darkgrey;
     /*padding: 5px;
     margin: 5px;*/
+}
+.granit_splitter_wrapper:hover > .granit_splitter_default,
+.granit_splitter_wrapper.granit_splitter_hover > .granit_splitter_default,
+.granit_splitter_wrapper:active > .granit_splitter_default,
+.granit_splitter_wrapper.granit_splitter_active > .granit_splitter_default {
+    background: grey;
 }
 
 .granit_separator_default {
