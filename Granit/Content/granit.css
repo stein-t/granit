@@ -118,7 +118,7 @@ body {
 .granit_suppressMouseEvents {
     pointer-events: none;
 }
-.granit_splitter_active, .granit_splitter_hover {
+.granit_splitter_active {
     pointer-events: auto !important;
 }
 
@@ -136,7 +136,6 @@ body {
     margin: 5px;*/
 }
 .granit_splitter_wrapper:hover > .granit_splitter_default,
-.granit_splitter_wrapper.granit_splitter_hover > .granit_splitter_default,
 .granit_splitter_wrapper:active > .granit_splitter_default,
 .granit_splitter_wrapper.granit_splitter_active > .granit_splitter_default {
     background: grey;

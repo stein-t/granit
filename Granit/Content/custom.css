@@ -74,7 +74,6 @@
     border-radius: 20px;
 }
 .granit_splitter_wrapper:hover > .splitter_HandleStyle,
-.granit_splitter_wrapper.granit_splitter_hover > .splitter_HandleStyle,
 .granit_splitter_wrapper:active > .splitter_HandleStyle,
 .granit_splitter_wrapper.granit_splitter_active > .splitter_HandleStyle {
     border: 2px solid darkgrey;
@@ -86,7 +85,6 @@
     margin: 0 10px;
 }
 .granit_splitter_wrapper:hover > .splitter_Layout1,
-.granit_splitter_wrapper.granit_splitter_hover > .splitter_Layout1,
 .granit_splitter_wrapper:active > .splitter_Layout1,
 .granit_splitter_wrapper.granit_splitter_active > .splitter_Layout1 {
     background: grey;

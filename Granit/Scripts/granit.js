@@ -371,13 +371,8 @@ $(function () {
                 this.splitterList.forEach(function (item, index) {
                     //attach mousedown if the associated splitter is enabled
                     if (!item.data().__granitData__.disabled) {
-                        item.hover(function () {
-                            $(this).toggleClass("granit_splitter_hover");
-                        });
                         self._on(item, {
                             "mousedown": "_splitterMouseDown",
-                            //"mouseenter": "_splitterHover",
-                            //"mouseleave": "_splitterHover"
                         });
                     }
                 });
@@ -390,22 +385,6 @@ $(function () {
             //        item.fontResize($.proxy(self._elementOnFontResize, self, item[0]));
             //    }
             //});
-        },
-
-        _splitterHover: function (event) {
-            event.stopPropagation();
-            event.preventDefault();
-
-            var self = this;
-            var movedSplitter = $(event.currentTarget);
-
-            if (event.type == "mouseenter") {
-                movedSplitter.addClass("granit_splitter_hover");
-            }
-
-            if (event.type == "mouseleave") {
-                movedSplitter.removeClass("granit_splitter_hover");
-            }
         },
 
         _elementOnResize: function (element) {
