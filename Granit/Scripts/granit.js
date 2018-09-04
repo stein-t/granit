@@ -334,14 +334,15 @@ $(function () {
                     var itemData = item.data().__granitData__;
 
                     var proportion = "(" + (!itemData.Size.autoSized ? itemData.Size.Number.Value : panelSizeDistributed) + " / 100)";
-                    var size = "calc(" + remainingSpace + " * " + proportion + ")";
+                    var result = "calc(" + remainingSpace + " * " + proportion + ")";
 
                     if (itemData.Size.autoSized) {
-                        itemData.Size.Number.Value = proportion;
+                        itemData.Size.Number.Value = panelSizeDistributed;
                         itemData.Size.Number.Unit = '%';
                     }
 
-                    item.css(self.sizePropertyName, size);
+                    item.css(self.sizePropertyName, result);
+                    itemData.Size.Number.CalcValue = result;
                 });
             }
 
@@ -435,8 +436,6 @@ $(function () {
              * 2. turn off flexible mode as the mouse-moving strictly controls the size on pixel basis
              */
             this.panels.forEach(function (item, index) {
-                //var size = item[0][offsetSizeName];
-
                 var size;
                 if (self.options.direction === "vertical") {
                     size = item.width();
@@ -469,6 +468,8 @@ $(function () {
                 item.data().__granitData__.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
 
                 item.data().__granitData__.Size.Pixel = size;
+                var test = item.data().__granitData__.Size.Number.Value;
+                item.data().__granitData__.Size.PixelCache = size;
             });
 
             pc.destroy();   //destroy the convertion tool
@@ -548,8 +549,8 @@ $(function () {
                     item.data().__granitData__.minimized = false;
                     item.data().__granitData__.maximized = false;
 
-                    //reconvert to original unit
                     size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
+                    //reconvert to original unit
                     unit = item.data().__granitData__.Size.Number.Unit;
 
                     if (unit === "px") {
@@ -586,7 +587,6 @@ $(function () {
                     parentSize = self.element.height();
                 }
 
-                //var remainingPixelSpace = self.element[0][offsetSizeName] - panelPixelSizeTotalOffset - splitterPixelOffset;
                 var remainingPixelSpace = parentSize - panelPixelSizeTotalOffset - splitterPixelOffset;
 
                 // iterating relative panels for re-converting
@@ -596,12 +596,14 @@ $(function () {
 
                     //reconvert to original unit
                     size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
+
                     var proportion = (size / remainingPixelSpace);
 
                     var result = "calc(" + remainingSpace + " * " + proportion + ")";
 
                     item.css(self.sizePropertyName, result);
-                    item.data().__granitData__.Size.Number.Value = proportion;
+                    item.data().__granitData__.Size.Number.CalcValue = result;
+                    item.data().__granitData__.Size.Number.Value = proportion * 100.00;
                 });
             }
 

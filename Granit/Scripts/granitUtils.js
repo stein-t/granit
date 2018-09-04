@@ -230,12 +230,18 @@ var granit = (function (gt) {
          * otherwise the new item simply is pushed into the list, together with the respective operation.
          */
         arr.add = function (item, operation) {
-            if (!(item instanceof NumberUnit)) {
+            var number, unit;
+
+            if (item instanceof NumberUnit) {
+                number = item.Value;
+                unit = item.Unit;
+            } else {
                 //the item is considered to be a css length value string ("10px", "5rem", etc.) and must be converted into a NumberUnit object 
-                var number = parseFloat(item);
-                var unit = item.replace(number, "");
-                item = new NumberUnit(number, unit);
+                number = parseFloat(item);
+                unit = item.replace(number, "");
             }
+
+            item = new NumberUnit(number, unit);
 
             var itemNumber = parseFloat(item.Value);
             var element;
@@ -417,8 +423,13 @@ var granit = (function (gt) {
 
             if (targetUnit === "em" || targetUnit === "rem") {
                 testElement.textContent = "&nbsp;";  //space content
-                testElement.style.fontSize = "1.0" + targetUnit;
                 testElement.style.lineHeight = "1";
+                testElement.style.fontSize = "1.0" + targetUnit;
+            }
+            else {
+                testElement.textContent = "x";  //space content
+                //testElement.style.lineHeight = "1";
+                testElement.style.height = "1.0" + targetUnit;
             }
             var pixelBase = testElement.offsetHeight;
 
