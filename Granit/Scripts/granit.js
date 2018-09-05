@@ -563,9 +563,7 @@ $(function () {
                         panelPixelSizeTotalOffset += size;
                     }
 
-                    item.data().__granitData__.minimized = false;
-                    item.data().__granitData__.maximized = false;
-                    item.data().__granitData__.resized = false;
+                    self._resetPanelData(item);
                 });
             }
 
@@ -595,20 +593,11 @@ $(function () {
                     item.data().__granitData__.Size.Number.CalcValue = result;
                     item.data().__granitData__.Size.Number.Value = proportion * 100.00;
 
-                    item.data().__granitData__.minimized = false;
-                    item.data().__granitData__.maximized = false;
-                    item.data().__granitData__.resized = false;
+                    self._resetPanelData(item);
                 });
             }
 
             pc.destroy();   //destroy the convertion tool
-
-            // set back to flexible
-            this.panels.forEach(function (item, index) {
-                if (item.data().__granitData__.flexible) {
-                    item.removeClass("granit_panel_static");
-                }
-            });
 
             //clean up
             this.movedSplitter.removeClass("granit_splitter_active");
@@ -621,6 +610,17 @@ $(function () {
 
             this.MousemoveEventController && this.MousemoveEventController.cancel();
             this.movedSplitter = undefined;
+        },
+
+        _resetPanelData: function (item) {
+            // set back to flexible
+            if (item.data().__granitData__.flexible) {
+                item.removeClass("granit_panel_static");
+            }
+
+            item.data().__granitData__.minimized = false;
+            item.data().__granitData__.maximized = false;
+            item.data().__granitData__.resized = false;
         },
 
         /*
@@ -716,12 +716,16 @@ $(function () {
 
                 if (offset >= 1.0) {
                     if (!result2.panel.data().__granitData__.resized) {
-                        result2.panel.addClass("granit_panel_static");
+                        if (!result2.panel.hasClass("granit_panel_static")) {
+                            result2.panel.addClass("granit_panel_static");
+                        }
                         result2.panel.data().__granitData__.resized = true;
                     }
                     result2.panel.css(self.sizePropertyName, result2.currentSize - offset + "px");
                     if (!result1.panel.data().__granitData__.resized) {
-                        result1.panel.addClass("granit_panel_static");
+                        if (!result1.panel.hasClass("granit_panel_static")) {
+                            result1.panel.addClass("granit_panel_static");
+                        }
                         result1.panel.data().__granitData__.resized = true;
                     }
                     result1.panel.css(self.sizePropertyName, result1.currentSize + offset + "px");
