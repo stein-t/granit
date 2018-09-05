@@ -443,12 +443,6 @@ $(function () {
                     size = item.height();
                 }
 
-                if (!item.hasClass("granit_panel_static")) {
-                    item.addClass("granit_panel_static");
-                }
-
-                item.css(self.sizePropertyName, size + "px");
-
                 if (!item.data().__granitData__.resizable) {
                     return false;    //we do not need to prepare non-resizable panels
                 }
@@ -468,8 +462,6 @@ $(function () {
                 item.data().__granitData__.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
 
                 item.data().__granitData__.Size.Pixel = size;
-                var test = item.data().__granitData__.Size.Number.Value;
-                item.data().__granitData__.Size.PixelCache = size;
             });
 
             pc.destroy();   //destroy the convertion tool
@@ -546,9 +538,6 @@ $(function () {
             if (self.staticPanels.length > 0) {
                 // iterating static panels for re-converting
                 self.staticPanels.forEach(function (item, index) {
-                    item.data().__granitData__.minimized = false;
-                    item.data().__granitData__.maximized = false;
-
                     size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
                     //reconvert to original unit
                     unit = item.data().__granitData__.Size.Number.Unit;
@@ -573,6 +562,10 @@ $(function () {
                         panelSizeTotalOffset.add(item.data().__granitData__.Size.Number, "-");
                         panelPixelSizeTotalOffset += size;
                     }
+
+                    item.data().__granitData__.minimized = false;
+                    item.data().__granitData__.maximized = false;
+                    item.data().__granitData__.resized = false;
                 });
             }
 
@@ -591,9 +584,6 @@ $(function () {
 
                 // iterating relative panels for re-converting
                 self.relativePanels.forEach(function (item, index) {
-                    item.data().__granitData__.minimized = false;
-                    item.data().__granitData__.maximized = false;
-
                     //reconvert to original unit
                     size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
 
@@ -604,6 +594,10 @@ $(function () {
                     item.css(self.sizePropertyName, result);
                     item.data().__granitData__.Size.Number.CalcValue = result;
                     item.data().__granitData__.Size.Number.Value = proportion * 100.00;
+
+                    item.data().__granitData__.minimized = false;
+                    item.data().__granitData__.maximized = false;
+                    item.data().__granitData__.resized = false;
                 });
             }
 
@@ -721,7 +715,15 @@ $(function () {
                 var offset = Math.min(result1.offset, result2.offset);
 
                 if (offset >= 1.0) {
+                    if (!result2.panel.data().__granitData__.resized) {
+                        result2.panel.addClass("granit_panel_static");
+                        result2.panel.data().__granitData__.resized = true;
+                    }
                     result2.panel.css(self.sizePropertyName, result2.currentSize - offset + "px");
+                    if (!result1.panel.data().__granitData__.resized) {
+                        result1.panel.addClass("granit_panel_static");
+                        result1.panel.data().__granitData__.resized = true;
+                    }
                     result1.panel.css(self.sizePropertyName, result1.currentSize + offset + "px");
 
                     result2.panel.data().__granitData__.Size.Pixel = result2.currentSize - offset;
