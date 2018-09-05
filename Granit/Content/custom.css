@@ -72,6 +72,7 @@
     border: 2px solid black;
     background: darkgrey;
     border-radius: 20px;
+    margin: 0;
 }
 .granit_splitter_wrapper:hover > .splitter_HandleStyle,
 .granit_splitter_wrapper:active > .splitter_HandleStyle,
@@ -90,3 +91,6 @@
     background: grey;
 }
 
+.splitter_Layout2 {
+    background: #404040;
+}

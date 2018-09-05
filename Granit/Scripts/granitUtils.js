@@ -39,46 +39,11 @@ var granit = (function (gt) {
 
     /*
      * Author(s):   Thomas Stein
-     * Description: Help function to validate the input.
-     */
-    var parseFloatUnit = function (size, numberSet, unitFormat, errorObject, math) {
-        if (!numberSet || (numberSet !== "Q" && numberSet !== "Q+" && numberSet !== "Q-")) {
-            numberSet = "Q";
-        }
-        if (jQuery.type(size) !== "string" && jQuery.type(size) !== "number") {
-            output("value (" + size + ") is not a number or a string)", errorObject);
-        }
-
-        math = math || function (x) { return x; };
-
-        var regex = new RegExp(/^[+-]?\d+(\.\d+)?/.source + "(" + unitFormat.source + ")?$");     //float number with optional measure
-
-        if (jQuery.type(size) === "string" && !size.match(regex)) {
-            output("value (" + size + ") format is invalid -- format (" + regex + ") expected (float number with optional measure)", errorObject);
-        }
-
-        var result = parseFloat(size);
-
-        if (numberSet !== "Q") {
-            if (result < 0.0 && numberSet == "Q+") {
-                output("value (" + result + ") < 0.0 -- positive value expected", errorObject);
-            }
-            if (result > 0.0 && numberSet == "Q-") {
-                output("value (" + result + ") > 0.0 -- negative value expected", errorObject);
-            }
-        }
-
-        return math(result);
-    };
-
-    /*
-     * Author(s):   Thomas Stein
      * Description: the NumberUnit class -- Instances of this class are very heavily used in granit to transfer not only numbers but also associated units.
      */
     var NumberUnit = function (value, unit, fixedDecimals) {
         value = value || 0;
-        fixedDecimals = fixedDecimals || 2;
-        this.Value = value.toFixed ? value.toFixed(fixedDecimals) : value;        //we round 2 decimals
+        this.Value = value.toFixed && fixedDecimals ? value.toFixed(fixedDecimals) : value;        //we round 2 decimals
         this.Unit = unit || "";
 
         this.getSize = function () {
@@ -159,7 +124,7 @@ var granit = (function (gt) {
             }
         }
 
-        return new NumberUnit(math(value), unit || defaultUnit);
+        return new NumberUnit(math(value), unit || defaultUnit, 2);
     };
 
     /*
@@ -418,7 +383,8 @@ var granit = (function (gt) {
 
             if (targetUnit === "%") {
                 var offsetSizeName = prefixSizeName(cssPropertyName, "offset", true);
-                return ((value / element[offsetSizeName]) * 100.00).toFixed(fixedDecimals);
+                //return ((value / element[offsetSizeName]) * 100.00).toFixed(fixedDecimals);
+                return ((value / element[offsetSizeName]) * 100.00);
             }
 
             if (targetUnit === "em" || targetUnit === "rem") {
@@ -437,7 +403,8 @@ var granit = (function (gt) {
                 self.destroy();
             }
 
-            return (value / pixelBase).toFixed(fixedDecimals); //return full float
+            //return (value / pixelBase).toFixed(fixedDecimals); //return full float
+            return (value / pixelBase); //return full float
         };
     };
 
@@ -573,7 +540,6 @@ var granit = (function (gt) {
 
     //publish
     gt.extractFloatUnit = extractFloatUnit;
-    gt.parseFloatUnit = parseFloatUnit;
     gt.output = output;
     gt.uniqueArray = uniqueArray;
     gt.listCompare = listCompare;

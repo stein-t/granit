@@ -17,7 +17,7 @@
  */
 html {
     /* IE has problems with em calculation with percentage font-size */
-    /*font-size: 62.5%; */
+    /*font-size: 62.5%;*/ 
     font-size: 10px;
 
     height: 100%;
@@ -28,8 +28,8 @@ body {
     margin: 0;
     height: 100%;
     width: auto;
-    padding: 10px;
-    box-sizing: border-box;
+    /*padding: 10px;
+    box-sizing: border-box;*/
 }
 
 /*******************************************************************/
@@ -38,6 +38,7 @@ body {
     width: auto !important;
     height: 100% !important;
     display: flex !important;
+    box-sizing: border-box !important;
     overflow: hidden;
     position: relative !important;
     margin: 0 !important;
@@ -81,6 +82,7 @@ body {
     position: relative !important;
     margin: 0 !important;
     padding: 0 !important;
+    border: 0 !important;
 }
 
 .granit_panel_static {
@@ -112,6 +114,7 @@ body {
     align-self: center !important;
     margin: 0 !important;
     padding: 0 !important;
+    border: 0 !important;
     pointer-events: auto;
 }
 
@@ -132,6 +135,7 @@ body {
 /*custom default splitter layout styles*/
 .granit_splitter_default {
     background: darkgrey;
+    margin: 0;
     /*padding: 5px;
     margin: 5px;*/
 }
@@ -143,4 +147,5 @@ body {
 
 .granit_separator_default {
     background: #404040;
+    margin: 0;
 }
