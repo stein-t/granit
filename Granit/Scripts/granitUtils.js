@@ -39,51 +39,37 @@ var granit = (function (gt) {
 
     /*
      * Author(s):   Thomas Stein
-     * Description: Help function to validate the input.
+     * Description: the NumberUnit class -- Instances of this class are very heavily used in granit to transfer not only numbers but also associated units.
      */
-    var parseFloatUnit = function (size, numberSet, unitFormat, errorObject, math) {
-        if (!numberSet || (numberSet !== "Q" && numberSet !== "Q+" && numberSet !== "Q-")) {
-            numberSet = "Q";
+    var NumberUnit = function (value, unit, fixedDecimals) {
+        value = value || 0;
+        this.Value = value.toFixed && fixedDecimals ? value.toFixed(fixedDecimals) : value;        //we round 2 decimals
+        this.Unit = unit || "";
+
+        this.getSize = function () {
+            return this.Value + this.Unit;
         }
-        if (jQuery.type(size) !== "string" && jQuery.type(size) !== "number") {
-            output("value (" + size + ") is not a number or a string)", errorObject);
-        }
-
-        math = math || function (x) { return x; };
-
-        var regex = new RegExp(/^[+-]?\d+(\.\d+)?/.source + "(" + unitFormat.source + ")?$");     //float number with optional measure
-
-        if (jQuery.type(size) === "string" && !size.match(regex)) {
-            output("value (" + size + ") format is invalid -- format (" + regex + ") expected (float number with optional measure)", errorObject);
-        }
-
-        var result = parseFloat(size);
-
-        if (numberSet !== "Q") {
-            if (result < 0.0 && numberSet == "Q+") {
-                output("value (" + result + ") < 0.0 -- positive value expected", errorObject);
-            }
-            if (result > 0.0 && numberSet == "Q-") {
-                output("value (" + result + ") > 0.0 -- negative value expected", errorObject);
-            }
-        }
-
-        return math(result);
     };
 
     /*
      * Author(s):   Thomas Stein
-     * Description: the NumberUnit class -- Instances of this class are very heavily used in granit to transfer not only numbers but also associated units.
+     * Description: NumberUnit wrapper with additional properties in order to express width and height lenghts
      */
-    var NumberUnit = function (number, unit) {
+    var Size = function (number, autoSized) {
+        this.autoSized = number === "auto" || autoSized ? true : false;
+
+        if (!number || number === "auto") {
+            number = new NumberUnit();
+        }
         this.Number = number;
-        this.Unit = unit || "";
+        this.Pixel = 0;
 
         this.getSize = function () {
-            return this.Number + this.Unit;
+            return this.Number.getSize();
         }
-    };
+    }
 
+    //check if value is of type boolean
     var isBooleanType = function (value) {
         return value === true || value === false;
     }
@@ -138,7 +124,7 @@ var granit = (function (gt) {
             }
         }
 
-        return new NumberUnit(math(value), unit || defaultUnit);
+        return new NumberUnit(math(value), unit || defaultUnit, 2);
     };
 
     /*
@@ -209,14 +195,20 @@ var granit = (function (gt) {
          * otherwise the new item simply is pushed into the list, together with the respective operation.
          */
         arr.add = function (item, operation) {
-            if (!(item instanceof NumberUnit)) {
+            var number, unit;
+
+            if (item instanceof NumberUnit) {
+                number = item.Value;
+                unit = item.Unit;
+            } else {
                 //the item is considered to be a css length value string ("10px", "5rem", etc.) and must be converted into a NumberUnit object 
-                var number = parseFloat(item);
-                var unit = item.replace(number, "");
-                item = new NumberUnit(number, unit);
+                number = parseFloat(item);
+                unit = item.replace(number, "");
             }
 
-            var itemNumber = parseFloat(item.Number);
+            item = new NumberUnit(number, unit);
+
+            var itemNumber = parseFloat(item.Value);
             var element;
             arr.forEach(function (el) {
                 if (item.Unit === el.Unit) {
@@ -226,7 +218,7 @@ var granit = (function (gt) {
             });
 
             if (element) {
-                var elementNumber = parseFloat(element.Operation + element.Number);
+                var elementNumber = parseFloat(element.Operation + element.Value);
                 switch (operation) {
                     case "+":
                         elementNumber = elementNumber + itemNumber;
@@ -238,10 +230,10 @@ var granit = (function (gt) {
                         break;
                 }
                 if (elementNumber >= 0) {
-                    element.Number = elementNumber;
+                    element.Value = elementNumber;
                     element.Operation = "+";
                 } else {
-                    element.Number = Math.abs(elementNumber);
+                    element.Value = Math.abs(elementNumber);
                     element.Operation = "-";
                 }
 
@@ -275,7 +267,7 @@ var granit = (function (gt) {
          */
         arr.toString = function () {
             var result = arr.reduce(function (total, item) {
-                return total + " " + item.Operation + " " + item.Number + item.Unit;
+                return total + " " + item.Operation + " " + item.Value + item.Unit;
             }, "");
 
             return result;
@@ -380,13 +372,30 @@ var granit = (function (gt) {
         };
 
         //convert any pixel length to target unit
-        this.convertFromPixel = function (value, targetUnit, cssPropertyName, destroy) {
+        this.convertFromPixel = function (value, targetUnit, cssPropertyName, fixedDecimals, destroy) {
             self.reset();
+
+            fixedDecimals = fixedDecimals || 2;
+
+            if (targetUnit === "px") {
+                return value;
+            }
+
+            if (targetUnit === "%") {
+                var offsetSizeName = prefixSizeName(cssPropertyName, "offset", true);
+                //return ((value / element[offsetSizeName]) * 100.00).toFixed(fixedDecimals);
+                return ((value / element[offsetSizeName]) * 100.00);
+            }
 
             if (targetUnit === "em" || targetUnit === "rem") {
                 testElement.textContent = "&nbsp;";  //space content
-                testElement.style.fontSize = "1.0" + targetUnit;
                 testElement.style.lineHeight = "1";
+                testElement.style.fontSize = "1.0" + targetUnit;
+            }
+            else {
+                testElement.textContent = "x";  //space content
+                //testElement.style.lineHeight = "1";
+                testElement.style.height = "1.0" + targetUnit;
             }
             var pixelBase = testElement.offsetHeight;
 
@@ -394,13 +403,8 @@ var granit = (function (gt) {
                 self.destroy();
             }
 
-            var dh = new DeviceHelper();
-            //check for IE browsers (including Edge)
-            if (dh.isMicrosoftBrowser()) {
-                return (value / pixelBase).toFixed(2) + targetUnit; //round 2 decimal digits: Microsoft browser only render 2 decimal digits
-            }
-
-            return (value / pixelBase).toFixed(8) + targetUnit; //return full float
+            //return (value / pixelBase).toFixed(fixedDecimals); //return full float
+            return (value / pixelBase); //return full float
         };
     };
 
@@ -536,12 +540,12 @@ var granit = (function (gt) {
 
     //publish
     gt.extractFloatUnit = extractFloatUnit;
-    gt.parseFloatUnit = parseFloatUnit;
     gt.output = output;
     gt.uniqueArray = uniqueArray;
     gt.listCompare = listCompare;
     gt.NumberUnitArray = numberUnitArray;
     gt.NumberUnit = NumberUnit;
+    gt.Size = Size;
     gt.prefixSizeName = prefixSizeName;
     gt.EventTimeController = EventTimeController;
     gt.DeviceHelper = DeviceHelper;

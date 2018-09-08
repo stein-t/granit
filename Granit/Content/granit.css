@@ -17,7 +17,7 @@
  */
 html {
     /* IE has problems with em calculation with percentage font-size */
-    /*font-size: 62.5%; */
+    /*font-size: 62.5%;*/ 
     font-size: 10px;
 
     height: 100%;
@@ -28,27 +28,17 @@ body {
     margin: 0;
     height: 100%;
     width: auto;
+    /*padding: 10px;
+    box-sizing: border-box;*/
 }
 
 /*******************************************************************/
 
-.granit_Panel_wrapper {
-    display: block !important;
-    position: absolute !important;
-    width: auto !important;
-    height: auto !important;
-    bottom: 0 !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    float: none !important;
-    overflow: auto !important;
-}
-
-.granitSplitter_Container {
+.granit_container {
     width: auto !important;
     height: 100% !important;
     display: flex !important;
+    box-sizing: border-box !important;
     overflow: hidden;
     position: relative !important;
     margin: 0 !important;
@@ -59,17 +49,31 @@ body {
     bottom: 0 !important;
 }
 
-.granitSplitter_Container_vertical {
+.granit_container_vertical {
     flex-flow: row nowrap !important;
     justify-content: flex-start !important;
 }
 
-.granitSplitter_Container_horizontal {
+.granit_container_horizontal {
     flex-flow: column nowrap !important;
     align-items: flex-start !important;
 }
 
-.granit_Panel {
+.granit_panel {
+    display: block !important;
+    position: absolute !important;
+    box-sizing: border-box !important;
+    width: auto !important;
+    height: auto !important;
+    bottom: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    float: none !important;
+    overflow: auto !important;
+}
+
+.granit_panel_wrapper {
     display: block !important;
     height: 100%;
     width: 100%;
@@ -78,37 +82,70 @@ body {
     position: relative !important;
     margin: 0 !important;
     padding: 0 !important;
+    border: 0 !important;
 }
 
-.granit_Panel_Static {
+.granit_panel_static {
     flex: none !important;
 }
 
-.granitSplitter_Splitter {
+.granit_splitter {
     display: block !important;
     float: none !important;
     box-sizing: border-box !important;
+    position: absolute !important;
+    width: auto !important;
+    height: auto !important;
+    bottom: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    overflow: hidden !important;
+}
+
+.granit_splitter_wrapper {
+    display: block !important;
+    float: none !important;
+    height: 100%;
+    width: 100%;
+    overflow: hidden !important;
     flex: none !important;
+    position: relative !important;
     align-self: center !important;
     margin: 0 !important;
     padding: 0 !important;
+    border: 0 !important;
+    pointer-events: auto;
 }
 
-/*custom default splitter layout styles*/
-.granit_Splitter_Default {
-    background: darkgrey;
+.granit_suppressMouseEvents {
+    pointer-events: none;
 }
-.granit_Splitter_Default:hover {
-    background: grey;
-}
-
-.granit_Separator_Default {
-    background: #404040;
+.granit_splitter_active {
+    pointer-events: auto !important;
 }
 
 /*custom default panel layout styles*/
-.granit_Panel_Default {
+.granit_panel_default {
     border: 1px solid grey;
     padding: 5px 20px 20px 5px;
     margin: 5% 20px 20px 5%;
+}
+
+/*custom default splitter layout styles*/
+.granit_splitter_default {
+    background: darkgrey;
+    margin: 0;
+    /*padding: 5px;
+    margin: 5px;*/
+}
+.granit_splitter_wrapper:hover > .granit_splitter_default,
+.granit_splitter_wrapper:active > .granit_splitter_default,
+.granit_splitter_wrapper.granit_splitter_active > .granit_splitter_default {
+    background: grey;
+}
+
+.granit_separator_default {
+    background: #404040;
+    margin: 0;
 }

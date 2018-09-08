@@ -19,10 +19,10 @@ $(function () {
             panel: [],
             splitter: [],
             panelTemplate: {
-                size: "auto", minSize: 5, maxSize: "none", margin: 0, flexible: true, resizable: true, classes: "granit_Panel_Default"
+                size: "auto", minSize: 5, maxSize: "none", margin: 0, flexible: true, resizable: true, class: "granit_panel_default"
             },
-            splitterTemplate: { width: "0.5em", length: "100%", classes: "granit_Splitter_Default" },
-            separatorTemplate: { width: "0.5em", length: "100%", classes: "granit_Separator_Default" },
+            splitterTemplate: { width: "2em", length: "100%", class: "granit_splitter_default" },
+            separatorTemplate: { width: "1em", length: "100%", class: "granit_separator_default" },
             relativeSizeBasedOnRemainingSpace: false,    //The group of percentage panels may be isolated from other unit-sized panels. Their relative (percentage) size is always relative to the remaining space of all non-percentage sized panels
             _throttle: 10       //the keywords 'none', 'raf' or a positive integer number
         },
@@ -56,15 +56,15 @@ $(function () {
             ];
 
             var panelOptionsAllowed = [
-                'size', 'minSize', 'maxSize', 'margin', 'flexible', 'resizable', 'classes'
+                'size', 'minSize', 'maxSize', 'margin', 'flexible', 'resizable', 'class'
             ];
 
             var splitterTemplateOptionsAllowed = [
-                'width', 'length', 'classes'
+                'width', 'length', 'class'
             ];
 
             var splitterOptionsAllowed = [
-                'display', 'width', 'length', 'classes'
+                'display', 'width', 'length', 'class'
             ];
 
             //check for invalid options
@@ -105,16 +105,16 @@ $(function () {
                 granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
             }
 
-            this.element.addClass("granitSplitter_Container");
+            this.element.addClass("granit_container");
 
             if (self.options.direction === "vertical") {
-                this.element.addClass("granitSplitter_Container_vertical");
+                this.element.addClass("granit_container_vertical");
                 this.element.css("overflow-x", self.options.overflow);
                 this.sizePropertyName = "width";
                 this.cursor = "ew-resize";
                 this.coordinate = "x";
             } else {
-                this.element.addClass("granitSplitter_Container_horizontal");
+                this.element.addClass("granit_container_horizontal");
                 this.element.css("overflow-y", self.options.overflow);
                 this.sizePropertyName = "height";
                 this.cursor = "ns-resize";
@@ -131,15 +131,17 @@ $(function () {
             }
 
             //local help variables
-            var panelsWithoutOrRelativeSize = [];                       //holds panels without size or percentage size
-            var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a non-percentage size under consideration of different units 
+            var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a definit size under consideration of different units 
             var panelSizePercentTotal = 0.0;                            //the total percentage size of percentage panels
-            var panelsWithoutSizeTotal = 0;                             //amount of panels without size
-            var splitterOffset = granit.NumberUnitArray();              //the total width of splitters under consideration different units 
 
             //global
             this.panels = [];               //reference to the panels (or final panel wrappers)
+            this.relativePanels = [];                                    //holds panels without size or percentage size based on remaining space
+            this.staticPanels = [];                                      //holds panels with definit size
+
             this.splitterList = [];         //reference to the splitters
+            this.splitterOffset = granit.NumberUnitArray();     //the total width of splitters under consideration different units 
+            this.panelsWithoutSizeTotal = 0;                             //amount of panels without size
 
             /*
              * iterate the children in order to ...
@@ -175,10 +177,10 @@ $(function () {
                 margin = granit.extractFloatUnit(margin, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel margin");
 
                 //retrieve the panelClasses option: the result is a string of class names as a combination of both the individual panel- and the global template- level options
-                var panelClasses = ((self.options.panelTemplate && self.options.panelTemplate.classes && (" " + self.options.panelTemplate.classes)) || "") +
-                    ((panel && panel.classes && (" " + panel.classes)) || "");                                       //all provided classes on template level and individual panel level are concatenated
+                var panelClasses = ((self.options.panelTemplate && self.options.panelTemplate.class && (" " + self.options.panelTemplate.class)) || "") +
+                    ((panel && panel.class && (" " + panel.class)) || "");                                       //all provided classes on template level and individual panel level are concatenated
                 panelClasses = granit.uniqueArray(panelClasses.split(" ")).join(" ");       //avoiding duplicate class names
-                panelClasses = "granit_Panel_wrapper" + panelClasses;                       //prefix the class string with the required system class
+                panelClasses = "granit_panel" + panelClasses;                       //prefix the class string with the required system class
 
                 //retrieve the flexible option: a value defined individually on panel level overwrites any panel template value
                 var flexible = (panel && (granit.IsBooleanType(panel.flexible) || panel.flexible)) || self.options.panelTemplate && self.options.panelTemplate.flexible;
@@ -198,31 +200,35 @@ $(function () {
                     }
 
                     //retrieve the splitterWidth option: a value defined individually on splitter level overwrites any template value
-                    var splitterWidth = (splitter && splitter.width) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.width : self.options.splitterTemplate && self.options.splitterTemplate.width); 
+                    var splitterWidth = (splitter && splitter.width) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.width : self.options.splitterTemplate && self.options.splitterTemplate.width);
                     splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- splitter width (splitter.width)");
 
                     //retrieve the splitterLength option: a value defined individually on splitter level overwrites any template value
-                    var splitterLength = (splitter && splitter.length) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.length : self.options.splitterTemplate && self.options.splitterTemplate.length); 
+                    var splitterLength = (splitter && splitter.length) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.length : self.options.splitterTemplate && self.options.splitterTemplate.length);
                     //Any css length value is allowed (including calc() statements). No validation needed here, because this value is directly forwarded into the css style definition
 
                     //retrieve the splitterClasses option: the result is a string of class names as a combination of both the individual splitter- and the global template- level options
                     var splitterClasses = (
-                                            splitter && splitter.display === "separator" ?
-                                            ((self.options.separatorTemplate && self.options.separatorTemplate.classes && (" " + self.options.separatorTemplate.classes)) || "") :
-                                            ((self.options.splitterTemplate && self.options.splitterTemplate.classes && (" " + self.options.splitterTemplate.classes)) || "")
-                                        ) +
-                                        ((splitter && splitter.classes && (" " + splitter.classes)) || "");                                       //all provided classes on template level and individual panel level are concatenated
+                        splitter && splitter.display === "separator" ?
+                            ((self.options.separatorTemplate && self.options.separatorTemplate.class && (" " + self.options.separatorTemplate.class)) || "") :
+                            ((self.options.splitterTemplate && self.options.splitterTemplate.class && (" " + self.options.splitterTemplate.class)) || "")
+                    ) +
+                        ((splitter && splitter.class && (" " + splitter.class)) || "");                                       //all provided classes on template level and individual panel level are concatenated
                     splitterClasses = granit.uniqueArray(splitterClasses.split(" ")).join(" ");     //avoiding duplicate class names
-                    splitterClasses = "granitSplitter_Splitter" + splitterClasses;                  //prefix the class string with the required system class
+                    splitterClasses = "granit_splitter" + splitterClasses;                  //prefix the class string with the required system class
 
                     var cursor = splitter && splitter.display === "separator" ? "default" : self.cursor;
 
-                    var splitterElement;
+                    var splitterElement = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='granit_splitter_wrapper' style='cursor:" + cursor + ";'></div>");
+                    splitterElement.append("<div class='" + splitterClasses + "'></div>");  //embed the div with custom splitter styles 
+
                     //define the splitter element
                     if (self.options.direction === "vertical") {
-                        splitterElement = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='" + splitterClasses + "' style='width:" + splitterWidth.getSize() + ";height:" + splitterLength + ";cursor:" + cursor + ";'></div>");
+                        splitterElement.css("width", splitterWidth.getSize());
+                        splitterElement.css("height", splitterLength);
                     } else {
-                        splitterElement = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='" + splitterClasses + "' style='width:" + splitterLength + ";height:" + splitterWidth.getSize() + ";cursor:" + cursor + ";'></div>");
+                        splitterElement.css("height", splitterWidth.getSize());
+                        splitterElement.css("width", splitterLength);
                     }
                     splitterElement.data().__granitData__ = { disabled: splitter && splitter.display === "separator" ? true : false };
                     self.splitterList[index] = splitterElement;
@@ -230,8 +236,8 @@ $(function () {
                     /*
                      * calculate the current total splitter offset as the n'th part of the total splitter width (where n is the amount of panels)
                      */
-                    if (splitterWidth.Number > 0) {
-                        splitterOffset.add(splitterWidth, "-");
+                    if (splitterWidth.Value > 0) {
+                        self.splitterOffset.add(splitterWidth, "-");
                     }
                 }
 
@@ -248,7 +254,6 @@ $(function () {
                 if (!wrappedElement.is(":data('granit-splitter')")) {                   //test if the element is a nested splitter
                     wrappedElement.wrap("<div class='" + panelClasses + "'></div>");
                     wrappedElement = wrappedElement.parent();
-                    //wrappedElement.css("margin", margin.getSize());
                 } else {
                     /* 
                      * --> see Issue #1: IE11 Flexbox Column Children width problem 
@@ -278,69 +283,66 @@ $(function () {
                 if (size !== "auto") {
                     size = granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "%", self.IdString + " -- Panel size (size)");
                 }
+                size = new granit.Size(size);
+                
+                var panelWrapperClass = "granit_panel_wrapper" + (flexible ? "" : " granit_panel_static");
 
-                if (size !== "auto" && (!self.options.relativeSizeBasedOnRemainingSpace || size.Unit !== "%")) {
-                    var panelDisplayClass = "granit_Panel" + (flexible ? "" : " granit_Panel_Static");
+                //apply splitter
+                wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelWrapperClass + "' style='" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + maxSize.getSize() + ";'></div>");
 
+                wrappedElement.parent().data().__granitData__ = { index: index, flexible: flexible, Size: size, resizable: resizable };
+                self.panels.push(wrappedElement.parent());
+
+                self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
+
+                if (!size.autoSized && (!self.options.relativeSizeBasedOnRemainingSpace || size.Number.Unit !== "%")) {
                     //present total static size
-                    if (size.Number > 0.0) {
-                        panelSizeTotalOffset.add(size, "-");
+                    if (size.Number.Value > 0.0) {
+                        panelSizeTotalOffset.add(size.Number, "-");
                     }
 
-                    //apply splitter
-                    wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + maxSize.getSize() + ";'></div>");
+                    wrappedElement.parent().css(self.sizePropertyName, size.getSize());
 
-                    wrappedElement.parent().data().__granitData__ = { index: index, flexible: flexible, originalUnit: size.Unit, resizable: resizable };
-                    self.panels.splice(index, 0, wrappedElement.parent());
-
-                    self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
+                    self.staticPanels.push(wrappedElement.parent());
 
                     return true; //leave loop
                 }
 
-                if (size === "auto") {                    
-                    panelsWithoutSizeTotal++;   //count panels with no size
+                if (size.autoSized) {
+                    self.panelsWithoutSizeTotal++;   //count panels with no size
                 }
-                else if (size.Unit === "%") {                    
-                    panelSizePercentTotal += size.Number;   //update total size of percentage panels
+                else if (size.Number.Unit === "%") {
+                    panelSizePercentTotal += size.Number.Value;   //update total size of percentage panels
                 }
 
                 //remember panels without size or percentage size
-                panelsWithoutOrRelativeSize.push({
-                    size: size,
-                    index: index,
-                    flexible: flexible,
-                    wrappedElement: wrappedElement,
-                    minSize: minSize.getSize(),
-                    maxSize: maxSize.getSize(),
-                    resizable: resizable
-                });
+                self.relativePanels.push(wrappedElement.parent());
             });
 
-            if (panelsWithoutOrRelativeSize.length > 0) {
+            if (self.relativePanels.length > 0) {
                 //the total remaining space 
-                var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(splitterOffset, "-").toString() + ")";
+                var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(self.splitterOffset, "-").toString() + ")";
 
                 //calculate remaining relative space 
-                var panelSizeDistributed = (100.0 - panelSizePercentTotal) / panelsWithoutSizeTotal;
+                var panelSizeDistributed = (100.0 - panelSizePercentTotal) / self.panelsWithoutSizeTotal;
                 if (panelSizeDistributed < 0.0) {
                     panelSizeDistributed = 0.0;
                 }
 
                 //apply left percentage panels
-                panelsWithoutOrRelativeSize.forEach(function (item) {
-                    var proportion = "(" + (item.size !== "auto" ? item.size.Number : panelSizeDistributed) + " / 100)";
-                    var size = "calc(" + remainingSpace + " * " + proportion + ")";
+                self.relativePanels.forEach(function (item) {
+                    var itemData = item.data().__granitData__;
 
-                    var panelDisplayClass = "granit_Panel" + (item.flexible ? "" : " granit_Panel_Static");
+                    var proportion = "(" + (!itemData.Size.autoSized ? itemData.Size.Number.Value : panelSizeDistributed) + " / 100)";
+                    var result = "calc(" + remainingSpace + " * " + proportion + ")";
 
-                    //apply splitter
-                    item.wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (item.index + 1) + "' class='" + panelDisplayClass + "' style='" + self.sizePropertyName + ":" + size + ";" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + item.minSize + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + item.maxSize + ";'></div>");
+                    if (itemData.Size.autoSized) {
+                        itemData.Size.Number.Value = panelSizeDistributed;
+                        itemData.Size.Number.Unit = '%';
+                    }
 
-                    item.wrappedElement.parent().data().__granitData__ = { index: item.index, flexible: item.flexible, originalUnit: "%", resizable: item.resizable };
-                    self.panels.splice(item.index, 0, item.wrappedElement.parent());
-
-                    self.splitterList[item.index] && self.splitterList[item.index].insertAfter(item.wrappedElement.parent());
+                    item.css(self.sizePropertyName, result);
+                    itemData.Size.Number.CalcValue = result;
                 });
             }
 
@@ -367,19 +369,19 @@ $(function () {
                     return item.data().__granitData__.resizable;
                 })
             ) {
-                //... if at least there is one resizable panel
-                this.splitterList.forEach(function (item, index) {                    
+                this.splitterList.forEach(function (item, index) {
+                    //attach mousedown if the associated splitter is enabled
                     if (!item.data().__granitData__.disabled) {
-                        //... and if the associated splitter is enabled
                         self._on(item, {
-                            "mousedown": "_splitterMouseDown"
+                            "mousedown": "_splitterMouseDown",
                         });
                     }
                 });
             }
 
             //this.panels.forEach(function (item, index) {
-            //    if (item.data().__granitData__.originalUnit === "em") {
+            //    var unit = item.data().__granitData__.Size.Number.Unit;
+            //    if (unit === "em" || unit === "rem") {
             //        item.resize($.proxy(self._elementOnResize, self, item[0])); 
             //        item.fontResize($.proxy(self._elementOnFontResize, self, item[0]));
             //    }
@@ -411,7 +413,10 @@ $(function () {
 
             var self = this;
 
-            this.movedSplitter = $(event.target);
+            this.movedSplitter = $(event.currentTarget);
+
+            $(".granit_splitter_wrapper, .granit_panel_wrapper").not(this.movedSplitter).addClass("granit_suppressMouseEvents");
+            this.movedSplitter.addClass("granit_splitter_active");
 
             //capture the mouse event
             if (event.target.setCapture) {
@@ -438,12 +443,6 @@ $(function () {
                     size = item.height();
                 }
 
-                if (!item.hasClass("granit_Panel_Static")) {
-                    item.addClass("granit_Panel_Static");
-                }
-
-                item.css(self.sizePropertyName, size + "px");
-
                 if (!item.data().__granitData__.resizable) {
                     return false;    //we do not need to prepare non-resizable panels
                 }
@@ -461,7 +460,8 @@ $(function () {
                 //capture the current limit sizes to support mouse-moving calculation 
                 item.data().__granitData__.minSize = Math.floor(minSize + 1);       //round slightly up to egalize (percent) convertion errors (in firefox and chrome)
                 item.data().__granitData__.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
-                item.data().__granitData__.size = size;
+
+                item.data().__granitData__.Size.Pixel = size;
             });
 
             pc.destroy();   //destroy the convertion tool
@@ -488,11 +488,12 @@ $(function () {
          * Description: EventHandler of the MouseMove event -- logic to be processes with every mouse move event
          */
         _splitterMouseMove: function (event) {
+
+            if (!this.movedSplitter) { return; }
+
             event.stopPropagation();
             event.stopImmediatePropagation();
             event.preventDefault();
-
-            if (!this.movedSplitter) { return; }
 
             this.currentMousePosition = { x: event.pageX, y: event.pageY };
 
@@ -505,58 +506,154 @@ $(function () {
          * Description: EventHandler of the MouseUp event -- final cleaning-up actions for the drag & drop process
          */
         _splitterMouseUp: function (event) {
-            if (this.movedSplitter) {
-                event.stopPropagation();
-                event.preventDefault();
+            if (!this.movedSplitter) { return; }
 
-                var self = this;
+            event.stopPropagation();
+            event.preventDefault();
 
-                //release mouse capture
-                if (event.target.releaseCapture) { event.target.releaseCapture(); }
+            var self = this;
 
-                //create the convertion tool in order to transfer any panel length pixel values into the associated original units
-                var pc = new granit.PixelConverter(self.element[0]);
-                var size, originalUnit;
+            //release mouse capture
+            if (event.target.releaseCapture) { event.target.releaseCapture(); }
 
-                // iterating the panels for re-converting
-                this.panels.forEach(function (item, index) {
-                    item.data().__granitData__.minimized = false;
-                    item.data().__granitData__.maximized = false;
+            //clean up
+            this.movedSplitter.removeClass("granit_splitter_active");
+            $(".granit_splitter_wrapper, .granit_panel_wrapper").removeClass("granit_suppressMouseEvents");
+
+            $("html").css("cursor", "default");
+
+            this._off($("html"), "mousemove");
+            this._off($("html"), "mouseup");
+
+            this.MousemoveEventController && this.MousemoveEventController.cancel();
+            this.movedSplitter = undefined;
+
+            if (!self.panels.some(function (item) {
+                return item.data().__granitData__.resized;
+            })) {
+                return;     //exit handler
+            }
+
+            //create the convertion tool in order to transfer any panel length pixel values into the associated original units
+            var pc = new granit.PixelConverter(self.element[0]);
+            var size, unit, result;
+            var offsetSizeName = granit.prefixSizeName(self.sizePropertyName, "offset", true);      //offsetWidth, offsetHeight
+
+            //local help variables
+            var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a definit size under consideration of different units 
+                panelPixelSizeTotalOffset = 0;      //the total pixel size of static panels
+                splitterPixelOffset = 0;            //the total pixel size of splitter                
+
+            this.splitterList.forEach(function (item, index) {
+                //calculate total splitter pixel size
+                if (self.options.direction === "vertical") {
+                    splitterPixelOffset += item.outerWidth();
+                } else {
+                    splitterPixelOffset += item.outerHeight();
+                }
+            });
+
+            if (self.staticPanels.length > 0 && self.panels.some(function (item) {
+                return item.data().__granitData__.resized;
+            })) {
+                // iterating static panels for re-converting
+                self.staticPanels.forEach(function (item, index) {
+                    size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
+
+                    unit = item.data().__granitData__.Size.Number.Unit;
+
+                    if (unit === "px") {
+                        item.data().__granitData__.Size.Number.Value = size;
+                    }
 
                     //reconvert to original unit
-                    size = item.data().__granitData__.size;                     //current size in pixels
-                    originalUnit = item.data().__granitData__.originalUnit;     //current original unit
+                    if (item.data().__granitData__.resized) {
+                        if (unit === "em" || unit === "rem" || unit === "%") {
+                            var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
 
-                    if (originalUnit !== "px") {
-                        var originalSize = pc.convertFromPixel(size, originalUnit, self.sizePropertyName);
-
-                        if (originalUnit === "em" || originalUnit === "rem") {
-                            item.css(self.sizePropertyName, originalSize);
+                            item.css(self.sizePropertyName, result + unit);
+                            item.data().__granitData__.Size.Number.Value = result;
+                        } else {
+                            item.data().__granitData__.Size.Number.Value = size;
+                            item.data().__granitData__.Size.Number.Unit = "px";
                         }
                     }
-
-                    if (item.data().__granitData__.originalUnit !== "%") {
-                        //TODO switch different length units
+                    //current total static size
+                    if (size > 0.0) {
+                        panelSizeTotalOffset.add(item.data().__granitData__.Size.Number, "-");
+                        panelPixelSizeTotalOffset += size;
                     }
                 });
-
-                pc.destroy();   //destroy the convertion tool
-
-                // set back to flexible
-                this.panels.forEach(function (item, index) {
-                    if (item.data().__granitData__.flexible) {
-                        item.removeClass("granit_Panel_Static");
-                    }
-                });
-
-                //clean up
-                $("html").css("cursor", "default");
-                this._off($("html"), "mousemove");
-                this._off($("html"), "mouseup");
-
-                this.MousemoveEventController && this.MousemoveEventController.cancel();
-                this.movedSplitter = undefined;
             }
+
+            if (self.relativePanels.length > 0 && self.relativePanels.some(function (item) {
+                return item.data().__granitData__.resized;
+            })) {
+                //the total remaining space 
+                var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(self.splitterOffset, "-").toString() + ")";
+
+                var parentSize = 0;
+                if (self.options.direction === "vertical") {
+                    parentSize = self.element.width();
+                } else {
+                    parentSize = self.element.height();
+                }
+
+                var remainingPixelSpace = parentSize - panelPixelSizeTotalOffset - splitterPixelOffset;
+
+                var proportionSum = 0.0, proportion = 0.0;
+                    lastResizedItem = null;
+
+                // iterating relative panels for re-converting
+                self.relativePanels.forEach(function (item, index) {
+                    size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
+
+                    proportion = (size / remainingPixelSpace);
+                    proportionSum += proportion;
+
+                    item.data().__granitData__.Size.Number.Value = proportion * 100.00;
+
+                    //reconvert to original unit
+                    if (item.data().__granitData__.resized) {
+
+                        lastResizedItem && lastResizedItem.css(self.sizePropertyName, lastResizedItem.data().__granitData__.Size.Number.calcValue);
+                        lastResizedItem = item;
+
+                        result = "calc(" + remainingSpace + " * " + proportion + ")";
+
+                        //item.css(self.sizePropertyName, result);
+                        item.data().__granitData__.Size.Number.calcValue = result;
+                        item.data().__granitData__.Size.Number.proportion = proportion;
+                    }
+                });
+
+                if (lastResizedItem) {
+                    var test = 1.0 - proportionSum;
+                    if (test !== 0) {
+                        lastResizedItem.data().__granitData__.Size.Number.proportion += test;
+                        lastResizedItem.data().__granitData__.Size.Number.calcValue = "calc(" + remainingSpace + " * " + lastResizedItem.data().__granitData__.Size.Number.proportion + ")";
+                        lastResizedItem.data().__granitData__.Size.Number.Value = proportion * 100.00;
+                    }
+                    lastResizedItem.css(self.sizePropertyName, lastResizedItem.data().__granitData__.Size.Number.calcValue);
+                }
+            }
+
+            pc.destroy();   //destroy the convertion tool
+
+            self.panels.forEach(function (item) {
+                self._resetPanelData(item);
+            });
+        },
+
+        _resetPanelData: function (item) {
+            // set back to flexible
+            if (item.data().__granitData__.flexible) {
+                item.removeClass("granit_panel_static");
+            }
+
+            item.data().__granitData__.minimized = false;
+            item.data().__granitData__.maximized = false;
+            item.data().__granitData__.resized = false;
         },
 
         /*
@@ -591,7 +688,7 @@ $(function () {
                     limitSize = panel.data().__granitData__.minSize;
                 }
 
-                var currentSize = panel.data().__granitData__.size;
+                var currentSize = panel.data().__granitData__.Size.Pixel;
 
                 if (modus === 'grow') {
                     newSize = Math.min(currentSize + Math.abs(distance), limitSize);
@@ -651,13 +748,25 @@ $(function () {
                 var offset = Math.min(result1.offset, result2.offset);
 
                 if (offset >= 1.0) {
+                    if (!result2.panel.data().__granitData__.resized) {
+                        if (!result2.panel.hasClass("granit_panel_static")) {
+                            result2.panel.addClass("granit_panel_static");
+                        }
+                        result2.panel.data().__granitData__.resized = true;
+                    }
                     result2.panel.css(self.sizePropertyName, result2.currentSize - offset + "px");
+                    if (!result1.panel.data().__granitData__.resized) {
+                        if (!result1.panel.hasClass("granit_panel_static")) {
+                            result1.panel.addClass("granit_panel_static");
+                        }
+                        result1.panel.data().__granitData__.resized = true;
+                    }
                     result1.panel.css(self.sizePropertyName, result1.currentSize + offset + "px");
 
-                    result2.panel.data().__granitData__.size = result2.currentSize - offset;
+                    result2.panel.data().__granitData__.Size.Pixel = result2.currentSize - offset;
                     result2.panel.data().__granitData__.maximized = false;
 
-                    result1.panel.data().__granitData__.size = result1.currentSize + offset;
+                    result1.panel.data().__granitData__.Size.Pixel = result1.currentSize + offset;
                     result1.panel.data().__granitData__.minimized = false;
                 }
 
