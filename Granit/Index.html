@@ -21,10 +21,10 @@
         $(document).ready(function () {
             $("#splitterInner2").splitter({
                 panel: [
-                    { size: "200px", class: "panelLayout1 panelLayout7", margin: "5%", flexible: true, resizable: true },
+                    { size: "200px", class: "panelLayout1 panelLayout7", flexible: true, resizable: true },
                     { size: "100px", class: "panelLayout2 panelLayout7" },
-                    { margin: "5vmin" },
-                    { class: "panelLayout3 panelLayout5", margin: "5pt" }
+                    { },
+                    { class: "panelLayout3 panelLayout5" }
                 ],
                 splitter: [
                     { width: 10 },
@@ -45,7 +45,7 @@
                     { resizable: true }
                 ],
                 splitter: [
-                    { width: "15%" },
+                    { width: "2.5%" },
                     { width: 15, length: "200rem" },
                     { width: "2rem" }
                 ],
@@ -61,9 +61,9 @@
             $("#splitterOuter").splitter({
                 panel: [
                     { size: "20.1em", minSize: "5%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true, flexible: true },
-                    { size: "20.1em", class: "panelLayout6", resizable: true, flexible: true },
                     { class: "panelLayout4", resizable: true, flexible: true },
-                    { class: "panelLayout5", resizable: true, flexible: true }
+                    { class: "panelLayout5", resizable: true, flexible: true },
+                    { size: "20.1em", class: "panelLayout6", resizable: true, flexible: true }
                 ],
                 splitter: [
                     {},
