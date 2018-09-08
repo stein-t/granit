@@ -161,7 +161,10 @@ $(function () {
                 }
 
                 //retrieve the resizable option: a value defined individually on panel level overwrites any panel template value
-                var resizable = (panel && (granit.IsBooleanType(panel.resizable) || panel.resizable)) || self.options.panelTemplate && self.options.panelTemplate.resizable;
+                var resizable = panel && panel.resizable;
+                if (!(panel && granit.IsBooleanType(panel.resizable))) {
+                    resizable = resizable || self.options.panelTemplate && self.options.panelTemplate.resizable;
+                }
                 resizable = resizable ? true : false;
 
                 //retrieve the minSize option: a value defined individually on panel level overwrites any panel template value
@@ -183,7 +186,10 @@ $(function () {
                 panelClasses = "granit_panel" + panelClasses;                       //prefix the class string with the required system class
 
                 //retrieve the flexible option: a value defined individually on panel level overwrites any panel template value
-                var flexible = (panel && (granit.IsBooleanType(panel.flexible) || panel.flexible)) || self.options.panelTemplate && self.options.panelTemplate.flexible;
+                var flexible = panel && panel.flexible;
+                if (!(panel && granit.IsBooleanType(panel.flexible))) {
+                    flexible = flexible || self.options.panelTemplate && self.options.panelTemplate.flexible;
+                }
                 flexible = flexible ? true : false;
 
                 if (index < children.length - 1) {
@@ -468,11 +474,16 @@ $(function () {
                     item.addClass("granit_panel_static");
                 }
 
-                if (!itemData.Size.Pixel || itemData.Size.Pixel !== size) {
-                    item.css(self.sizePropertyName, size + "px");
+                if (itemData.resizable) {
+                    if (!itemData.Size.Pixel || itemData.Size.Pixel !== size) {
+                        item.css(self.sizePropertyName, size + "px");
 
-                    itemData.Size.Pixel = size;
-                    itemData.resized = true;
+                        itemData.Size.Pixel = size;
+                        itemData.resized = true;
+                    }
+                }
+                else {
+                    itemData.Size.Pixel = size;     //ensure to set pixel size
                 }
             });
 
@@ -560,15 +571,16 @@ $(function () {
                             unit = data.Size.Number.Unit;
 
                         if (unit !== "px") {
-                            if (unit === "em" || unit === "rem" /*|| unit === "%"*/) {
+                            ////if (unit === "em" || unit === "rem" /*|| unit === "%"*/) {
+                            //if (unit !== "%") {
                                 var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
 
                                 item.css(self.sizePropertyName, result + unit);
                                 item.data().__granitData__.Size.Number.Value = result;
-                            } else {
-                                item.data().__granitData__.Size.Number.Value = size;
-                                item.data().__granitData__.Size.Number.Unit = "px";
-                            }
+                            //} else {
+                            //    item.data().__granitData__.Size.Number.Value = size;
+                            //    item.data().__granitData__.Size.Number.Unit = "px";
+                            //}
                         } else {
                             item.data().__granitData__.Size.Number.Value = size;
                         }
@@ -792,20 +804,9 @@ $(function () {
                 var offset = Math.min(result1.offset, result2.offset);
 
                 if (offset >= 1.0) {
-                    //if (!result2.panel.data().__granitData__.resized) {
-                    //    if (!result2.panel.hasClass("granit_panel_static")) {
-                    //        result2.panel.addClass("granit_panel_static");
-                    //    }
-                    //    result2.panel.data().__granitData__.resized = true;
-                    //}
                     result2.panel.data().__granitData__.resized = true;
                     result2.panel.css(self.sizePropertyName, result2.currentSize - offset + "px");
-                    //if (!result1.panel.data().__granitData__.resized) {
-                    //    if (!result1.panel.hasClass("granit_panel_static")) {
-                    //        result1.panel.addClass("granit_panel_static");
-                    //    }
-                    //    result1.panel.data().__granitData__.resized = true;
-                    //}
+
                     result1.panel.data().__granitData__.resized = true;
                     result1.panel.css(self.sizePropertyName, result1.currentSize + offset + "px");
 

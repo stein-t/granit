@@ -372,39 +372,68 @@ var granit = (function (gt) {
         };
 
         //convert any pixel length to target unit
-        this.convertFromPixel = function (value, targetUnit, cssPropertyName, fixedDecimals, destroy) {
+        this.convertFromPixel = function (value, targetUnit, cssPropertyName, destroy) {
             self.reset();
-
-            fixedDecimals = fixedDecimals || 2;
 
             if (targetUnit === "px") {
                 return value;
             }
 
             if (targetUnit === "%") {
-                var offsetSizeName = prefixSizeName(cssPropertyName, "offset", true);
-                //return ((value / element[offsetSizeName]) * 100.00).toFixed(fixedDecimals);
-                return ((value / element[offsetSizeName]) * 100.00);
+                var size;
+                if (cssPropertyName === "width") {
+                    size = $(element).innerWidth();
+                } else {
+                    size = $(element).innerHeight();
+                }
+
+                return ((value * 100.0) / size);
             }
+
+            var result;
 
             if (targetUnit === "em" || targetUnit === "rem") {
                 testElement.textContent = "&nbsp;";  //space content
                 testElement.style.lineHeight = "1";
                 testElement.style.fontSize = "1.0" + targetUnit;
+
+                pixelBase = $(testElement).height();
+                result = value / pixelBase;
             }
-            else {
-                testElement.textContent = "x";  //space content
-                //testElement.style.lineHeight = "1";
-                testElement.style.height = "1.0" + targetUnit;
+            else if (
+                targetUnit === "in" || targetUnit === "pt" || targetUnit === "pc" || 
+                targetUnit === "cm" || targetUnit === "mm") {
+                testElement.style.width = "1in";
+                var pixelBase = $(testElement).width(),
+                    conversionFactor = 1.0;
+
+                if (targetUnit === "pt") {
+                    conversionFactor = 72.0;
+                }
+                else if (targetUnit === "pc") {
+                    conversionFactor = 6.0;
+                }
+                else if (targetUnit === "cm") {
+                    conversionFactor = 2.53968;
+                }
+                else if (targetUnit == "mm") {
+                    conversionFactor = 25.3968;
+                }
+
+                result = (value * conversionFactor) / pixelBase;
             }
-            var pixelBase = testElement.offsetHeight;
+            //else {
+            //    //testElement.textContent = "x";  //space content
+            //    //testElement.style.lineHeight = "1";
+            //    testElement.style.height = "1.0" + targetUnit;
+            //    pixelBase = $(testElement).height();
+            //}
 
             if (destroy) {
                 self.destroy();
             }
 
-            //return (value / pixelBase).toFixed(fixedDecimals); //return full float
-            return (value / pixelBase); //return full float
+            return result; //return full float
         };
     };
 
