@@ -443,7 +443,9 @@ $(function () {
                     size = item.height();
                 }
 
-                if (!item.data().__granitData__.resizable) {
+                var itemData = item.data().__granitData__;
+
+                if (!itemData.resizable) {
                     return false;    //we do not need to prepare non-resizable panels
                 }
 
@@ -458,10 +460,20 @@ $(function () {
                 }
 
                 //capture the current limit sizes to support mouse-moving calculation 
-                item.data().__granitData__.minSize = Math.floor(minSize + 1);       //round slightly up to egalize (percent) convertion errors (in firefox and chrome)
-                item.data().__granitData__.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
+                itemData.minSize = Math.floor(minSize + 1);       //round slightly up to egalize (percent) convertion errors (in firefox and chrome)
+                itemData.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
 
-                item.data().__granitData__.Size.Pixel = size;
+                //convert to Pixel
+                if (!item.hasClass("granit_panel_static")) {
+                    item.addClass("granit_panel_static");
+                }
+
+                if (!itemData.Size.Pixel || itemData.Size.Pixel !== size) {
+                    item.css(self.sizePropertyName, size + "px");
+
+                    itemData.Size.Pixel = size;
+                    itemData.resized = true;
+                }
             });
 
             pc.destroy();   //destroy the convertion tool
@@ -528,117 +540,149 @@ $(function () {
             this.MousemoveEventController && this.MousemoveEventController.cancel();
             this.movedSplitter = undefined;
 
-            if (!self.panels.some(function (item) {
+            if (self.panels.some(function (item) {
                 return item.data().__granitData__.resized;
             })) {
-                return;     //exit handler
-            }
+                var pc = new granit.PixelConverter(self.element[0]),
+                    offsetSizeName = granit.prefixSizeName(self.sizePropertyName, "offset", true);      //offsetWidth, offsetHeight
 
-            //create the convertion tool in order to transfer any panel length pixel values into the associated original units
-            var pc = new granit.PixelConverter(self.element[0]);
-            var size, unit, result;
-            var offsetSizeName = granit.prefixSizeName(self.sizePropertyName, "offset", true);      //offsetWidth, offsetHeight
-
-            //local help variables
-            var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a definit size under consideration of different units 
-                panelPixelSizeTotalOffset = 0;      //the total pixel size of static panels
-                splitterPixelOffset = 0;            //the total pixel size of splitter                
-
-            this.splitterList.forEach(function (item, index) {
-                //calculate total splitter pixel size
-                if (self.options.direction === "vertical") {
-                    splitterPixelOffset += item.outerWidth();
-                } else {
-                    splitterPixelOffset += item.outerHeight();
-                }
-            });
-
-            if (self.staticPanels.length > 0 && self.panels.some(function (item) {
-                return item.data().__granitData__.resized;
-            })) {
                 // iterating static panels for re-converting
                 self.staticPanels.forEach(function (item, index) {
-                    size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
+                    var data = item.data().__granitData__;
 
-                    unit = item.data().__granitData__.Size.Number.Unit;
+                    if (!data.resized) {
+                        if (data.Size.Number.Unit !== "px") {
+                            var value = data.Size.getSize();
+                            item.css(self.sizePropertyName, value);   //this only when we reconverted to original unit
+                        }
+                    } else {
+                        var size = data.Size.Pixel,                             //current size in pixels
+                            unit = data.Size.Number.Unit;
 
-                    if (unit === "px") {
-                        item.data().__granitData__.Size.Number.Value = size;
-                    }
+                        if (unit !== "px") {
+                            if (unit === "em" || unit === "rem" /*|| unit === "%"*/) {
+                                var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
 
-                    //reconvert to original unit
-                    if (item.data().__granitData__.resized) {
-                        if (unit === "em" || unit === "rem" || unit === "%") {
-                            var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
-
-                            item.css(self.sizePropertyName, result + unit);
-                            item.data().__granitData__.Size.Number.Value = result;
+                                item.css(self.sizePropertyName, result + unit);
+                                item.data().__granitData__.Size.Number.Value = result;
+                            } else {
+                                item.data().__granitData__.Size.Number.Value = size;
+                                item.data().__granitData__.Size.Number.Unit = "px";
+                            }
                         } else {
                             item.data().__granitData__.Size.Number.Value = size;
-                            item.data().__granitData__.Size.Number.Unit = "px";
                         }
                     }
-                    //current total static size
-                    if (size > 0.0) {
-                        panelSizeTotalOffset.add(item.data().__granitData__.Size.Number, "-");
-                        panelPixelSizeTotalOffset += size;
-                    }
-                });
-            }
-
-            if (self.relativePanels.length > 0 && self.relativePanels.some(function (item) {
-                return item.data().__granitData__.resized;
-            })) {
-                //the total remaining space 
-                var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(self.splitterOffset, "-").toString() + ")";
-
-                var parentSize = 0;
-                if (self.options.direction === "vertical") {
-                    parentSize = self.element.width();
-                } else {
-                    parentSize = self.element.height();
-                }
-
-                var remainingPixelSpace = parentSize - panelPixelSizeTotalOffset - splitterPixelOffset;
-
-                var proportionSum = 0.0, proportion = 0.0;
-                    lastResizedItem = null;
-
-                // iterating relative panels for re-converting
-                self.relativePanels.forEach(function (item, index) {
-                    size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
-
-                    proportion = (size / remainingPixelSpace);
-                    proportionSum += proportion;
-
-                    item.data().__granitData__.Size.Number.Value = proportion * 100.00;
-
-                    //reconvert to original unit
-                    if (item.data().__granitData__.resized) {
-
-                        lastResizedItem && lastResizedItem.css(self.sizePropertyName, lastResizedItem.data().__granitData__.Size.Number.calcValue);
-                        lastResizedItem = item;
-
-                        result = "calc(" + remainingSpace + " * " + proportion + ")";
-
-                        //item.css(self.sizePropertyName, result);
-                        item.data().__granitData__.Size.Number.calcValue = result;
-                        item.data().__granitData__.Size.Number.proportion = proportion;
-                    }
                 });
 
-                if (lastResizedItem) {
-                    var test = 1.0 - proportionSum;
-                    if (test !== 0) {
-                        lastResizedItem.data().__granitData__.Size.Number.proportion += test;
-                        lastResizedItem.data().__granitData__.Size.Number.calcValue = "calc(" + remainingSpace + " * " + lastResizedItem.data().__granitData__.Size.Number.proportion + ")";
-                        lastResizedItem.data().__granitData__.Size.Number.Value = proportion * 100.00;
-                    }
-                    lastResizedItem.css(self.sizePropertyName, lastResizedItem.data().__granitData__.Size.Number.calcValue);
-                }
-            }
 
-            pc.destroy();   //destroy the convertion tool
+
+                ////create the convertion tool in order to transfer any panel length pixel values into the associated original units
+                ////var pc = new granit.PixelConverter(self.element[0]);
+                //var size, unit, result;
+                //var offsetSizeName = granit.prefixSizeName(self.sizePropertyName, "offset", true);      //offsetWidth, offsetHeight
+
+                ////local help variables
+                //var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a definit size under consideration of different units 
+                //    panelPixelSizeTotalOffset = 0;      //the total pixel size of static panels
+                //    splitterPixelOffset = 0;            //the total pixel size of splitter                
+
+                //this.splitterList.forEach(function (item, index) {
+                //    //calculate total splitter pixel size
+                //    if (self.options.direction === "vertical") {
+                //        splitterPixelOffset += item.outerWidth();
+                //    } else {
+                //        splitterPixelOffset += item.outerHeight();
+                //    }
+                //});
+
+                //if (self.staticPanels.length > 0 && self.panels.some(function (item) {
+                //    return item.data().__granitData__.resized;
+                //})) {
+                //    // iterating static panels for re-converting
+                //    self.staticPanels.forEach(function (item, index) {
+                //        size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
+
+                //        unit = item.data().__granitData__.Size.Number.Unit;
+
+                //        if (unit === "px") {
+                //            item.data().__granitData__.Size.Number.Value = size;
+                //        }
+
+                //        //reconvert to original unit
+                //        if (item.data().__granitData__.resized) {
+                //            if (unit === "em" || unit === "rem" || unit === "%") {
+                //                var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
+
+                //                item.css(self.sizePropertyName, result + unit);
+                //                item.data().__granitData__.Size.Number.Value = result;
+                //            } else {
+                //                item.data().__granitData__.Size.Number.Value = size;
+                //                item.data().__granitData__.Size.Number.Unit = "px";
+                //            }
+                //        }
+                //        //current total static size
+                //        if (size > 0.0) {
+                //            panelSizeTotalOffset.add(item.data().__granitData__.Size.Number, "-");
+                //            panelPixelSizeTotalOffset += size;
+                //        }
+                //    });
+                //}
+
+                //if (self.relativePanels.length > 0 && self.relativePanels.some(function (item) {
+                //    return item.data().__granitData__.resized;
+                //})) {
+                //    //the total remaining space 
+                //    var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(self.splitterOffset, "-").toString() + ")";
+
+                //    var parentSize = 0;
+                //    if (self.options.direction === "vertical") {
+                //        parentSize = self.element.width();
+                //    } else {
+                //        parentSize = self.element.height();
+                //    }
+
+                //    var remainingPixelSpace = parentSize - panelPixelSizeTotalOffset - splitterPixelOffset;
+
+                //    var proportionSum = 0.0, proportion = 0.0;
+                //        lastResizedItem = null;
+
+                //    // iterating relative panels for re-converting
+                //    self.relativePanels.forEach(function (item, index) {
+                //        size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
+
+                //        proportion = (size / remainingPixelSpace);
+                //        proportionSum += proportion;
+
+                //        item.data().__granitData__.Size.Number.Value = proportion * 100.00;
+
+                //        //reconvert to original unit
+                //        if (item.data().__granitData__.resized) {
+
+                //            lastResizedItem && lastResizedItem.css(self.sizePropertyName, lastResizedItem.data().__granitData__.Size.Number.calcValue);
+                //            lastResizedItem = item;
+
+                //            result = "calc(" + remainingSpace + " * " + proportion + ")";
+
+                //            //item.css(self.sizePropertyName, result);
+                //            item.data().__granitData__.Size.Number.calcValue = result;
+                //            item.data().__granitData__.Size.Number.proportion = proportion;
+                //        }
+                //    });
+
+                //    if (lastResizedItem) {
+                //        var test = 1.0 - proportionSum;
+                //        if (test !== 0) {
+                //            lastResizedItem.data().__granitData__.Size.Number.proportion += test;
+                //            lastResizedItem.data().__granitData__.Size.Number.calcValue = "calc(" + remainingSpace + " * " + lastResizedItem.data().__granitData__.Size.Number.proportion + ")";
+                //            lastResizedItem.data().__granitData__.Size.Number.Value = proportion * 100.00;
+                //        }
+                //        lastResizedItem.css(self.sizePropertyName, lastResizedItem.data().__granitData__.Size.Number.calcValue);
+                //    }
+                //}
+
+                //pc.destroy();   //destroy the convertion tool
+            }
 
             self.panels.forEach(function (item) {
                 self._resetPanelData(item);
@@ -748,19 +792,21 @@ $(function () {
                 var offset = Math.min(result1.offset, result2.offset);
 
                 if (offset >= 1.0) {
-                    if (!result2.panel.data().__granitData__.resized) {
-                        if (!result2.panel.hasClass("granit_panel_static")) {
-                            result2.panel.addClass("granit_panel_static");
-                        }
-                        result2.panel.data().__granitData__.resized = true;
-                    }
+                    //if (!result2.panel.data().__granitData__.resized) {
+                    //    if (!result2.panel.hasClass("granit_panel_static")) {
+                    //        result2.panel.addClass("granit_panel_static");
+                    //    }
+                    //    result2.panel.data().__granitData__.resized = true;
+                    //}
+                    result2.panel.data().__granitData__.resized = true;
                     result2.panel.css(self.sizePropertyName, result2.currentSize - offset + "px");
-                    if (!result1.panel.data().__granitData__.resized) {
-                        if (!result1.panel.hasClass("granit_panel_static")) {
-                            result1.panel.addClass("granit_panel_static");
-                        }
-                        result1.panel.data().__granitData__.resized = true;
-                    }
+                    //if (!result1.panel.data().__granitData__.resized) {
+                    //    if (!result1.panel.hasClass("granit_panel_static")) {
+                    //        result1.panel.addClass("granit_panel_static");
+                    //    }
+                    //    result1.panel.data().__granitData__.resized = true;
+                    //}
+                    result1.panel.data().__granitData__.resized = true;
                     result1.panel.css(self.sizePropertyName, result1.currentSize + offset + "px");
 
                     result2.panel.data().__granitData__.Size.Pixel = result2.currentSize - offset;

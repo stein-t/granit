@@ -87,7 +87,7 @@
 }
 .granit_splitter_wrapper:hover > .splitter_Layout1,
 .granit_splitter_wrapper:active > .splitter_Layout1,
-.granit_splitter_wrapper.granit_splitter_active > .splitter_Layout1 {
+.granit_splitter_wrapper.granit_splitter_active > .splitter_Layout1 /* in IE11 only */ {
     background: grey;
 }
 
