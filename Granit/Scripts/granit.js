@@ -19,7 +19,7 @@ $(function () {
             panel: [],
             splitter: [],
             panelTemplate: {
-                size: "auto", minSize: 5, maxSize: "none", margin: 0, flexible: true, resizable: true, class: "granit_panel_default"
+                size: "auto", minSize: 5, maxSize: "none", flexible: true, resizable: true, class: "granit_panel_default"
             },
             splitterTemplate: { width: "2em", length: "100%", class: "granit_splitter_default" },
             separatorTemplate: { width: "1em", length: "100%", class: "granit_separator_default" },
@@ -56,7 +56,7 @@ $(function () {
             ];
 
             var panelOptionsAllowed = [
-                'size', 'minSize', 'maxSize', 'margin', 'flexible', 'resizable', 'class'
+                'size', 'minSize', 'maxSize', 'flexible', 'resizable', 'class'
             ];
 
             var splitterTemplateOptionsAllowed = [
@@ -174,10 +174,6 @@ $(function () {
                 //retrieve the maxSize option: a value defined individually on panel level overwrites any panel template value
                 var maxSize = (panel && panel.maxSize) || self.options.panelTemplate && self.options.panelTemplate.maxSize;
                 maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
-
-                //retrieve the margin option: a value defined individually on panel level overwrites any panel template value
-                var margin = (panel && panel.margin) || self.options.panelTemplate && self.options.panelTemplate.margin;
-                margin = granit.extractFloatUnit(margin, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel margin");
 
                 //retrieve the panelClasses option: the result is a string of class names as a combination of both the individual panel- and the global template- level options
                 var panelClasses = ((self.options.panelTemplate && self.options.panelTemplate.class && (" " + self.options.panelTemplate.class)) || "") +
