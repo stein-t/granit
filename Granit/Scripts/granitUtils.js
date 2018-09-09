@@ -375,32 +375,59 @@ var granit = (function (gt) {
         this.convertFromPixel = function (value, targetUnit, cssPropertyName, destroy) {
             self.reset();
 
-            if (targetUnit === "px") {
-                return value;
-            }
-
-            if (targetUnit === "%") {
-                var size;
-                if (cssPropertyName === "width") {
-                    size = $(element).innerWidth();
-                } else {
-                    size = $(element).innerHeight();
-                }
-
-                return ((value * 100.0) / size);
-            }
-
             var result;
 
-            if (targetUnit === "em" || targetUnit === "rem") {
-                testElement.textContent = "&nbsp;";  //space content
-                testElement.style.lineHeight = "1";
-                testElement.style.fontSize = "1.0" + targetUnit;
+            if (targetUnit === "px") {
+                result = value;
+            }
+            else if (
+                //relative (viewport) lengths
+                targetUnit === "%" ||
+                targetUnit === "vw" || targetUnit === "vh" ||
+                targetUnit === "vmin" || targetUnit === "vmax"
+            ) {
+                testElement.style[cssPropertyName] = "1.0" + targetUnit;
+                if (cssPropertyName === "width") {
+                    pixelBase = $(testElement).width();
+                } else {
+                    pixelBase = $(testElement).height();
+                }
 
-                pixelBase = $(testElement).height();
                 result = value / pixelBase;
             }
             else if (
+                //font-related lenghts
+                targetUnit === "em" || targetUnit === "rem" ||
+                targetUnit === "ex" || targetUnit === "ch"
+            ) {
+                testElement.style.lineHeight = "1";
+                testElement.style.fontSize = "1.0em";
+
+                if (targetUnit === "em" || targetUnit === "rem") {
+                    testElement.textContent = "&nbsp;";  //space content
+                    testElement.style.fontSize = "1.0" + targetUnit;
+
+                    pixelBase = $(testElement).height();
+                    result = value / pixelBase;
+                }
+                else if (targetUnit === "ex") {
+                    testElement.textContent = "x";  //x content
+                    testElement.style.height = "1.0" + targetUnit;
+
+                    pixelBase = $(testElement).height();
+                    result = value / pixelBase;
+                    var test = result;
+                }
+                else if (targetUnit === "ch") {
+                    testElement.textContent = "0";  //0 content
+                    testElement.style.width = "1.0" + targetUnit;
+
+                    pixelBase = $(testElement).width();
+                    result = value / pixelBase;
+                }
+            }
+            else if (
+                //static lenghts
                 targetUnit === "in" || targetUnit === "pt" || targetUnit === "pc" || 
                 targetUnit === "cm" || targetUnit === "mm") {
                 testElement.style.width = "1in";
@@ -414,20 +441,14 @@ var granit = (function (gt) {
                     conversionFactor = 6.0;
                 }
                 else if (targetUnit === "cm") {
-                    conversionFactor = 2.53968;
+                    conversionFactor = 2.54;
                 }
                 else if (targetUnit == "mm") {
-                    conversionFactor = 25.3968;
+                    conversionFactor = 25.4;
                 }
 
                 result = (value * conversionFactor) / pixelBase;
             }
-            //else {
-            //    //testElement.textContent = "x";  //space content
-            //    //testElement.style.lineHeight = "1";
-            //    testElement.style.height = "1.0" + targetUnit;
-            //    pixelBase = $(testElement).height();
-            //}
 
             if (destroy) {
                 self.destroy();

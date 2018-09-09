@@ -169,11 +169,11 @@ $(function () {
 
                 //retrieve the minSize option: a value defined individually on panel level overwrites any panel template value
                 var minSize = (panel && panel.minSize) || self.options.panelTemplate && self.options.panelTemplate.minSize;
-                minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit("none");
+                minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit("none");
 
                 //retrieve the maxSize option: a value defined individually on panel level overwrites any panel template value
                 var maxSize = (panel && panel.maxSize) || self.options.panelTemplate && self.options.panelTemplate.maxSize;
-                maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
+                maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
 
                 //retrieve the panelClasses option: the result is a string of class names as a combination of both the individual panel- and the global template- level options
                 var panelClasses = ((self.options.panelTemplate && self.options.panelTemplate.class && (" " + self.options.panelTemplate.class)) || "") +
@@ -203,7 +203,7 @@ $(function () {
 
                     //retrieve the splitterWidth option: a value defined individually on splitter level overwrites any template value
                     var splitterWidth = (splitter && splitter.width) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.width : self.options.splitterTemplate && self.options.splitterTemplate.width);
-                    splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "px", self.IdString + " -- splitter width (splitter.width)");
+                    splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, "px", self.IdString + " -- splitter width (splitter.width)");
 
                     //retrieve the splitterLength option: a value defined individually on splitter level overwrites any template value
                     var splitterLength = (splitter && splitter.length) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.length : self.options.splitterTemplate && self.options.splitterTemplate.length);
@@ -283,7 +283,7 @@ $(function () {
                 //retrieve the size option: a value defined individually on panel level overwrites any panel template value
                 var size = (panel && panel.size) || self.options.panelTemplate && self.options.panelTemplate.size || "auto";
                 if (size !== "auto") {
-                    size = granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin/, "%", self.IdString + " -- Panel size (size)");
+                    size = granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, "%", self.IdString + " -- Panel size (size)");
                 }
                 size = new granit.Size(size);
                 
@@ -567,16 +567,16 @@ $(function () {
                             unit = data.Size.Number.Unit;
 
                         if (unit !== "px") {
-                            ////if (unit === "em" || unit === "rem" /*|| unit === "%"*/) {
-                            //if (unit !== "%") {
-                                var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
+                            var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
+                            item.data().__granitData__.Size.Number.Value = result;
 
+                            if (
+                                unit === "em" || unit === "rem" || unit === "%" ||
+                                unit === "vw" || unit === "vh" ||
+                                unit === "vmin" || unit === "vmax"
+                            ) {
                                 item.css(self.sizePropertyName, result + unit);
-                                item.data().__granitData__.Size.Number.Value = result;
-                            //} else {
-                            //    item.data().__granitData__.Size.Number.Value = size;
-                            //    item.data().__granitData__.Size.Number.Unit = "px";
-                            //}
+                            }
                         } else {
                             item.data().__granitData__.Size.Number.Value = size;
                         }

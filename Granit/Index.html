@@ -23,7 +23,7 @@
                 panel: [
                     { size: "10pc", class: "panelLayout1 panelLayout7", flexible: true, resizable: true },
                     { size: "20%", class: "panelLayout2 panelLayout7" },
-                    { },
+                    { size: "20ex" },
                     { class: "panelLayout3 panelLayout5" }
                 ],
                 splitter: [
@@ -38,8 +38,8 @@
 
             $("#splitterInner").splitter({
                 panel: [
-                    { size: "1.5in", class: "panelLayout1 panelLayout7", resizable: true },
-                    { size: "20%", maxSize: "20%", class: "panelLayout2 panelLayout7", resizable: true },
+                    { size: "20vmin", class: "panelLayout1 panelLayout7", resizable: true },
+                    { size: "10vmax", maxSize: "50%", class: "panelLayout2 panelLayout7", resizable: true },
                     { maxSize: "50%", resizable: true, class: "panelLayout7" },
                     { size: "120pt", minSize: "5px", class: "panelLayout3 panelLayout5" },
                     { resizable: true }
@@ -60,13 +60,13 @@
 
             $("#splitterOuter").splitter({
                 panel: [
-                    { size: "20.1em", minSize: "5%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true, flexible: true },
+                    { size: "20%", minSize: "5%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true, flexible: true },
                     { class: "panelLayout4", resizable: true, flexible: true },
-                    { size: "5cm", class: "panelLayout5", resizable: false, flexible: false },
-                    { size: "20%", class: "panelLayout6", resizable: true, flexible: true }
+                    { size: "5cm", class: "panelLayout5", resizable: true, flexible: false },
+                    { size: "20vmax", class: "panelLayout6", resizable: true, flexible: true }
                 ],
                 splitter: [
-                    { width: "3em", },
+                    { width: "5ex", },
                     { width: "3em", display: "separator", length: "80%" },
                     { width: "3em", length: "30ch", class: "splitter_HandleStyle" }
                 ],
