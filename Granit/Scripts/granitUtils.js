@@ -527,8 +527,6 @@ var granit = (function (gt) {
                 if (floor == 0) {
                     return rest + "px";
                 }
-                //alert("calc(" + (floor / test) + targetUnit + operation + rest + "px)");
-
                 return "calc(" + (floor / test) + targetUnit + operation + rest + "px)";
             }
         };
