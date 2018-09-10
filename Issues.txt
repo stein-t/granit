@@ -1,3 +1,0 @@
-ms edge: definition of panel margin with 5vmin: after resizing and window (parent) resizing: on moving the panel margin right or top or left or bottom sometimes shrinks by exatcly 1 pixel
-
-ms edge / opera: sometimes the scrollbar overlaps the border by exactly 1 pixel on nested divs
