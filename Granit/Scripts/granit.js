@@ -574,8 +574,9 @@ $(function () {
                                 unit === "em" || unit === "rem" || unit === "%" ||
                                 unit === "vw" || unit === "vh" ||
                                 unit === "vmin" || unit === "vmax"
+                                //|| unit === "ex" || unit === "ch"
                             ) {
-                                item.css(self.sizePropertyName, result + unit);
+                                item.css(self.sizePropertyName, result);
                             }
                         } else {
                             item.data().__granitData__.Size.Number.Value = size;
