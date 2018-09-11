@@ -41,9 +41,9 @@ var granit = (function (gt) {
      * Author(s):   Thomas Stein
      * Description: the NumberUnit class -- Instances of this class are very heavily used in granit to transfer not only numbers but also associated units.
      */
-    var NumberUnit = function (value, unit, fixedDecimals) {
+    var NumberUnit = function (value, unit) {
         value = value || 0;
-        this.Value = value.toFixed && fixedDecimals ? value.toFixed(fixedDecimals) : value;        //we round 2 decimals
+        this.Value = value;
         this.Unit = unit || "";
 
         this.getSize = function () {
@@ -181,12 +181,37 @@ var granit = (function (gt) {
         }
     }
 
+    var CalcNumber = function (number1, number2) {
+        var self = this;
+
+        self.Numbers = numberUnitArray();
+
+        self.Value = function () {
+            if (self.Numbers.length === 0) {
+                return null;
+            }
+            else if (self.Numbers.length === 1) {
+                return arr[0].getSize();
+            }
+            else if (self.Numbers.length === 2) {
+                return "calc(" + self.Numbers[0].getSize() + " " + " + " + self.Numbers[1].getSize() + ")";
+            }
+        }
+
+        if (number1) {
+            self.Numbers.add(number1);
+        }
+        if (number2) {
+            self.Numbers.add(number2);
+        }
+    }
+
     /*
      * Author(s):   Thomas Stein
      * Description: creates a helper list of NumberUnit objects used in order to sum up items with equal units.
      *              as a final goal this very specific array joins values together (toString) into a string to be used in css-calc statements
      */
-    var numberUnitArray = function numberUnitArray() {
+    var numberUnitArray = function() {
         var arr = [];
         //arr.push.apply(arr, arguments); // currently no initialization arguments supported
 
@@ -409,7 +434,7 @@ var granit = (function (gt) {
             self.reset();
 
             var result, pixelBase = 1.0,
-                test = 1.0;
+                precisionFactor = 1.0;
 
             if (targetUnit === "px") {
                 result = value;
@@ -444,7 +469,7 @@ var granit = (function (gt) {
                 }
 
                 pixelBase = total / 100.0;
-                test = 10.0;            //support 1 decimal places for relative sizes
+                precisionFactor = 10.0;            //support 1 decimal places for relative sizes
             }
             else if (
                 //font-related lenghts
@@ -453,7 +478,7 @@ var granit = (function (gt) {
             ) {
                 testElement.style.lineHeight = "1";
                 testElement.style.fontSize = "1.0em";
-                test = 10.0;            //support 2 decimal places for font-related sizes
+                precisionFactor = 10.0;            //support 2 decimal places for font-related sizes
 
                 if (targetUnit === "em" || targetUnit === "rem") {
                     testElement.textContent = "&nbsp;";  //space content
@@ -473,61 +498,73 @@ var granit = (function (gt) {
 
                     pixelBase = $(testElement).width();
                 }
+
+                return (value / pixelBase) + targetUnit;
             }
             else if (
                 //static lenghts
                 targetUnit === "in" || targetUnit === "pt" || targetUnit === "pc" || 
                 targetUnit === "cm" || targetUnit === "mm") {
                 testElement.style.width = "1in";
-                test = 10.0;                //support 1 decimal places for static sizes
+                precisionFactor = 10.0;                //support 1 decimal places for static sizes
 
                 var pixelBase = $(testElement).width(),
                     conversionFactor = 1.0;
 
                 if (targetUnit === "pt") {
                     conversionFactor = 72.0;
-                    test = 1.0;             //support no decimal places for point
+                    precisionFactor = 1.0;             //support no decimal places for point
                 }
                 else if (targetUnit === "pc") {
                     conversionFactor = 6.0;
-                    test = 10.0;            //support 1 decimal places for pica
+                    precisionFactor = 10.0;            //support 1 decimal places for pica
                 }
                 else if (targetUnit === "cm") {
                     conversionFactor = 2.54;
-                    test = 100.0;           //support 2 decimal places for centimeter
+                    precisionFactor = 100.0;           //support 2 decimal places for centimeter
                 }
                 else if (targetUnit == "mm") {
                     conversionFactor = 25.4;
-                    test = 10.0;            //support 1 decimal places for millimeter
+                    precisionFactor = 10.0;            //support 1 decimal places for millimeter
                 }
 
                 value *= conversionFactor;
+
+                var test = (value / pixelBase) + targetUnit;
             }
 
             if (destroy) {
                 self.destroy();
             }
 
-            //var rest = Math.floor(((value * test) % pixelBase) * 10.0) / 10.0;
-            var rest = (value * test) % pixelBase;
+            var rest = (value * precisionFactor) % pixelBase;
 
             if (rest === 0) {
                 return (value / pixelBase) + targetUnit;
             }
             else {
-                var floor = Math.floor((value * test) / pixelBase),
+                var floor = Math.floor((value * precisionFactor) / pixelBase),
                     operation = " + ";
+                pixelBase *= precisionFactor;
                 if (rest > pixelBase - rest) {
                     floor += 1.0;
                     operation = " - ";
                     rest = pixelBase - rest;
                 }
-                rest /= test; 
-
-                if (floor == 0) {
+                rest /= 100.00;
+                if (floor === 0) {
                     return rest + "px";
                 }
-                return "calc(" + (floor / test) + targetUnit + operation + rest + "px)";
+
+                //var number1 = new NumberUnit(floor / precisionFactor, targetUnit);
+                //var number2 = new NumberUnit(rest, "px");
+
+                //var result = new CalcNumber();
+                //result.Add();
+
+                var test2 = test;
+                var test3 = "calc(" + (floor / precisionFactor) + targetUnit + operation + rest + "px)";
+                return test;
             }
         };
     };

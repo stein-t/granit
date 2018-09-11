@@ -553,6 +553,20 @@ $(function () {
                 var pc = new granit.PixelConverter(self.element[0]),
                     offsetSizeName = granit.prefixSizeName(self.sizePropertyName, "offset", true);      //offsetWidth, offsetHeight
 
+                ////local help variables
+                //var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a definit size under consideration of different units 
+                //    panelPixelSizeTotalOffset = 0;                          //the total pixel size of static panels
+                //    splitterPixelOffset = 0;                                //the total pixel size of splitter                
+
+                //this.splitterList.forEach(function (item, index) {
+                //    //calculate total splitter pixel size
+                //    if (self.options.direction === "vertical") {
+                //        splitterPixelOffset += item.outerWidth();
+                //    } else {
+                //        splitterPixelOffset += item.outerHeight();
+                //    }
+                //});
+
                 // iterating static panels for re-converting
                 self.staticPanels.forEach(function (item, index) {
                     var data = item.data().__granitData__;
@@ -560,7 +574,7 @@ $(function () {
                     if (!data.resized) {
                         if (data.Size.Number.Unit !== "px") {
                             var value = data.Size.getSize();
-                            item.css(self.sizePropertyName, value);   //this only when we reconverted to original unit
+                            item.css(self.sizePropertyName, value);             //this only when we reconverted to original unit
                         }
                     } else {
                         var size = data.Size.Pixel,                             //current size in pixels
@@ -575,16 +589,21 @@ $(function () {
                                 unit === "vw" || unit === "vh" ||
                                 unit === "vmin" || unit === "vmax"
                                 //|| unit === "ex" || unit === "ch"
+                                //unit !== "ex" && unit !== "ch"
                             ) {
                                 item.css(self.sizePropertyName, result);
                             }
                         } else {
                             item.data().__granitData__.Size.Number.Value = size;
                         }
+
+                        ////current total static size
+                        //if (size > 0.0) {
+                        //    panelSizeTotalOffset.add(item.data().__granitData__.Size.Number, "-");
+                        //    panelPixelSizeTotalOffset += size;
+                        //}
                     }
                 });
-
-
 
                 ////create the convertion tool in order to transfer any panel length pixel values into the associated original units
                 ////var pc = new granit.PixelConverter(self.element[0]);
