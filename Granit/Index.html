@@ -21,9 +21,9 @@
         $(document).ready(function () {
             $("#splitterInner2").splitter({
                 panel: [
-                    { size: "20.7vmin", class: "panelLayout1 panelLayout7", flexible: true, resizable: true },
-                    { size: "20.4ch", class: "panelLayout2 panelLayout7" },
-                    { size: "20.1ex" },
+                    { size: "50ch", class: "panelLayout1 panelLayout7", flexible: true, resizable: true },
+                    { size: "20.4vmax", class: "panelLayout2 panelLayout7" },
+                    { size: "50ex" },
                     { class: "panelLayout3 panelLayout5" }
                 ],
                 splitter: [
@@ -38,10 +38,10 @@
 
             $("#splitterInner").splitter({
                 panel: [
-                    { size: "20.2vh", class: "panelLayout1 panelLayout7", resizable: true },
-                    { size: "19.7ch", maxSize: "50%", class: "panelLayout2 panelLayout7", resizable: true },
-                    { maxSize: "50%", resizable: true, class: "panelLayout7" },
-                    { size: "18.9ex", minSize: "5px", class: "panelLayout3 panelLayout5" },
+                    { size: "20%", class: "panelLayout1 panelLayout7", resizable: true },
+                    { size: "20.4vmax", maxSize: "50%", class: "panelLayout2 panelLayout7", resizable: true },
+                    { maxSize: "20vmin", resizable: true, class: "panelLayout7" },
+                    { size: "5.4pc", minSize: "5px", class: "panelLayout3 panelLayout5" },
                     { resizable: true }
                 ],
                 splitter: [
@@ -60,13 +60,13 @@
 
             $("#splitterOuter").splitter({
                 panel: [
-                    { size: "20.3em", minSize: "5%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true, flexible: true },
+                    { size: "20.5%", minSize: "1%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true, flexible: true },
                     { class: "panelLayout4", resizable: true, flexible: true },
-                    { size: "19.1rem", class: "panelLayout5", resizable: true, flexible: true },
-                    { size: "20vw", class: "panelLayout6", resizable: true, flexible: true }
+                    { size: "19.8vw", class: "panelLayout5", resizable: true, flexible: true },
+                    { size: "18.5vh", class: "panelLayout6", resizable: true, flexible: true }
                 ],
                 splitter: [
-                    { width: "5ex", },
+                    { width: "10ex", },
                     { width: "3em", display: "separator", length: "80%" },
                     { width: "3em", length: "30ch", class: "splitter_HandleStyle" }
                 ],

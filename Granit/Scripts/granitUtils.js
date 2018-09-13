@@ -47,6 +47,9 @@ var granit = (function (gt) {
         this.Unit = unit || "";
 
         this.getSize = function () {
+            if (this.Value.startsWith && this.Value.startsWith("calc")) {
+                return this.Value;
+            }
             return this.Value + this.Unit;
         }
     };
@@ -330,7 +333,23 @@ var granit = (function (gt) {
             targetParent.removeChild(testElement);
         };
 
-        var parentSize = new function () {
+        var _parentSize;
+        var parentSize = function () {
+            if (!_parentSize) {
+                _parentSize = new parentSizeClass();
+            }
+            return _parentSize;
+        };
+
+        var _viewportSize;
+        var viewportSize = function() {
+            if (!_viewportSize) {
+                _viewportSize = new viewportSizeClass();
+            }
+            return _viewportSize;
+        };
+
+        var parentSizeClass = function () {
             var _width, _height;
             this.width = function () {
                 if (!_width) {
@@ -346,8 +365,7 @@ var granit = (function (gt) {
             }
         };
 
-
-        var viewportSize = new function () {
+        var viewportSizeClass = function () {
             var _width, _height;
             this.width = function () {
                 if (!_width) {
@@ -361,7 +379,6 @@ var granit = (function (gt) {
                 }
                 return _height;
             }
-            return this;
         };
 
         //reset test element
@@ -434,7 +451,7 @@ var granit = (function (gt) {
             self.reset();
 
             var result, pixelBase = 1.0,
-                precisionFactor = 1.0;
+                precision = 1, pixelPrecision = 2;
 
             if (targetUnit === "px") {
                 result = value;
@@ -448,28 +465,29 @@ var granit = (function (gt) {
                 var total;
                 if (targetUnit === "%") {
                     if (cssPropertyName === "width") {
-                        total = parentSize.width();
+                        total = parentSize().width();
                     } else {
-                        total = parentSize.height();
+                        total = parentSize().height();
                     }
                 }
                 else if (targetUnit === "vw") {
-                    total = viewportSize.width();
+                    total = viewportSize().width();
                 }
                 else if (targetUnit === "vh") {
-                    total = viewportSize.height();
+                    total = viewportSize().height();
                 }
                 else if (targetUnit === "vmin") {
-                    var test1 = viewportSize.width();
-                    var test2 = viewportSize.height();
+                    var test1 = viewportSize().width();
+                    var test2 = viewportSize().height();
                     total = Math.min(test1, test2);
                 }
-                else if (targetUnit === "vmin") {
-                    total = Math.max(viewportSize.width(), viewportSize.height());
+                else if (targetUnit === "vmax") {
+                    total = Math.max(viewportSize().width(), viewportSize().height());
                 }
 
                 pixelBase = total / 100.0;
-                precisionFactor = 10.0;            //support 1 decimal places for relative sizes
+                precision = 1;            //support 1 decimal places for relative sizes
+                pixelPrecision = 1;
             }
             else if (
                 //font-related lenghts
@@ -478,7 +496,7 @@ var granit = (function (gt) {
             ) {
                 testElement.style.lineHeight = "1";
                 testElement.style.fontSize = "1.0em";
-                precisionFactor = 10.0;            //support 2 decimal places for font-related sizes
+                precision = 2;            //support 2 decimal places for font-related sizes
 
                 if (targetUnit === "em" || targetUnit === "rem") {
                     testElement.textContent = "&nbsp;";  //space content
@@ -499,73 +517,78 @@ var granit = (function (gt) {
                     pixelBase = $(testElement).width();
                 }
 
-                return (value / pixelBase) + targetUnit;
+                //return (value / pixelBase) + targetUnit;
             }
             else if (
                 //static lenghts
                 targetUnit === "in" || targetUnit === "pt" || targetUnit === "pc" || 
-                targetUnit === "cm" || targetUnit === "mm") {
+                targetUnit === "cm" || targetUnit === "mm"
+            ) {
                 testElement.style.width = "1in";
-                precisionFactor = 10.0;                //support 1 decimal places for static sizes
+                precision = 2;
 
                 var pixelBase = $(testElement).width(),
                     conversionFactor = 1.0;
 
                 if (targetUnit === "pt") {
                     conversionFactor = 72.0;
-                    precisionFactor = 1.0;             //support no decimal places for point
-                }
-                else if (targetUnit === "pc") {
-                    conversionFactor = 6.0;
-                    precisionFactor = 10.0;            //support 1 decimal places for pica
-                }
-                else if (targetUnit === "cm") {
-                    conversionFactor = 2.54;
-                    precisionFactor = 100.0;           //support 2 decimal places for centimeter
+                    precision = 0;              //support no decimal places for point
                 }
                 else if (targetUnit == "mm") {
                     conversionFactor = 25.4;
-                    precisionFactor = 10.0;            //support 1 decimal places for millimeter
+                    precision = 1;              //support 1 decimal places for millimeter
+                }
+                else if (targetUnit === "pc") {
+                    conversionFactor = 6.0;
+                    precision = 2;              //support 2 decimal places for millimeter
+                }
+                else if (targetUnit === "cm") {
+                    conversionFactor = 2.54;
+                    precision = 2;              //support 2 decimal places for centimeter
                 }
 
-                value *= conversionFactor;
+                pixelBase /= conversionFactor;
 
-                var test = (value / pixelBase) + targetUnit;
+                //var test = (value / pixelBase).toFixed(2) + targetUnit;
+                //console.log(test);
+                //return test;
             }
 
             if (destroy) {
                 self.destroy();
             }
 
+            var precisionFactor = Math.pow(10, precision);      //support precision decimal places for static sizes
+
             var rest = (value * precisionFactor) % pixelBase;
 
-            if (rest === 0) {
-                return (value / pixelBase) + targetUnit;
+            var floor = Math.floor((value * precisionFactor) / pixelBase),                
+                operation = " + ";
+            if (rest > pixelBase - rest) {
+                floor += 1.0;
+                operation = " - ";
+                rest = pixelBase - rest;
+            }
+            floor = (floor / precisionFactor).toFixed(precision);
+            rest = (rest / precisionFactor).toFixed(pixelPrecision);
+
+            var test;
+
+            if (rest == 0) {
+                test = new NumberUnit(floor, targetUnit);
             }
             else {
-                var floor = Math.floor((value * precisionFactor) / pixelBase),
-                    operation = " + ";
-                pixelBase *= precisionFactor;
-                if (rest > pixelBase - rest) {
-                    floor += 1.0;
-                    operation = " - ";
-                    rest = pixelBase - rest;
-                }
-                rest /= 100.00;
-                if (floor === 0) {
-                    return rest + "px";
-                }
-
-                //var number1 = new NumberUnit(floor / precisionFactor, targetUnit);
-                //var number2 = new NumberUnit(rest, "px");
-
-                //var result = new CalcNumber();
-                //result.Add();
-
-                var test2 = test;
-                var test3 = "calc(" + (floor / precisionFactor) + targetUnit + operation + rest + "px)";
-                return test;
+                test = new NumberUnit("calc(" + floor + targetUnit + operation + rest + "px)");
             }
+
+            //var number1 = new NumberUnit(floor / precisionFactor, targetUnit);
+            //var number2 = new NumberUnit(rest, "px");
+
+            //var result = new CalcNumber();
+            //result.Add();
+
+            console.log(test.getSize());
+            return test;
         };
     };
 

@@ -444,7 +444,6 @@ $(function () {
                 } else {
                     size = item.height();
                 }
-
                 var itemData = item.data().__granitData__;
 
                 if (!itemData.resizable) {
@@ -471,7 +470,7 @@ $(function () {
                 }
 
                 if (itemData.resizable) {
-                    if (!itemData.Size.Pixel || itemData.Size.Pixel !== size) {
+                    if (!itemData.Size.Pixel || Math.abs(itemData.Size.Pixel - size) > 0.01) {
                         item.css(self.sizePropertyName, size + "px");
 
                         itemData.Size.Pixel = size;
@@ -582,16 +581,16 @@ $(function () {
 
                         if (unit !== "px") {
                             var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
-                            item.data().__granitData__.Size.Number.Value = result;
+                            item.data().__granitData__.Size.Number.Value = result.Value;
 
                             if (
-                                unit === "em" || unit === "rem" || unit === "%" ||
-                                unit === "vw" || unit === "vh" ||
-                                unit === "vmin" || unit === "vmax"
-                                //|| unit === "ex" || unit === "ch"
-                                //unit !== "ex" && unit !== "ch"
+                                //unit === "em" || unit === "rem" || unit === "%" ||
+                                //unit === "vw" || unit === "vh" ||
+                                //unit === "vmin" || unit === "vmax"
+                                ////|| unit === "ex" || unit === "ch"
+                                unit !== "ex" && unit !== "ch"
                             ) {
-                                item.css(self.sizePropertyName, result);
+                                item.css(self.sizePropertyName, result.getSize());
                             }
                         } else {
                             item.data().__granitData__.Size.Number.Value = size;
