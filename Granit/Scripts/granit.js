@@ -470,7 +470,7 @@ $(function () {
                 }
 
                 if (itemData.resizable) {
-                    if (!itemData.Size.Pixel || Math.abs(itemData.Size.Pixel - size) > 0.01) {
+                    if (!itemData.Size.Pixel || Math.abs(itemData.Size.Pixel - size) > 0.02) {
                         item.css(self.sizePropertyName, size + "px");
 
                         itemData.Size.Pixel = size;

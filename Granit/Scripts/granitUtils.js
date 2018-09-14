@@ -451,7 +451,7 @@ var granit = (function (gt) {
             self.reset();
 
             var result, pixelBase = 1.0,
-                precision = 1, pixelPrecision = 2;
+                precision = 1;
 
             if (targetUnit === "px") {
                 result = value;
@@ -487,7 +487,6 @@ var granit = (function (gt) {
 
                 pixelBase = total / 100.0;
                 precision = 1;            //support 1 decimal places for relative sizes
-                pixelPrecision = 1;
             }
             else if (
                 //font-related lenghts
@@ -569,8 +568,8 @@ var granit = (function (gt) {
                 operation = " - ";
                 rest = pixelBase - rest;
             }
-            floor = (floor / precisionFactor).toFixed(precision);
-            rest = (rest / precisionFactor).toFixed(pixelPrecision);
+            floor = (floor / precisionFactor);
+            rest = (rest / precisionFactor);
 
             var test;
 
