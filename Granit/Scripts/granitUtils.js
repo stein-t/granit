@@ -42,15 +42,17 @@ var granit = (function (gt) {
      * Description: the NumberUnit class -- Instances of this class are very heavily used in granit to transfer not only numbers but also associated units.
      */
     var NumberUnit = function (value, unit) {
-        value = value || 0;
-        this.Value = value;
-        this.Unit = unit || "";
+        var self = this;
 
-        this.getSize = function () {
+        value = value || 0;
+        self.Value = value;
+        self.Unit = unit || "";
+
+        self.getSize = function () {
             if (this.Value.startsWith && this.Value.startsWith("calc")) {
                 return this.Value;
             }
-            return this.Value + this.Unit;
+            return self.Value + self.Unit;
         }
     };
 
@@ -58,17 +60,23 @@ var granit = (function (gt) {
      * Author(s):   Thomas Stein
      * Description: NumberUnit wrapper with additional properties in order to express width and height lenghts
      */
-    var Size = function (number, autoSized) {
-        this.autoSized = number === "auto" || autoSized ? true : false;
+    var Size = function (number, offset, pixel) {
+        var self = this;
+
+        self.autoSized = number === "auto" ? true : false;
 
         if (!number || number === "auto") {
             number = new NumberUnit();
         }
-        this.Number = number;
-        this.Pixel = 0;
+        self.Number = number;
+        self.Offset = offset;
+        self.Pixel = pixel || 0;
 
-        this.getSize = function () {
-            return this.Number.getSize();
+        self.getSize = function () {
+            if (!self.Offset || self.Offset.Value === 0) {
+                return self.Number.getSize();
+            }
+            return "calc(" + self.Number.getSize() + " " + " + " + self.Offset.getSize() + ")";
         }
     }
 
@@ -181,31 +189,6 @@ var granit = (function (gt) {
                 }
                 return true;
             });
-        }
-    }
-
-    var CalcNumber = function (number1, number2) {
-        var self = this;
-
-        self.Numbers = numberUnitArray();
-
-        self.Value = function () {
-            if (self.Numbers.length === 0) {
-                return null;
-            }
-            else if (self.Numbers.length === 1) {
-                return arr[0].getSize();
-            }
-            else if (self.Numbers.length === 2) {
-                return "calc(" + self.Numbers[0].getSize() + " " + " + " + self.Numbers[1].getSize() + ")";
-            }
-        }
-
-        if (number1) {
-            self.Numbers.add(number1);
-        }
-        if (number2) {
-            self.Numbers.add(number2);
         }
     }
 
@@ -495,7 +478,6 @@ var granit = (function (gt) {
             ) {
                 testElement.style.lineHeight = "1";
                 testElement.style.fontSize = "1.0em";
-                precision = 2;            //support 2 decimal places for font-related sizes
 
                 if (targetUnit === "em" || targetUnit === "rem") {
                     testElement.textContent = "&nbsp;";  //space content
@@ -516,7 +498,10 @@ var granit = (function (gt) {
                     pixelBase = $(testElement).width();
                 }
 
-                //return (value / pixelBase) + targetUnit;
+                precision = 2;            //support 2 decimal places for font-related sizes
+                //var test = (value / pixelBase) + targetUnit;
+                //console.log(test);
+                //return test;
             }
             else if (
                 //static lenghts
@@ -533,7 +518,7 @@ var granit = (function (gt) {
                     conversionFactor = 72.0;
                     precision = 0;              //support no decimal places for point
                 }
-                else if (targetUnit == "mm") {
+                else if (targetUnit === "mm") {
                     conversionFactor = 25.4;
                     precision = 1;              //support 1 decimal places for millimeter
                 }
@@ -548,7 +533,7 @@ var granit = (function (gt) {
 
                 pixelBase /= conversionFactor;
 
-                //var test = (value / pixelBase).toFixed(2) + targetUnit;
+                //var test = (value / pixelBase) + targetUnit;
                 //console.log(test);
                 //return test;
             }
@@ -561,33 +546,21 @@ var granit = (function (gt) {
 
             var rest = (value * precisionFactor) % pixelBase;
 
-            var floor = Math.floor((value * precisionFactor) / pixelBase),                
-                operation = " + ";
+            var floor = Math.floor((value * precisionFactor) / pixelBase);
             if (rest > pixelBase - rest) {
                 floor += 1.0;
-                operation = " - ";
-                rest = pixelBase - rest;
+                rest = (pixelBase - rest) * -1.0;
             }
-            floor = (floor / precisionFactor);
-            rest = (rest / precisionFactor);
+            floor = floor / precisionFactor;
+            rest = rest / precisionFactor;
 
-            var test;
+            var main = new NumberUnit(floor, targetUnit),
+                offset = new NumberUnit(rest, "px");
 
-            if (rest == 0) {
-                test = new NumberUnit(floor, targetUnit);
-            }
-            else {
-                test = new NumberUnit("calc(" + floor + targetUnit + operation + rest + "px)");
-            }
+            var number = new Size(main, offset, value);
 
-            //var number1 = new NumberUnit(floor / precisionFactor, targetUnit);
-            //var number2 = new NumberUnit(rest, "px");
-
-            //var result = new CalcNumber();
-            //result.Add();
-
-            console.log(test.getSize());
-            return test;
+            console.log(number.getSize());
+            return number;
         };
     };
 

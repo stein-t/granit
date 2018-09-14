@@ -344,7 +344,7 @@ $(function () {
                     }
 
                     item.css(self.sizePropertyName, result);
-                    itemData.Size.Number.CalcValue = result;
+                    itemData.Size.Number.Value = result;
                 });
             }
 
@@ -581,19 +581,21 @@ $(function () {
 
                         if (unit !== "px") {
                             var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
-                            item.data().__granitData__.Size.Number.Value = result.Value;
+                            data.Size = result;
 
                             if (
                                 //unit === "em" || unit === "rem" || unit === "%" ||
                                 //unit === "vw" || unit === "vh" ||
-                                //unit === "vmin" || unit === "vmax"
-                                ////|| unit === "ex" || unit === "ch"
-                                unit !== "ex" && unit !== "ch"
+                                //unit === "vmin" || unit === "vmax" ||
+                                //unit === "ch"
+                                unit !== "ex"
                             ) {
-                                item.css(self.sizePropertyName, result.getSize());
+                                var test = result.getSize();
+                                console.log(test);
+                                item.css(self.sizePropertyName, test);
                             }
                         } else {
-                            item.data().__granitData__.Size.Number.Value = size;
+                            data.Size.Number.Value = size;
                         }
 
                         ////current total static size
