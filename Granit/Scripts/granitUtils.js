@@ -430,14 +430,14 @@ var granit = (function (gt) {
         };
 
         //convert any pixel length to target unit
-        this.convertFromPixel = function (value, targetUnit, cssPropertyName, destroy) {
+        this.convertFromPixel = function (size, targetUnit, cssPropertyName, destroy) {
             self.reset();
 
             var result, pixelBase = 1.0,
                 precision = 1;
 
             if (targetUnit === "px") {
-                result = value;
+                result = size;
             }
             else if (
                 //relative (viewport) lengths
@@ -469,7 +469,7 @@ var granit = (function (gt) {
                 }
 
                 pixelBase = total / 100.0;
-                precision = 1;            //support 1 decimal places for relative sizes
+                precision = 2;            //support 1 decimal places for relative sizes
             }
             else if (
                 //font-related lenghts
@@ -478,6 +478,8 @@ var granit = (function (gt) {
             ) {
                 testElement.style.lineHeight = "1";
                 testElement.style.fontSize = "1.0em";
+
+                precision = 2;            //support 2 decimal places for font-related sizes
 
                 if (targetUnit === "em" || targetUnit === "rem") {
                     testElement.textContent = "&nbsp;";  //space content
@@ -498,8 +500,7 @@ var granit = (function (gt) {
                     pixelBase = $(testElement).width();
                 }
 
-                precision = 2;            //support 2 decimal places for font-related sizes
-                //var test = (value / pixelBase) + targetUnit;
+                //var test = (size / pixelBase) + targetUnit;
                 //console.log(test);
                 //return test;
             }
@@ -533,7 +534,7 @@ var granit = (function (gt) {
 
                 pixelBase /= conversionFactor;
 
-                //var test = (value / pixelBase) + targetUnit;
+                //var test = (size / pixelBase) + targetUnit;
                 //console.log(test);
                 //return test;
             }
@@ -544,9 +545,9 @@ var granit = (function (gt) {
 
             var precisionFactor = Math.pow(10, precision);      //support precision decimal places for static sizes
 
-            var rest = (value * precisionFactor) % pixelBase;
+            var rest = (size * precisionFactor) % pixelBase;
 
-            var floor = Math.floor((value * precisionFactor) / pixelBase);
+            var floor = Math.floor((size * precisionFactor) / pixelBase);
             if (rest > pixelBase - rest) {
                 floor += 1.0;
                 rest = (pixelBase - rest) * -1.0;
@@ -557,9 +558,7 @@ var granit = (function (gt) {
             var main = new NumberUnit(floor, targetUnit),
                 offset = new NumberUnit(rest, "px");
 
-            var number = new Size(main, offset, value);
-
-            console.log(number.getSize());
+            var number = new Size(main, offset, size);
             return number;
         };
     };

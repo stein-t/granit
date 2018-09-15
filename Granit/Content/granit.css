@@ -36,8 +36,7 @@ body {
 }
 
 /*******************************************************************/
-
-.granit_container {
+.granit-splitter {
     width: auto !important;
     height: 100% !important;
     display: flex !important;

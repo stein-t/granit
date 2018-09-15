@@ -105,7 +105,9 @@ $(function () {
                 granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
             }
 
-            this.element.addClass("granit_container");
+            if (!this.element.hasClass("granit-splitter")) {
+                this.element.addClass("granit-splitter");
+            }
 
             if (self.options.direction === "vertical") {
                 this.element.addClass("granit_container_vertical");
@@ -253,7 +255,7 @@ $(function () {
                  *      ... otherwise the logic would not recognize nested splitters and would wrap those elements into style containers
                  *          ... for those elements (nested splitters), any defined styles (border, margin, padding, etc.) would be displayed twice unintentionally
                  */
-                if (!wrappedElement.is(":data('granit-splitter')")) {                   //test if the element is a nested splitter
+                if (!(wrappedElement.is(":data('granit-splitter')") || wrappedElement.hasClass("granit-splitter"))) {                   //test if the element is a nested splitter
                     wrappedElement.wrap("<div class='" + panelClasses + "'></div>");
                     wrappedElement = wrappedElement.parent();
                 } else {
@@ -552,19 +554,19 @@ $(function () {
                 var pc = new granit.PixelConverter(self.element[0]),
                     offsetSizeName = granit.prefixSizeName(self.sizePropertyName, "offset", true);      //offsetWidth, offsetHeight
 
-                ////local help variables
-                //var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a definit size under consideration of different units 
-                //    panelPixelSizeTotalOffset = 0;                          //the total pixel size of static panels
-                //    splitterPixelOffset = 0;                                //the total pixel size of splitter                
+                //local help variables
+                var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a definit size under consideration of different units 
+                    panelPixelSizeTotalOffset = 0;                          //the total pixel size of static panels
+                    splitterPixelOffset = 0;                                //the total pixel size of splitter                
 
-                //this.splitterList.forEach(function (item, index) {
-                //    //calculate total splitter pixel size
-                //    if (self.options.direction === "vertical") {
-                //        splitterPixelOffset += item.outerWidth();
-                //    } else {
-                //        splitterPixelOffset += item.outerHeight();
-                //    }
-                //});
+                this.splitterList.forEach(function (item, index) {
+                    //calculate total splitter pixel size
+                    if (self.options.direction === "vertical") {
+                        splitterPixelOffset += item.outerWidth();
+                    } else {
+                        splitterPixelOffset += item.outerHeight();
+                    }
+                });
 
                 // iterating static panels for re-converting
                 self.staticPanels.forEach(function (item, index) {
@@ -588,7 +590,8 @@ $(function () {
                                 //unit === "vw" || unit === "vh" ||
                                 //unit === "vmin" || unit === "vmax" ||
                                 //unit === "ch"
-                                unit !== "ex"
+                                unit !== "ex" && unit !== "vmin" && unit !== "vmax" &&
+                                unit !== "vw" && unit !== "vh"
                             ) {
                                 var test = result.getSize();
                                 console.log(test);
