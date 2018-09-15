@@ -586,12 +586,7 @@ $(function () {
                             data.Size = result;
 
                             if (
-                                //unit === "em" || unit === "rem" || unit === "%" ||
-                                //unit === "vw" || unit === "vh" ||
-                                //unit === "vmin" || unit === "vmax" ||
-                                //unit === "ch"
-                                unit !== "ex" && unit !== "vmin" && unit !== "vmax" &&
-                                unit !== "vw" && unit !== "vh"
+                                unit === "em" || unit === "rem" || unit === "%"
                             ) {
                                 var test = result.getSize();
                                 console.log(test);
