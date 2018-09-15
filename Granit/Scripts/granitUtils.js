@@ -202,11 +202,12 @@ var granit = (function (gt) {
         //arr.push.apply(arr, arguments); // currently no initialization arguments supported
 
         /*
-         * if the new item matches an existing item by unit, both the items Numbers are joined together with the provided operation.
-         * otherwise the new item simply is pushed into the list, together with the respective operation.
+         * if the new item matches an existing item by unit, both the items Numbers are joined together.
+         * otherwise the new item simply is pushed into the list.
          */
         arr.add = function (item, operation) {
             var number, unit;
+            operation = operation || "+";
 
             if (item instanceof NumberUnit) {
                 number = item.Value;
@@ -216,7 +217,9 @@ var granit = (function (gt) {
                 number = parseFloat(item);
                 unit = item.replace(number, "");
             }
-
+            if (operation === "-") {
+                number *= -1.0;
+            }
             item = new NumberUnit(number, unit);
 
             var itemNumber = parseFloat(item.Value);
@@ -229,30 +232,12 @@ var granit = (function (gt) {
             });
 
             if (element) {
-                var elementNumber = parseFloat(element.Operation + element.Value);
-                switch (operation) {
-                    case "+":
-                        elementNumber = elementNumber + itemNumber;
-                        break;
-                    case "-":
-                        elementNumber = elementNumber - itemNumber
-                        break;
-                    default:
-                        break;
-                }
-                if (elementNumber >= 0) {
-                    element.Value = elementNumber;
-                    element.Operation = "+";
-                } else {
-                    element.Value = Math.abs(elementNumber);
-                    element.Operation = "-";
-                }
-
-                return true;
+                var elementNumber = parseFloat(element.Value);
+                elementNumber = elementNumber + itemNumber;
+                element.Value = elementNumber;
             }
             else {
-                item.Operation = operation;
-                return this.push(item);                
+                this.push(item);                
             }
 
             return arr;
@@ -278,10 +263,9 @@ var granit = (function (gt) {
          */
         arr.toString = function () {
             var result = arr.reduce(function (total, item) {
-                return total + " " + item.Operation + " " + item.Value + item.Unit;
+                return total + " + " + item.Value + item.Unit;
             }, "");
-
-            return result;
+            return result.substr(3);
         }
 
         //... eventually define more methods for this special array type
@@ -401,20 +385,17 @@ var granit = (function (gt) {
         this.convertToPixel = function (target, cssPropertyName, destroy) {
             self.reset();
 
-            var result;
-
             //get CSS value
             var value = getComputedStyle(target, null).getPropertyValue(cssPropertyName);
 
             //if the value is a string ("none") we simply return it
-            if (!parseFloat(value)) {
+            var result = parseFloat(value);
+
+            if (!result && result !== 0) {
                 result = value;
             }
             //We can return pixels directly, but not other units
-            else if (value.slice(-2) == "px") {
-                result = parseFloat(value.slice(0, -2));
-            }
-            else {
+            else if (value.slice(-2) !== "px") {
                 cssPropertyName = cssPropertyName.slice(4);
                 var offsetSizeName = prefixSizeName(cssPropertyName, "offset", true);
 

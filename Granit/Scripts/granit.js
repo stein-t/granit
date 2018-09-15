@@ -171,7 +171,7 @@ $(function () {
 
                 //retrieve the minSize option: a value defined individually on panel level overwrites any panel template value
                 var minSize = (panel && panel.minSize) || self.options.panelTemplate && self.options.panelTemplate.minSize;
-                minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit("none");
+                minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit(0, "px");
 
                 //retrieve the maxSize option: a value defined individually on panel level overwrites any panel template value
                 var maxSize = (panel && panel.maxSize) || self.options.panelTemplate && self.options.panelTemplate.maxSize;
@@ -290,7 +290,6 @@ $(function () {
                 size = new granit.Size(size);
                 
                 var panelWrapperClass = "granit_panel_wrapper" + (flexible ? "" : " granit_panel_static");
-
                 //apply splitter
                 wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelWrapperClass + "' style='" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + maxSize.getSize() + ";'></div>");
 
@@ -325,7 +324,7 @@ $(function () {
 
             if (self.relativePanels.length > 0) {
                 //the total remaining space 
-                var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(self.splitterOffset, "-").toString() + ")";
+                var remainingSpace = "(100% + " + panelSizeTotalOffset.addAll(self.splitterOffset, "+").toString() + ")";
 
                 //calculate remaining relative space 
                 var panelSizeDistributed = (100.0 - panelSizePercentTotal) / self.panelsWithoutSizeTotal;
@@ -572,143 +571,83 @@ $(function () {
                 self.staticPanels.forEach(function (item, index) {
                     var data = item.data().__granitData__;
 
+                    var size = data.Size.Pixel,                             //current size in pixels
+                        unit = data.Size.Number.Unit;
+
                     if (!data.resized) {
-                        if (data.Size.Number.Unit !== "px") {
+                        if (unit !== "px" && data.converted) {
                             var value = data.Size.getSize();
                             item.css(self.sizePropertyName, value);             //this only when we reconverted to original unit
                         }
                     } else {
-                        var size = data.Size.Pixel,                             //current size in pixels
-                            unit = data.Size.Number.Unit;
-
                         if (unit !== "px") {
-                            var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
-                            data.Size = result;
-
                             if (
                                 unit === "em" || unit === "rem" || unit === "%"
                             ) {
+                                var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
+                                data.Size = result;
+
                                 var test = result.getSize();
                                 console.log(test);
                                 item.css(self.sizePropertyName, test);
+
+                                data.converted = true;
                             }
                         } else {
                             data.Size.Number.Value = size;
                         }
+                    }
 
-                        ////current total static size
-                        //if (size > 0.0) {
-                        //    panelSizeTotalOffset.add(item.data().__granitData__.Size.Number, "-");
-                        //    panelPixelSizeTotalOffset += size;
-                        //}
+                    //current total static size
+                    if (size > 0.0) {
+                        if (data.converted) {
+                            panelSizeTotalOffset.add(item.data().__granitData__.Size.Number, "-");
+                            panelSizeTotalOffset.add(item.data().__granitData__.Size.Offset, "-");
+                        }
+                        else {
+                            panelSizeTotalOffset.add(size + "px", "-");
+                        }
+
+                        panelPixelSizeTotalOffset += size;
                     }
                 });
 
-                ////create the convertion tool in order to transfer any panel length pixel values into the associated original units
-                ////var pc = new granit.PixelConverter(self.element[0]);
-                //var size, unit, result;
-                //var offsetSizeName = granit.prefixSizeName(self.sizePropertyName, "offset", true);      //offsetWidth, offsetHeight
+                pc.destroy();   //destroy the convertion tool
 
-                ////local help variables
-                //var panelSizeTotalOffset = granit.NumberUnitArray();        //the total size of panels with a definit size under consideration of different units 
-                //    panelPixelSizeTotalOffset = 0;      //the total pixel size of static panels
-                //    splitterPixelOffset = 0;            //the total pixel size of splitter                
+                if (self.relativePanels.some(function (item) {
+                    return item.data().__granitData__.resized;
+                })) {
+                    //the total remaining space 
+                    var remainingSpace = "(100% + " + panelSizeTotalOffset.addAll(self.splitterOffset, "+").toString() + ")";
 
-                //this.splitterList.forEach(function (item, index) {
-                //    //calculate total splitter pixel size
-                //    if (self.options.direction === "vertical") {
-                //        splitterPixelOffset += item.outerWidth();
-                //    } else {
-                //        splitterPixelOffset += item.outerHeight();
-                //    }
-                //});
+                    var parentSize = 0;
+                    if (self.options.direction === "vertical") {
+                        parentSize = self.element.width();
+                    } else {
+                        parentSize = self.element.height();
+                    }
 
-                //if (self.staticPanels.length > 0 && self.panels.some(function (item) {
-                //    return item.data().__granitData__.resized;
-                //})) {
-                //    // iterating static panels for re-converting
-                //    self.staticPanels.forEach(function (item, index) {
-                //        size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
+                    var remainingPixelSpace = parentSize - panelPixelSizeTotalOffset - splitterPixelOffset;
 
-                //        unit = item.data().__granitData__.Size.Number.Unit;
+                    var proportionSum = 0.0, proportion = 0.0;
 
-                //        if (unit === "px") {
-                //            item.data().__granitData__.Size.Number.Value = size;
-                //        }
+                    // iterating relative panels for re-converting
+                    self.relativePanels.forEach(function (item, index) {
+                        var data = item.data().__granitData__;
 
-                //        //reconvert to original unit
-                //        if (item.data().__granitData__.resized) {
-                //            if (unit === "em" || unit === "rem" || unit === "%") {
-                //                var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
+                        size = data.Size.Pixel;                             //current size in pixels
 
-                //                item.css(self.sizePropertyName, result + unit);
-                //                item.data().__granitData__.Size.Number.Value = result;
-                //            } else {
-                //                item.data().__granitData__.Size.Number.Value = size;
-                //                item.data().__granitData__.Size.Number.Unit = "px";
-                //            }
-                //        }
-                //        //current total static size
-                //        if (size > 0.0) {
-                //            panelSizeTotalOffset.add(item.data().__granitData__.Size.Number, "-");
-                //            panelPixelSizeTotalOffset += size;
-                //        }
-                //    });
-                //}
+                        proportion = (size / remainingPixelSpace);
+                        proportionSum += proportion;
 
-                //if (self.relativePanels.length > 0 && self.relativePanels.some(function (item) {
-                //    return item.data().__granitData__.resized;
-                //})) {
-                //    //the total remaining space 
-                //    var remainingSpace = "(100%" + panelSizeTotalOffset.addAll(self.splitterOffset, "-").toString() + ")";
-
-                //    var parentSize = 0;
-                //    if (self.options.direction === "vertical") {
-                //        parentSize = self.element.width();
-                //    } else {
-                //        parentSize = self.element.height();
-                //    }
-
-                //    var remainingPixelSpace = parentSize - panelPixelSizeTotalOffset - splitterPixelOffset;
-
-                //    var proportionSum = 0.0, proportion = 0.0;
-                //        lastResizedItem = null;
-
-                //    // iterating relative panels for re-converting
-                //    self.relativePanels.forEach(function (item, index) {
-                //        size = item.data().__granitData__.Size.Pixel;                             //current size in pixels
-
-                //        proportion = (size / remainingPixelSpace);
-                //        proportionSum += proportion;
-
-                //        item.data().__granitData__.Size.Number.Value = proportion * 100.00;
-
-                //        //reconvert to original unit
-                //        if (item.data().__granitData__.resized) {
-
-                //            lastResizedItem && lastResizedItem.css(self.sizePropertyName, lastResizedItem.data().__granitData__.Size.Number.calcValue);
-                //            lastResizedItem = item;
-
-                //            result = "calc(" + remainingSpace + " * " + proportion + ")";
-
-                //            //item.css(self.sizePropertyName, result);
-                //            item.data().__granitData__.Size.Number.calcValue = result;
-                //            item.data().__granitData__.Size.Number.proportion = proportion;
-                //        }
-                //    });
-
-                //    if (lastResizedItem) {
-                //        var test = 1.0 - proportionSum;
-                //        if (test !== 0) {
-                //            lastResizedItem.data().__granitData__.Size.Number.proportion += test;
-                //            lastResizedItem.data().__granitData__.Size.Number.calcValue = "calc(" + remainingSpace + " * " + lastResizedItem.data().__granitData__.Size.Number.proportion + ")";
-                //            lastResizedItem.data().__granitData__.Size.Number.Value = proportion * 100.00;
-                //        }
-                //        lastResizedItem.css(self.sizePropertyName, lastResizedItem.data().__granitData__.Size.Number.calcValue);
-                //    }
-                //}
-
-                //pc.destroy();   //destroy the convertion tool
+                        //reconvert to original unit
+                        if (data.resized) {
+                            var result = "calc(" + remainingSpace + " * " + proportion + ")";
+                            item.data().__granitData__.Size.Number.Value = result;
+                            item.css(self.sizePropertyName, result);
+                        }
+                    });
+                }
             }
 
             self.panels.forEach(function (item) {
