@@ -614,40 +614,40 @@ $(function () {
 
                 pc.destroy();   //destroy the convertion tool
 
-                if (self.relativePanels.some(function (item) {
-                    return item.data().__granitData__.resized;
-                })) {
-                    //the total remaining space 
-                    var remainingSpace = "(100% + " + panelSizeTotalOffset.addAll(self.splitterOffset, "+").toString() + ")";
+                //if (self.relativePanels.some(function (item) {
+                //    return item.data().__granitData__.resized;
+                //})) {
+                //    //the total remaining space 
+                //    var remainingSpace = "(100% + " + panelSizeTotalOffset.addAll(self.splitterOffset, "+").toString() + ")";
 
-                    var parentSize = 0;
-                    if (self.options.direction === "vertical") {
-                        parentSize = self.element.width();
-                    } else {
-                        parentSize = self.element.height();
-                    }
+                //    var parentSize = 0;
+                //    if (self.options.direction === "vertical") {
+                //        parentSize = self.element.width();
+                //    } else {
+                //        parentSize = self.element.height();
+                //    }
 
-                    var remainingPixelSpace = parentSize - panelPixelSizeTotalOffset - splitterPixelOffset;
+                //    var remainingPixelSpace = parentSize - panelPixelSizeTotalOffset - splitterPixelOffset;
 
-                    var proportionSum = 0.0, proportion = 0.0;
+                //    var proportionSum = 0.0, proportion = 0.0;
 
-                    // iterating relative panels for re-converting
-                    self.relativePanels.forEach(function (item, index) {
-                        var data = item.data().__granitData__;
+                //    // iterating relative panels for re-converting
+                //    self.relativePanels.forEach(function (item, index) {
+                //        var data = item.data().__granitData__;
 
-                        size = data.Size.Pixel;                             //current size in pixels
+                //        size = data.Size.Pixel;                             //current size in pixels
 
-                        proportion = (size / remainingPixelSpace);
-                        proportionSum += proportion;
+                //        proportion = (size / remainingPixelSpace);
+                //        proportionSum += proportion;
 
-                        //reconvert to original unit
-                        if (data.resized) {
-                            var result = "calc(" + remainingSpace + " * " + proportion + ")";
-                            item.data().__granitData__.Size.Number.Value = result;
-                            item.css(self.sizePropertyName, result);
-                        }
-                    });
-                }
+                //        //reconvert to original unit
+                //        if (data.resized) {
+                //            var result = "calc(" + remainingSpace + " * " + proportion + ")";
+                //            item.data().__granitData__.Size.Number.Value = result;
+                //            item.css(self.sizePropertyName, result);
+                //        }
+                //    });
+                //}
             }
 
             self.panels.forEach(function (item) {
