@@ -77,10 +77,11 @@ body {
 
 .granit_panel_wrapper {
     display: block !important;
+    box-sizing: border-box !important;
     height: 100%;
     width: 100%;
     overflow: hidden !important;
-    flex: auto !important;
+    flex: 0 1 0px;                  /* we accept shrinking, the proper size will be set in runtime */
     position: relative !important;
     margin: 0 !important;
     padding: 0 !important;

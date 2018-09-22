@@ -63,14 +63,14 @@ var granit = (function (gt) {
     var Size = function (number, offset, pixel) {
         var self = this;
 
-        self.autoSized = number === "auto" ? true : false;
-
         if (!number || number === "auto") {
             number = new NumberUnit();
         }
         self.Number = number;
         self.Offset = offset;
         self.Pixel = pixel || 0;
+
+        self.autoSized = !number.Unit ? true : false;
 
         self.getSize = function () {
             if (!self.Offset || self.Offset.Value === 0) {
@@ -107,7 +107,7 @@ var granit = (function (gt) {
         var floatRegex = /[+-]?\d+(\.\d+)?/;
         var regex = new RegExp("^(" + floatRegex.source + ")" + "(" + unitFormat.source + ")?$");     //float number with optional measure
 
-        var value, unit = '';
+        var value, unit;
 
         if (jQuery.type(size) === "string") {
             var match = size.match(regex);
@@ -118,10 +118,6 @@ var granit = (function (gt) {
 
             size = match[1];
             unit = match[3];
-        }
-
-        if (!defaultUnit && !unit) {
-            output("value (" + size + ") format is invalid -- unit expected (float number with measure unit)", errorObject);
         }
 
         value = parseFloat(size);
@@ -135,47 +131,20 @@ var granit = (function (gt) {
             }
         }
 
-        return new NumberUnit(math(value), unit || defaultUnit, 2);
+        return new NumberUnit(math(value), unit || defaultUnit);
     };
-
-    /*
-     * Author(s):   Thomas Stein
-     * Description: eliminates duplicates from the list
-     */
-    var uniqueArray = function (list) {
-        var result = [];
-        $.each(list, function (i, e) {
-            if ($.inArray(e, result) == -1) result.push(e);
-        });
-        return result;
-    }
 
     /*
      * Author(s):   Thomas Stein
      * Description: helper methods for searching and comparing in objects and arrays
      */
-    var listCompare = {
-        /*
-         * Author(s):   Thomas Stein
-         * Description: checks if all items in the array can be found in haystack.
-         *              Additionally, if all = true, checks if all items in the haystack are represented in the array.
-         */
-        arrayToArray: function (arr, haystack, all) {
-            if (all && arr.length !== haystack.length) {
-                return false;                       //same amount of items
-            }
-
-            return arr.every(function (v) {
-                return haystack.indexOf(v) >= 0;
-            });
-        },
-
+    var arrayOperations = {
         /*
          * Author(s):   Thomas Stein
          * Description: checks if all property names in the object can be found in haystack.
          *              Additionally, if all = true, checks if all items in the haystack are represented in the propert-name list of the object.
          */
-        objectToArray: function (object, haystack, all) {
+        compareObjectToArray: function (object, haystack, all) {
             if (!object || !haystack) {
                 return undefined;
             }
@@ -189,88 +158,19 @@ var granit = (function (gt) {
                 }
                 return true;
             });
-        }
-    }
-
-    /*
-     * Author(s):   Thomas Stein
-     * Description: creates a helper list of NumberUnit objects used in order to sum up items with equal units.
-     *              as a final goal this very specific array joins values together (toString) into a string to be used in css-calc statements
-     */
-    var numberUnitArray = function() {
-        var arr = [];
-        //arr.push.apply(arr, arguments); // currently no initialization arguments supported
+        },
 
         /*
-         * if the new item matches an existing item by unit, both the items Numbers are joined together.
-         * otherwise the new item simply is pushed into the list.
+         * Author(s):   Thomas Stein
+         * Description: eliminates duplicates from the list
          */
-        arr.add = function (item, operation) {
-            var number, unit;
-            operation = operation || "+";
-
-            if (item instanceof NumberUnit) {
-                number = item.Value;
-                unit = item.Unit;
-            } else {
-                //the item is considered to be a css length value string ("10px", "5rem", etc.) and must be converted into a NumberUnit object 
-                number = parseFloat(item);
-                unit = item.replace(number, "");
-            }
-            if (operation === "-") {
-                number *= -1.0;
-            }
-            item = new NumberUnit(number, unit);
-
-            var itemNumber = parseFloat(item.Value);
-            var element;
-            arr.forEach(function (el) {
-                if (item.Unit === el.Unit) {
-                    element = el;
-                    return true;
-                }                
+        uniqueArray: function (list) {
+            var result = [];
+            $.each(list, function (i, e) {
+                if ($.inArray(e, result) == -1) result.push(e);
             });
-
-            if (element) {
-                var elementNumber = parseFloat(element.Value);
-                elementNumber = elementNumber + itemNumber;
-                element.Value = elementNumber;
-            }
-            else {
-                this.push(item);                
-            }
-
-            return arr;
+            return result;
         }
-
-        /*
-         * use to insert list of items
-         */
-        arr.addAll = function (itemArray, operation) {
-            if (!(Array.isArray(itemArray))) {
-                output("itemArray is no array", "numberUnitArray.addAll");
-            }
-            itemArray.forEach(function (item) {
-                arr.add(item, operation);
-            });
-
-            return arr;
-        }
-
-        /*
-         * join the items together with the respective operation as a string to be used in a css-calc statement.
-         * For example: " - 5px + 10% - 80em".
-         */
-        arr.toString = function () {
-            var result = arr.reduce(function (total, item) {
-                return total + " + " + item.Value + item.Unit;
-            }, "");
-            return result.substr(3);
-        }
-
-        //... eventually define more methods for this special array type
-
-        return arr;
     }
 
     /*
@@ -677,9 +577,7 @@ var granit = (function (gt) {
     //publish
     gt.extractFloatUnit = extractFloatUnit;
     gt.output = output;
-    gt.uniqueArray = uniqueArray;
-    gt.listCompare = listCompare;
-    gt.NumberUnitArray = numberUnitArray;
+    gt.arrayOperations = arrayOperations;
     gt.NumberUnit = NumberUnit;
     gt.Size = Size;
     gt.prefixSizeName = prefixSizeName;
