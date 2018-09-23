@@ -173,87 +173,6 @@ var granit = (function (gt) {
         }
     }
 
-    ///*
-    // * Author(s):   Thomas Stein
-    // * Description: creates a helper list of NumberUnit objects used in order to sum up items with equal units.
-    // *              as a final goal this very specific array joins values together (toString) into a string to be used in css-calc statements
-    // */
-    //var numberUnitArray = function () {
-    //    var arr = [];
-    //    //arr.push.apply(arr, arguments); // currently no initialization arguments supported
-
-    //    /*
-    //     * if the new item matches an existing item by unit, both the items Numbers are joined together.
-    //     * otherwise the new item simply is pushed into the list.
-    //     */
-    //    arr.add = function (item, operation) {
-    //        var number, unit;
-    //        operation = operation || "+";
-
-    //        if (item instanceof NumberUnit) {
-    //            number = item.Value;
-    //            unit = item.Unit;
-    //        } else {
-    //            //the item is considered to be a css length value string ("10px", "5rem", etc.) and must be converted into a NumberUnit object 
-    //            number = parseFloat(item);
-    //            unit = item.replace(number, "");
-    //        }
-    //        if (operation === "-") {
-    //            number *= -1.0;
-    //        }
-    //        item = new NumberUnit(number, unit);
-
-    //        var itemNumber = parseFloat(item.Value);
-    //        var element;
-    //        arr.forEach(function (el) {
-    //            if (item.Unit === el.Unit) {
-    //                element = el;
-    //                return true;
-    //            }
-    //        });
-
-    //        if (element) {
-    //            var elementNumber = parseFloat(element.Value);
-    //            elementNumber = elementNumber + itemNumber;
-    //            element.Value = elementNumber;
-    //        }
-    //        else {
-    //            this.push(item);
-    //        }
-
-    //        return arr;
-    //    }
-
-    //    /*
-    //     * use to insert list of items
-    //     */
-    //    arr.addAll = function (itemArray, operation) {
-    //        if (!(Array.isArray(itemArray))) {
-    //            output("itemArray is no array", "numberUnitArray.addAll");
-    //        }
-    //        itemArray.forEach(function (item) {
-    //            arr.add(item, operation);
-    //        });
-
-    //        return arr;
-    //    }
-
-    //    /*
-    //     * join the items together with the respective operation as a string to be used in a css-calc statement.
-    //     * For example: " - 5px + 10% - 80em".
-    //     */
-    //    arr.toString = function () {
-    //        var result = arr.reduce(function (total, item) {
-    //            return total + " + " + item.Value + item.Unit;
-    //        }, "");
-    //        return result;
-    //    }
-
-    //    //... eventually define more methods for this special array type
-
-    //    return arr;
-    //}
-
     /*
      * Author(s):   Thomas Stein
      * Description: prefixes the sizename "width" or "height" accordingly to get "min-width", "min-height", "max-width," "max-height", "offsetWidth", "offsetHeight"
@@ -568,111 +487,13 @@ var granit = (function (gt) {
         }
     };
 
-    /*
-     * Author(s):   Thomas Stein
-     * Description: controller for debounce and throttle methods
-     */
-    var EventTimeController = function (modus, context, threshold) {
-        var self = this;
-
-        modus = modus || "raf";
-        if (modus !== "raf" && modus !== "throttle" && modus !== "debounce") {
-            output("the modus parameter value '" + modus + "' is invalid. Allowd values are 'raf', 'throttle', 'debounce'", "granit.eventTimeController");
-        }
-        context = context || this;
-        threshold = threshold || 20;
-
-        var last, timeout, raf;
-
-        this.process = function (fn) {
-
-            if (modus === "raf") {
-                requestFrame(fn);
-            }
-            if (modus === "throttle") {
-                throttle(fn);
-            }
-            if (modus === "debounce") {
-                debounce(fn);
-            }
-        }
-
-        this.cancel = function () {
-            if (modus === "raf") {
-                cancelFrame();
-            }
-            if (modus === "throttle") {
-                cancelThrottle();
-            }
-            if (modus === "debounce") {
-                cancelDebounce();
-            }
-        }
-
-        var debounce = function (func) {
-            var args = arguments;
-            var later = function () {
-                timeout = null;
-                context && func.apply(context, args) || func(args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, threshold);
-        };
-
-        var cancelDebounce = function () {
-            clearTimeout(timeout);
-        }
-
-        var throttle = function (fn) {
-            var now = + new Date, args = arguments;
-
-            if (last && now < last + threshold) {
-                // Hold on to it
-                clearTimeout(timeout);
-                timeout = setTimeout(function () {
-                    last = now;
-                    context && fn.apply(context, args) || fn(args);
-                }, threshold);
-            } else {
-                last = now;
-                context && fn.apply(context, args) || fn(args);
-            }
-        };
-
-        var cancelThrottle = function () {
-            clearTimeout(timeout);
-            last = undefined;
-        }
-
-        var requestFrame = function (fn) {
-            var frame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
-            if (frame) {
-                raf = frame(fn.bind(context));
-            } else {
-                throttle(fn);
-            }
-        };
-
-        var cancelFrame = function () {
-            var cancel = window.cancelAnimationFrame || window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame;
-            if (cancel) {
-                cancel(raf);
-                raf = undefined;
-            } else {
-                cancelThrottle();
-            }
-        };
-    };
-
     //publish
     gt.extractFloatUnit = extractFloatUnit;
     gt.output = output;
     gt.arrayOperations = arrayOperations;
     gt.NumberUnit = NumberUnit;
-    //gt.NumberUnitArray = numberUnitArray;
     gt.Size = Size;
     gt.prefixSizeName = prefixSizeName;
-    gt.EventTimeController = EventTimeController;
     gt.DeviceHelper = DeviceHelper;
     gt.PixelConverter = PixelConverter;
     gt.IsBooleanType = isBooleanType;
