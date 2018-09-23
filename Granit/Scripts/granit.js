@@ -421,7 +421,7 @@ $(function () {
                 item.addClass("granit_panel_static");
 
                 if (itemData.resizable) {
-                    if (!itemData.Size.Pixel || Math.abs(itemData.Size.Pixel - size) > 0.02) {
+                    if (!itemData.Size.Pixel || Math.abs(itemData.Size.Pixel - size) >= 0.01) {
                         item.css(self.sizePropertyName, size + "px");
 
                         itemData.Size.Pixel = size;

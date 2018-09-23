@@ -73,7 +73,7 @@ var granit = (function (gt) {
         self.autoSized = !number.Unit ? true : false;
 
         self.getSize = function () {
-            if (!self.Offset || self.Offset.Value === 0) {
+            if (!self.Offset || self.Offset.Value < 0.01) {
                 return self.Number.getSize();
             }
             return "calc(" + self.Number.getSize() + " " + " + " + self.Offset.getSize() + ")";
