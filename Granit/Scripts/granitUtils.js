@@ -141,8 +141,23 @@ var granit = (function (gt) {
     var arrayOperations = {
         /*
          * Author(s):   Thomas Stein
+         * Description: checks if all items in the array can be found in haystack.
+         *              Additionally, if all = true, checks if all items in the haystack are represented in the array.
+         */
+        compareArrayToArray: function (arr, haystack, all) {
+            if (all && arr.length !== haystack.length) {
+                return false;                       //same amount of items
+            }
+
+            return arr.every(function (v) {
+                return haystack.indexOf(v) >= 0;
+            });
+        },
+
+        /*
+         * Author(s):   Thomas Stein
          * Description: checks if all property names in the object can be found in haystack.
-         *              Additionally, if all = true, checks if all items in the haystack are represented in the propert-name list of the object.
+         *              Additionally, if all = true, checks if all items in the haystack are represented in the property-name list of the object.
          */
         compareObjectToArray: function (object, haystack, all) {
             if (!object || !haystack) {

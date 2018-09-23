@@ -19,10 +19,11 @@ $(function () {
             panel: [],
             splitter: [],
             panelTemplate: {
-                size: "auto", minSize: 20, maxSize: "none", resizable: true, class: "granit_panel_default"
+                size: "auto", minSize: 20, maxSize: "none", resizable: true, flexible: true, class: "granit_panel_default"
             },
             splitterTemplate: { width: "2em", length: "100%", class: "granit_splitter_default" },
             separatorTemplate: { width: "1em", length: "100%", class: "granit_separator_default" },
+            reconvert: "all"       //reconvert units: 'all', 'none' or specify explicitly
         },
         /*
          * Author(s):   Thomas Stein
@@ -49,11 +50,12 @@ $(function () {
             var optionsAllowed = [
                 'classes', 'disabled', 'create', 'hide', 'show',
                 'direction', 'overflow', 'panel', 'splitter',
-                'panelTemplate', 'splitterTemplate', 'separatorTemplate'
+                'panelTemplate', 'splitterTemplate', 'separatorTemplate',
+                'reconvert'
             ];
 
             var panelOptionsAllowed = [
-                'size', 'minSize', 'maxSize', 'resizable', 'class'
+                'size', 'minSize', 'maxSize', 'resizable', 'flexible', 'class'
             ];
 
             var splitterTemplateOptionsAllowed = [
@@ -101,6 +103,20 @@ $(function () {
             if (self.options.overflow !== "auto" && self.options.overflow !== "hidden" && self.options.overflow !== "scroll") {
                 granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
             }
+
+            var reconvertibleUnits = ["%", "em"];    //array of all possible reconvertible units %, em, rem        
+            if (self.options.reconvert === "all") {
+                self.options.reconvert = reconvertibleUnits.join("|");
+            }
+            else if (self.options.reconvert === "none") {
+                self.options.reconvert === "";
+            }
+            else {
+                if (!granit.arrayOperations.compareArrayToArray(self.options.reconvert.split("|"), reconvertibleUnits)) {
+                    granit.output("value (" + self.options.reconvert + ") is invalid -- expected values are 'all', 'none' or explicit convertible units '%' or 'em' or '%|em'", this.IdString + " -- self.options.reconvert");
+                }
+            }
+            var reconvertRegex = new RegExp(self.options.reconvert);
 
             if (!this.element.hasClass("granit-splitter")) {
                 this.element.addClass("granit-splitter");
@@ -156,6 +172,13 @@ $(function () {
                     resizable = resizable || self.options.panelTemplate && self.options.panelTemplate.resizable;
                 }
                 resizable = resizable ? true : false;
+
+                //retrieve the flexible option: a value defined individually on panel level overwrites any panel template value
+                var flexible = panel && panel.flexible;
+                if (!(panel && granit.IsBooleanType(panel.flexible))) {
+                    flexible = flexible || self.options.panelTemplate && self.options.panelTemplate.flexible;
+                }
+                flexible = flexible ? true : false;
 
                 //retrieve the minSize option: a value defined individually on panel level overwrites any panel template value
                 var minSize = (panel && panel.minSize) || self.options.panelTemplate && self.options.panelTemplate.minSize;
@@ -262,24 +285,37 @@ $(function () {
                 size = granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, null, self.IdString + " -- Panel size (size)");
                 size = new granit.Size(size);
 
+                var reconvert = false;
+                if (size.Number.Unit.match(reconvertRegex)) {
+                    reconvert = true;
+                }
+
                 var panelWrapperClass = "granit_panel_wrapper";
                 //apply splitter
                 wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelWrapperClass + "' style='" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";'></div>");
 
-                wrappedElement.parent().data().__granitData__ = { index: index, Size: size, resizable: resizable, minSize: minSize, maxSize: maxSize };
+                wrappedElement.parent().data().__granitData__ = { index: index, Size: size, resizable: resizable, minSize: minSize, maxSize: maxSize, reconvert: reconvert };
                 self.panels.push(wrappedElement.parent());
 
                 self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
 
-                var value = size.getSize();
+                //flex default values
+                var value = size.getSize(),
+                    basis = "0px",
+                    grow = 0,
+                    shrink = 1;
 
                 if (size.Number.Unit) {
-                    wrappedElement.parent().css("flex-basis", value);   //set size
+                    basis = value;
+                    shrink = flexible ? 1 : 0;
                 }
                 else {
                     //autoSized
-                    wrappedElement.parent().css("flex", value + " " + value + " 0px");    //set fraction
+                    grow = value;
+                    shrink = value;
                 }
+
+                wrappedElement.parent().css("flex", grow + " " + shrink + " " + basis);    //set flex size
             });
 
             //we attach drag & drop support
@@ -472,16 +508,15 @@ $(function () {
                         unit = data.Size.Number.Unit;
 
                     if (data.resized) {
-                        if (unit
-                            && (unit === "em" || unit === "rem" || unit === "%")
-                        ) {
+                        if (data.reconvert) {
                             var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
                             data.Size = result;
                             size = result.getSize();
                         } else {
-                            if (!unit) {
+                            if (!unit && data.Size.Number.Value !== 1) {
                                 //autoSized
                                 item.css("flex", "1 1 0px");
+                                data.Size.Number.Value = 1;
                             }
                             size += "px";
                         }

@@ -81,7 +81,7 @@ body {
     height: 100%;
     width: 100%;
     overflow: hidden !important;
-    flex: 0 1 auto;                  /* the proper size will be set at runtime */
+    flex: 0 1 auto;                  /* default flex setting: the proper size will be set at runtime */
     position: relative !important;
     margin: 0 !important;
     padding: 0 !important;

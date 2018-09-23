@@ -23,7 +23,7 @@
                 panel: [
                     { size: 1, minSize: "1%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true },
                     { class: "panelLayout4", resizable: true },
-                    { size: "20.5%", class: "panelLayout5", resizable: true },
+                    { size: "20.5%", class: "panelLayout5", resizable: false, flexible: false },
                     { size: 1.25, class: "panelLayout6", resizable: true }
                 ],
                 splitter: [
@@ -37,16 +37,15 @@
                 splitterTemplate: { width: "2.5em", class: "splitter_Layout1" },
                 //separatorTemplate: { width: "2.2em", class: "splitter_Layout2" },
                 //direction: "horizontal",
-                direction: "vertical",
-                _throttle: "none"
+                direction: "vertical"
             });
 
             $("#splitterInner").splitter({
                 panel: [
-                    { size: "5.5em", class: "panelLayout1 panelLayout7", resizable: true },
+                    { size: "15.5%", class: "panelLayout1 panelLayout7", resizable: true, flexible: true },
                     { size: "40.76mm", class: "panelLayout2 panelLayout7", resizable: true },
                     { maxSize: "20vmin", resizable: true, class: "panelLayout7" },
-                    { size: "5.4em", minSize: "5px", class: "panelLayout3 panelLayout5" },
+                    { size: "5.4rem", minSize: "5px", class: "panelLayout3 panelLayout5" },
                     { size: 3, resizable: true }
                 ],
                 splitter: [
@@ -59,7 +58,7 @@
                 panelTemplate: {
                     minSize: "5px", resizable: true
                 },
-                //_throttle: "raf"
+                reconvert: "em"
             });
 
             $("#splitterInner2").splitter({
