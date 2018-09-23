@@ -63,14 +63,14 @@ var granit = (function (gt) {
     var Size = function (number, offset, pixel) {
         var self = this;
 
-        self.autoSized = number === "auto" ? true : false;
-
         if (!number || number === "auto") {
             number = new NumberUnit();
         }
         self.Number = number;
         self.Offset = offset;
         self.Pixel = pixel || 0;
+
+        self.autoSized = !number.Unit ? true : false;
 
         self.getSize = function () {
             if (!self.Offset || self.Offset.Value === 0) {
@@ -107,7 +107,7 @@ var granit = (function (gt) {
         var floatRegex = /[+-]?\d+(\.\d+)?/;
         var regex = new RegExp("^(" + floatRegex.source + ")" + "(" + unitFormat.source + ")?$");     //float number with optional measure
 
-        var value, unit = '';
+        var value, unit;
 
         if (jQuery.type(size) === "string") {
             var match = size.match(regex);
@@ -118,10 +118,6 @@ var granit = (function (gt) {
 
             size = match[1];
             unit = match[3];
-        }
-
-        if (!defaultUnit && !unit) {
-            output("value (" + size + ") format is invalid -- unit expected (float number with measure unit)", errorObject);
         }
 
         value = parseFloat(size);
@@ -135,32 +131,20 @@ var granit = (function (gt) {
             }
         }
 
-        return new NumberUnit(math(value), unit || defaultUnit, 2);
+        return new NumberUnit(math(value), unit || defaultUnit);
     };
-
-    /*
-     * Author(s):   Thomas Stein
-     * Description: eliminates duplicates from the list
-     */
-    var uniqueArray = function (list) {
-        var result = [];
-        $.each(list, function (i, e) {
-            if ($.inArray(e, result) == -1) result.push(e);
-        });
-        return result;
-    }
 
     /*
      * Author(s):   Thomas Stein
      * Description: helper methods for searching and comparing in objects and arrays
      */
-    var listCompare = {
+    var arrayOperations = {
         /*
          * Author(s):   Thomas Stein
          * Description: checks if all items in the array can be found in haystack.
          *              Additionally, if all = true, checks if all items in the haystack are represented in the array.
          */
-        arrayToArray: function (arr, haystack, all) {
+        compareArrayToArray: function (arr, haystack, all) {
             if (all && arr.length !== haystack.length) {
                 return false;                       //same amount of items
             }
@@ -173,9 +157,9 @@ var granit = (function (gt) {
         /*
          * Author(s):   Thomas Stein
          * Description: checks if all property names in the object can be found in haystack.
-         *              Additionally, if all = true, checks if all items in the haystack are represented in the propert-name list of the object.
+         *              Additionally, if all = true, checks if all items in the haystack are represented in the property-name list of the object.
          */
-        objectToArray: function (object, haystack, all) {
+        compareObjectToArray: function (object, haystack, all) {
             if (!object || !haystack) {
                 return undefined;
             }
@@ -189,88 +173,19 @@ var granit = (function (gt) {
                 }
                 return true;
             });
-        }
-    }
-
-    /*
-     * Author(s):   Thomas Stein
-     * Description: creates a helper list of NumberUnit objects used in order to sum up items with equal units.
-     *              as a final goal this very specific array joins values together (toString) into a string to be used in css-calc statements
-     */
-    var numberUnitArray = function() {
-        var arr = [];
-        //arr.push.apply(arr, arguments); // currently no initialization arguments supported
+        },
 
         /*
-         * if the new item matches an existing item by unit, both the items Numbers are joined together.
-         * otherwise the new item simply is pushed into the list.
+         * Author(s):   Thomas Stein
+         * Description: eliminates duplicates from the list
          */
-        arr.add = function (item, operation) {
-            var number, unit;
-            operation = operation || "+";
-
-            if (item instanceof NumberUnit) {
-                number = item.Value;
-                unit = item.Unit;
-            } else {
-                //the item is considered to be a css length value string ("10px", "5rem", etc.) and must be converted into a NumberUnit object 
-                number = parseFloat(item);
-                unit = item.replace(number, "");
-            }
-            if (operation === "-") {
-                number *= -1.0;
-            }
-            item = new NumberUnit(number, unit);
-
-            var itemNumber = parseFloat(item.Value);
-            var element;
-            arr.forEach(function (el) {
-                if (item.Unit === el.Unit) {
-                    element = el;
-                    return true;
-                }                
+        uniqueArray: function (list) {
+            var result = [];
+            $.each(list, function (i, e) {
+                if ($.inArray(e, result) == -1) result.push(e);
             });
-
-            if (element) {
-                var elementNumber = parseFloat(element.Value);
-                elementNumber = elementNumber + itemNumber;
-                element.Value = elementNumber;
-            }
-            else {
-                this.push(item);                
-            }
-
-            return arr;
+            return result;
         }
-
-        /*
-         * use to insert list of items
-         */
-        arr.addAll = function (itemArray, operation) {
-            if (!(Array.isArray(itemArray))) {
-                output("itemArray is no array", "numberUnitArray.addAll");
-            }
-            itemArray.forEach(function (item) {
-                arr.add(item, operation);
-            });
-
-            return arr;
-        }
-
-        /*
-         * join the items together with the respective operation as a string to be used in a css-calc statement.
-         * For example: " - 5px + 10% - 80em".
-         */
-        arr.toString = function () {
-            var result = arr.reduce(function (total, item) {
-                return total + " + " + item.Value + item.Unit;
-            }, "");
-            return result.substr(3);
-        }
-
-        //... eventually define more methods for this special array type
-
-        return arr;
     }
 
     /*
@@ -382,11 +297,13 @@ var granit = (function (gt) {
          * Converts some css Property values into pixel
          * Supported properties are min-width, min-height, max-width, max-height
          */
-        this.convertToPixel = function (target, cssPropertyName, destroy) {
+        this.convertToPixel = function (target, cssPropertyName, value, destroy) {
             self.reset();
 
-            //get CSS value
-            var value = getComputedStyle(target, null).getPropertyValue(cssPropertyName);
+            if (!value) {
+                //get CSS value
+                var value = getComputedStyle(target, null).getPropertyValue(cssPropertyName);
+            }
 
             //if the value is a string ("none") we simply return it
             var result = parseFloat(value);
@@ -411,8 +328,17 @@ var granit = (function (gt) {
         };
 
         //convert any pixel length to target unit
-        this.convertFromPixel = function (size, targetUnit, cssPropertyName, destroy) {
+        this.convertFromPixel = function (size, targetUnit, cssPropertyName, modus, destroy) {
             self.reset();
+
+            modus = modus || "Offset";
+            if (modus !== "Offset" && modus !== "Precise") {
+                output("Invalid parameter 'modus': expected values are 'Offset', 'Precise'.", "granit.PixelConverter.convertFromPixel");
+            }
+            var isPreciseMode = false;
+            if (modus === "Precise") {
+                isPreciseMode = true;
+            }
 
             var result, pixelBase = 1.0,
                 precision = 1;
@@ -427,6 +353,8 @@ var granit = (function (gt) {
                 targetUnit === "vmin" || targetUnit === "vmax"
             ) {                
                 var total;
+                precision = 2;            //support 1 decimal places for relative sizes
+
                 if (targetUnit === "%") {
                     if (cssPropertyName === "width") {
                         total = parentSize().width();
@@ -450,7 +378,6 @@ var granit = (function (gt) {
                 }
 
                 pixelBase = total / 100.0;
-                precision = 2;            //support 1 decimal places for relative sizes
             }
             else if (
                 //font-related lenghts
@@ -480,10 +407,6 @@ var granit = (function (gt) {
 
                     pixelBase = $(testElement).width();
                 }
-
-                //var test = (size / pixelBase) + targetUnit;
-                //console.log(test);
-                //return test;
             }
             else if (
                 //static lenghts
@@ -514,16 +437,17 @@ var granit = (function (gt) {
                 }
 
                 pixelBase /= conversionFactor;
-
-                //var test = (size / pixelBase) + targetUnit;
-                //console.log(test);
-                //return test;
             }
 
             if (destroy) {
                 self.destroy();
             }
 
+            if (isPreciseMode) {
+                return (size / pixelBase) + targetUnit;
+            }
+
+            //calculate pixel offset
             var precisionFactor = Math.pow(10, precision);      //support precision decimal places for static sizes
 
             var rest = (size * precisionFactor) % pixelBase;
@@ -578,112 +502,13 @@ var granit = (function (gt) {
         }
     };
 
-    /*
-     * Author(s):   Thomas Stein
-     * Description: controller for debounce and throttle methods
-     */
-    var EventTimeController = function (modus, context, threshold) {
-        var self = this;
-
-        modus = modus || "raf";
-        if (modus !== "raf" && modus !== "throttle" && modus !== "debounce") {
-            output("the modus parameter value '" + modus + "' is invalid. Allowd values are 'raf', 'throttle', 'debounce'", "granit.eventTimeController");
-        }
-        context = context || this;
-        threshold = threshold || 20;
-
-        var last, timeout, raf;
-
-        this.process = function (fn) {
-
-            if (modus === "raf") {
-                requestFrame(fn);
-            }
-            if (modus === "throttle") {
-                throttle(fn);
-            }
-            if (modus === "debounce") {
-                debounce(fn);
-            }
-        }
-
-        this.cancel = function () {
-            if (modus === "raf") {
-                cancelFrame();
-            }
-            if (modus === "throttle") {
-                cancelThrottle();
-            }
-            if (modus === "debounce") {
-                cancelDebounce();
-            }
-        }
-
-        var debounce = function (func) {
-            var args = arguments;
-            var later = function () {
-                timeout = null;
-                context && func.apply(context, args) || func(args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, threshold);
-        };
-
-        var cancelDebounce = function () {
-            clearTimeout(timeout);
-        }
-
-        var throttle = function (fn) {
-            var now = + new Date, args = arguments;
-
-            if (last && now < last + threshold) {
-                // Hold on to it
-                clearTimeout(timeout);
-                timeout = setTimeout(function () {
-                    last = now;
-                    context && fn.apply(context, args) || fn(args);
-                }, threshold);
-            } else {
-                last = now;
-                context && fn.apply(context, args) || fn(args);
-            }
-        };
-
-        var cancelThrottle = function () {
-            clearTimeout(timeout);
-            last = undefined;
-        }
-
-        var requestFrame = function (fn) {
-            var frame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame;
-            if (frame) {
-                raf = frame(fn.bind(context));
-            } else {
-                throttle(fn);
-            }
-        };
-
-        var cancelFrame = function () {
-            var cancel = window.cancelAnimationFrame || window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame;
-            if (cancel) {
-                cancel(raf);
-                raf = undefined;
-            } else {
-                cancelThrottle();
-            }
-        };
-    };
-
     //publish
     gt.extractFloatUnit = extractFloatUnit;
     gt.output = output;
-    gt.uniqueArray = uniqueArray;
-    gt.listCompare = listCompare;
-    gt.NumberUnitArray = numberUnitArray;
+    gt.arrayOperations = arrayOperations;
     gt.NumberUnit = NumberUnit;
     gt.Size = Size;
     gt.prefixSizeName = prefixSizeName;
-    gt.EventTimeController = EventTimeController;
     gt.DeviceHelper = DeviceHelper;
     gt.PixelConverter = PixelConverter;
     gt.IsBooleanType = isBooleanType;
