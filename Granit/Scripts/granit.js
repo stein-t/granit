@@ -135,6 +135,9 @@ $(function () {
             this.panels = [];               //reference to the panels (or final panel wrappers)
             this.splitterList = [];         //reference to the splitters
 
+            //var splitterOffset = granit.NumberUnitArray();          //the total width of splitters under consideration different units 
+            //var panelMinSizeTotal = granit.NumberUnitArray();       //the total min sizes of the panels under consideration of different units 
+
             /*
              * iterate the children in order to ...
              *      ... retrieve and validate the associated panel and splitter options
@@ -161,7 +164,12 @@ $(function () {
 
                 //retrieve the minSize option: a value defined individually on panel level overwrites any panel template value
                 var minSize = (panel && panel.minSize) || self.options.panelTemplate && self.options.panelTemplate.minSize;
-                minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit(0, "px");
+                minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit("none");
+
+                ////calculate the total min sizes
+                //if (minSize.Value !== "none" && minSize.Value > 0) {
+                //    panelMinSizeTotal.add(minSize, "-");
+                //}
 
                 //retrieve the maxSize option: a value defined individually on panel level overwrites any panel template value
                 var maxSize = (panel && panel.maxSize) || self.options.panelTemplate && self.options.panelTemplate.maxSize;
@@ -219,6 +227,11 @@ $(function () {
                     }
                     splitterElement.data().__granitData__ = { disabled: splitter && splitter.display === "separator" ? true : false };
                     self.splitterList[index] = splitterElement;
+
+                    ////calculate the current total splitter offset
+                    //if (splitterWidth.Value > 0) {
+                    //    splitterOffset.add(splitterWidth, "-");
+                    //}
                 }
 
                 var wrappedElement = $(element);
@@ -266,9 +279,9 @@ $(function () {
 
                 var panelWrapperClass = "granit_panel_wrapper";
                 //apply splitter
-                wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelWrapperClass + "' style='" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";" + granit.prefixSizeName(self.sizePropertyName, "max") + ":" + maxSize.getSize() + ";'></div>");
+                wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelWrapperClass + "' style='" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";'></div>");
 
-                wrappedElement.parent().data().__granitData__ = { index: index, Size: size, resizable: resizable };
+                wrappedElement.parent().data().__granitData__ = { index: index, Size: size, resizable: resizable, minSize: minSize, maxSize: maxSize };
                 self.panels.push(wrappedElement.parent());
 
                 self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
@@ -280,7 +293,7 @@ $(function () {
                 }
                 else {
                     //autoSized
-                    wrappedElement.parent().css("flex-grow", value);    //set fraction
+                    wrappedElement.parent().css("flex", value + " " + value + " 0px");    //set fraction
                 }
             });
 
@@ -300,6 +313,45 @@ $(function () {
                 }
                 this.MousemoveEventController = new granit.EventTimeController(throttle.modus, this, throttle.threshold);
             }
+
+            //var pc = new granit.PixelConverter(this.element[0]),
+            //    maxSizeName = granit.prefixSizeName(this.sizePropertyName, "max"),      //max-width, max-height
+            //    totalMaxSize = "100%" + panelMinSizeTotal.addAll(splitterOffset).toString();
+
+            //this.panels.forEach(function (item) {
+            //    var data = item.data().__granitData__,
+            //        maxSize = data.maxSize.getSize();
+
+            //    if (data.Size.Number.Unit) {    //if not autoSized                    
+            //        var calcMaxSize = totalMaxSize + " + " + (data.minSize.Value * -1) + data.minSize.Unit;       //subtract current min-size
+            //        calcMaxSizeTerm = "calc(" + calcMaxSize + ")";
+
+            //        if (maxSize === "none") {
+            //            maxSize = calcMaxSizeTerm;
+            //        } else {                    
+            //            /********************************************************************************
+            //             * Actually the css maxSize must be set as the minimum of the calculated max Size and the custom max Size
+            //             * css max() & min() functions are beeing announced for CSS Level 4
+            //             */
+            //            //maxSize = "min(" + maxSize + ", " + calcMaxSize + ")";
+            //            //item.css(maxSizeName, max);
+            //            /*********************************************************************************/
+
+            //            //we calculate the minimum once at widget creation
+            //            var max1 = Math.floor(pc.convertToPixel(item[0], maxSizeName, maxSize) + 1),
+            //                max2 = Math.floor(pc.convertToPixel(item[0], maxSizeName, calcMaxSizeTerm) + 1);
+            //            if (max1 > max2) {
+            //                maxSize = calcMaxSizeTerm;
+            //            } else {
+            //                /* we enable the panel to shrink, if the custom max size is set */
+            //                wrappedElement.parent().css("flex-shrink", 1);
+            //            }
+            //        }
+            //    }
+            //    item.css(maxSizeName, maxSize);
+            //});
+
+            //pc.destroy();
 
             //we attach drag & drop support
             if (
@@ -496,17 +548,18 @@ $(function () {
                         ) {
                             var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
                             data.Size = result;
+                            size = result.getSize();
 
-                            var test = result.getSize();
-                            console.log(test);
-                            item.css("flex-basis", test);
+                            //var test = result.getSize();
+                            //console.log(test);
                         } else {
                             if (!unit) {
                                 //autoSized
-                                item.css("flex", "1 1 " + size + "px");
+                                item.css("flex", "1 1 0px");
                             }
-                            item.css("flex-basis", size + "px");
+                            size += "px";
                         }
+                        item.css("flex-basis", size);
                     }
                 });
 

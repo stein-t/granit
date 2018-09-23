@@ -17,9 +17,9 @@
  */
 html {
     /* IE has problems with em calculation: set the general html font-size to a natural pixel number. See issues #2 and #3 */
-    font-size: 10px;
+    /*font-size: 10px;*/
     /* for all other browsers: set the general font-size to a value that exactly converts to a natural pixel number. See issues  #2 and #3 */
-    /*font-size: 62.5%;*/
+    font-size: 62.5%;
     /*font-size: 56.25%;*/
     /*font-size: 0.125in;*/
     /*font-size: 0.625em;*/
@@ -81,7 +81,7 @@ body {
     height: 100%;
     width: 100%;
     overflow: hidden !important;
-    flex: 0 1 0px;                  /* we accept shrinking, the proper size will be set in runtime */
+    flex: 0 1 auto;                  /* the proper size will be set at runtime */
     position: relative !important;
     margin: 0 !important;
     padding: 0 !important;

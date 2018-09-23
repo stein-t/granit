@@ -173,6 +173,87 @@ var granit = (function (gt) {
         }
     }
 
+    ///*
+    // * Author(s):   Thomas Stein
+    // * Description: creates a helper list of NumberUnit objects used in order to sum up items with equal units.
+    // *              as a final goal this very specific array joins values together (toString) into a string to be used in css-calc statements
+    // */
+    //var numberUnitArray = function () {
+    //    var arr = [];
+    //    //arr.push.apply(arr, arguments); // currently no initialization arguments supported
+
+    //    /*
+    //     * if the new item matches an existing item by unit, both the items Numbers are joined together.
+    //     * otherwise the new item simply is pushed into the list.
+    //     */
+    //    arr.add = function (item, operation) {
+    //        var number, unit;
+    //        operation = operation || "+";
+
+    //        if (item instanceof NumberUnit) {
+    //            number = item.Value;
+    //            unit = item.Unit;
+    //        } else {
+    //            //the item is considered to be a css length value string ("10px", "5rem", etc.) and must be converted into a NumberUnit object 
+    //            number = parseFloat(item);
+    //            unit = item.replace(number, "");
+    //        }
+    //        if (operation === "-") {
+    //            number *= -1.0;
+    //        }
+    //        item = new NumberUnit(number, unit);
+
+    //        var itemNumber = parseFloat(item.Value);
+    //        var element;
+    //        arr.forEach(function (el) {
+    //            if (item.Unit === el.Unit) {
+    //                element = el;
+    //                return true;
+    //            }
+    //        });
+
+    //        if (element) {
+    //            var elementNumber = parseFloat(element.Value);
+    //            elementNumber = elementNumber + itemNumber;
+    //            element.Value = elementNumber;
+    //        }
+    //        else {
+    //            this.push(item);
+    //        }
+
+    //        return arr;
+    //    }
+
+    //    /*
+    //     * use to insert list of items
+    //     */
+    //    arr.addAll = function (itemArray, operation) {
+    //        if (!(Array.isArray(itemArray))) {
+    //            output("itemArray is no array", "numberUnitArray.addAll");
+    //        }
+    //        itemArray.forEach(function (item) {
+    //            arr.add(item, operation);
+    //        });
+
+    //        return arr;
+    //    }
+
+    //    /*
+    //     * join the items together with the respective operation as a string to be used in a css-calc statement.
+    //     * For example: " - 5px + 10% - 80em".
+    //     */
+    //    arr.toString = function () {
+    //        var result = arr.reduce(function (total, item) {
+    //            return total + " + " + item.Value + item.Unit;
+    //        }, "");
+    //        return result;
+    //    }
+
+    //    //... eventually define more methods for this special array type
+
+    //    return arr;
+    //}
+
     /*
      * Author(s):   Thomas Stein
      * Description: prefixes the sizename "width" or "height" accordingly to get "min-width", "min-height", "max-width," "max-height", "offsetWidth", "offsetHeight"
@@ -282,11 +363,13 @@ var granit = (function (gt) {
          * Converts some css Property values into pixel
          * Supported properties are min-width, min-height, max-width, max-height
          */
-        this.convertToPixel = function (target, cssPropertyName, destroy) {
+        this.convertToPixel = function (target, cssPropertyName, value, destroy) {
             self.reset();
 
-            //get CSS value
-            var value = getComputedStyle(target, null).getPropertyValue(cssPropertyName);
+            if (!value) {
+                //get CSS value
+                var value = getComputedStyle(target, null).getPropertyValue(cssPropertyName);
+            }
 
             //if the value is a string ("none") we simply return it
             var result = parseFloat(value);
@@ -311,8 +394,17 @@ var granit = (function (gt) {
         };
 
         //convert any pixel length to target unit
-        this.convertFromPixel = function (size, targetUnit, cssPropertyName, destroy) {
+        this.convertFromPixel = function (size, targetUnit, cssPropertyName, modus, destroy) {
             self.reset();
+
+            modus = modus || "Offset";
+            if (modus !== "Offset" && modus !== "Precise") {
+                output("Invalid parameter 'modus': expected values are 'Offset', 'Precise'.", "granit.PixelConverter.convertFromPixel");
+            }
+            var isPreciseMode = false;
+            if (modus === "Precise") {
+                isPreciseMode = true;
+            }
 
             var result, pixelBase = 1.0,
                 precision = 1;
@@ -327,6 +419,8 @@ var granit = (function (gt) {
                 targetUnit === "vmin" || targetUnit === "vmax"
             ) {                
                 var total;
+                precision = 2;            //support 1 decimal places for relative sizes
+
                 if (targetUnit === "%") {
                     if (cssPropertyName === "width") {
                         total = parentSize().width();
@@ -350,7 +444,6 @@ var granit = (function (gt) {
                 }
 
                 pixelBase = total / 100.0;
-                precision = 2;            //support 1 decimal places for relative sizes
             }
             else if (
                 //font-related lenghts
@@ -380,10 +473,6 @@ var granit = (function (gt) {
 
                     pixelBase = $(testElement).width();
                 }
-
-                //var test = (size / pixelBase) + targetUnit;
-                //console.log(test);
-                //return test;
             }
             else if (
                 //static lenghts
@@ -414,16 +503,17 @@ var granit = (function (gt) {
                 }
 
                 pixelBase /= conversionFactor;
-
-                //var test = (size / pixelBase) + targetUnit;
-                //console.log(test);
-                //return test;
             }
 
             if (destroy) {
                 self.destroy();
             }
 
+            if (isPreciseMode) {
+                return (size / pixelBase) + targetUnit;
+            }
+
+            //calculate pixel offset
             var precisionFactor = Math.pow(10, precision);      //support precision decimal places for static sizes
 
             var rest = (size * precisionFactor) % pixelBase;
@@ -579,6 +669,7 @@ var granit = (function (gt) {
     gt.output = output;
     gt.arrayOperations = arrayOperations;
     gt.NumberUnit = NumberUnit;
+    //gt.NumberUnitArray = numberUnitArray;
     gt.Size = Size;
     gt.prefixSizeName = prefixSizeName;
     gt.EventTimeController = EventTimeController;
