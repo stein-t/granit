@@ -141,7 +141,7 @@ $(function () {
                 "div, article, aside, details, figcaption, figure, footer, header, main, mark, nav, section, summary, time"
             );
 
-            if (children.length != this.element.children("*").length) {
+            if (children.length !== this.element.children("*").length) {
                 granit.output("not all panels are divs or semantic elements!", this.IdString + " -- self.children");
             }
 
@@ -328,7 +328,7 @@ $(function () {
                     //attach mousedown if the associated splitter is enabled
                     if (!item.data().__granitData__.disabled) {
                         self._on(item, {
-                            "mousedown": "_splitterMouseDown",
+                            "mousedown": "_splitterMouseDown"
                         });
                     }
                 });
@@ -445,7 +445,7 @@ $(function () {
                 "mousemove": "_splitterMouseMove"
             });
             this._on($("html"), {
-                "mouseup": "_splitterMouseUp",
+                "mouseup": "_splitterMouseUp"
             });
         },
 
@@ -590,7 +590,7 @@ $(function () {
                         currentSize: currentSize,
                         limitSize: limitSize,
                         offset: Math.abs(currentSize - newSize)
-                    }
+                    };
                 }
                 return null;
             }
@@ -603,7 +603,7 @@ $(function () {
                     }
                 }
                 if (result1) {
-                    for (var pointer = this.movedSplitter.prev().data().__granitData__.index + 1; pointer < this.panels.length; pointer++) {
+                    for (pointer = this.movedSplitter.prev().data().__granitData__.index + 1; pointer < this.panels.length; pointer++) {
                         result2 = test("shrink", this.panels[pointer]);
                         if (result2) {
                             break;
@@ -613,14 +613,14 @@ $(function () {
             }
 
             if (distance < 0.0) {
-                for (var pointer = this.movedSplitter.next().data().__granitData__.index; pointer < this.panels.length; pointer++) {
+                for (pointer = this.movedSplitter.next().data().__granitData__.index; pointer < this.panels.length; pointer++) {
                     result1 = test("grow", this.panels[pointer]);
                     if (result1) {
                         break;
                     }
                 }
                 if (result1) {
-                    for (var pointer = this.movedSplitter.next().data().__granitData__.index - 1; pointer >= 0; pointer--) {
+                    for (pointer = this.movedSplitter.next().data().__granitData__.index - 1; pointer >= 0; pointer--) {
                         result2 = test("shrink", this.panels[pointer]);
                         if (result2) {
                             break;
