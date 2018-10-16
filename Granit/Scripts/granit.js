@@ -23,7 +23,7 @@ $(function () {
             },
             splitterTemplate: { width: "2em", length: "100%", class: "granit_splitter_default" },
             separatorTemplate: { width: "1em", length: "100%", class: "granit_separator_default" },
-            reconvert: "all"       //reconvert units: 'all', 'none' or specify explicitly
+            reconvert: "default"       //reconvert units: 'all', 'none' or specify explicitly
         },
         /*
          * Author(s):   Thomas Stein
@@ -96,24 +96,28 @@ $(function () {
 
             //validate options.direction
             if (self.options.direction !== "vertical" && self.options.direction !== "horizontal") {
-                granit.output("value (" + self.options.direction + ") is invalid -- expected values are 'vertical', 'horizontal'", this.IdString + " -- self.options.direction");
+                granit.output("value (" + self.options.direction + ") is invalid -- expected values are 'vertical', 'horizontal'", this.IdString + " -- self.options.direction", 'Warning');
             }
 
             //validate options.overflow
             if (self.options.overflow !== "auto" && self.options.overflow !== "hidden" && self.options.overflow !== "scroll") {
-                granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow");
+                granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow", 'Warning');
             }
 
-            var reconvertibleUnits = ["%", "em"];    //array of all possible reconvertible units %, em, rem        
+            var reconvertibleUnits = ["%", "em", "rem", "cm", "mm", "in", "pt", "pc"];    //array of all possible reconvertible units       
             if (self.options.reconvert === "all") {
                 self.options.reconvert = reconvertibleUnits.join("|");
+            }
+            if (self.options.reconvert === "default") {
+                var def = ["%", "em"];                  //these is the default minimum set of reconvertible units
+                self.options.reconvert = def.join("|");
             }
             else if (self.options.reconvert === "none") {
                 self.options.reconvert === "";
             }
             else {
                 if (!granit.arrayOperations.compareArrayToArray(self.options.reconvert.split("|"), reconvertibleUnits)) {
-                    granit.output("value (" + self.options.reconvert + ") is invalid -- expected values are 'all', 'none' or explicit convertible units '%' or 'em' or '%|em'", this.IdString + " -- self.options.reconvert");
+                    granit.output("value (" + self.options.reconvert + ") is invalid -- expected values are 'all', 'default', 'none' or some of the following ['%', 'em', 'cm', 'mm', 'in', 'pt', 'pc']", this.IdString + " -- self.options.reconvert", 'Warning');
                 }
             }
             var reconvertRegex = new RegExp(self.options.reconvert);
@@ -142,7 +146,7 @@ $(function () {
             );
 
             if (children.length !== this.element.children("*").length) {
-                granit.output("not all panels are divs or semantic elements!", this.IdString + " -- self.children");
+                granit.output("not all panels are divs or semantic elements!", this.IdString + " -- self.children", 'Warning');
             }
 
             //global
@@ -169,14 +173,14 @@ $(function () {
                 //retrieve the resizable option: a value defined individually on panel level overwrites any panel template value
                 var resizable = panel && panel.resizable;
                 if (!(panel && granit.IsBooleanType(panel.resizable))) {
-                    resizable = resizable || self.options.panelTemplate && self.options.panelTemplate.resizable;
+                    resizable = self.options.panelTemplate && self.options.panelTemplate.resizable;
                 }
                 resizable = resizable ? true : false;
 
                 //retrieve the flexible option: a value defined individually on panel level overwrites any panel template value
                 var flexible = panel && panel.flexible;
                 if (!(panel && granit.IsBooleanType(panel.flexible))) {
-                    flexible = flexible || self.options.panelTemplate && self.options.panelTemplate.flexible;
+                    flexible = self.options.panelTemplate && self.options.panelTemplate.flexible;
                 }
                 flexible = flexible ? true : false;
 
@@ -232,10 +236,10 @@ $(function () {
 
                     //define the splitter element
                     if (self.options.direction === "vertical") {
-                        splitterElement.css("width", splitterWidth.getSize());
+                        splitterElement.css("width", splitterWidth.getValue());
                         splitterElement.css("height", splitterLength);
                     } else {
-                        splitterElement.css("height", splitterWidth.getSize());
+                        splitterElement.css("height", splitterWidth.getValue());
                         splitterElement.css("width", splitterLength);
                     }
                     splitterElement.data().__granitData__ = { disabled: splitter && splitter.display === "separator" ? true : false };
@@ -282,17 +286,17 @@ $(function () {
                 //retrieve the size option: a value defined individually on panel level overwrites any panel template value
                 var size = (panel && panel.size) || self.options.panelTemplate && self.options.panelTemplate.size || 1;
                 if (size === "auto") { size = 1; }
-                size = granit.extractFloatUnit(size, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, null, self.IdString + " -- Panel size (size)");
+                size = granit.extractFloatUnit(size, "Q+", /%|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, null, self.IdString + " -- Panel size (size)");
                 size = new granit.Size(size);
 
                 var reconvert = false;
-                if (size.Number.Unit.match(reconvertRegex)) {
+                if (size.TargetUnit.match(reconvertRegex)) {
                     reconvert = true;
                 }
 
                 var panelWrapperClass = "granit_panel_wrapper";
                 //apply splitter
-                wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelWrapperClass + "' style='" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getSize() + ";'></div>");
+                wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelWrapperClass + "' style='" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getValue() + ";'></div>");
 
                 wrappedElement.parent().data().__granitData__ = { index: index, Size: size, resizable: resizable, minSize: minSize, maxSize: maxSize, reconvert: reconvert };
                 self.panels.push(wrappedElement.parent());
@@ -300,12 +304,12 @@ $(function () {
                 self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
 
                 //flex default values
-                var value = size.getSize(),
+                var value = size.getValue(),
                     basis = "0px",
                     grow = 0,
                     shrink = 1;
 
-                if (size.Number.Unit) {
+                if (size.TargetUnit) {
                     basis = value;
                     shrink = flexible ? 1 : 0;
                 }
@@ -421,7 +425,7 @@ $(function () {
                 item.addClass("granit_panel_static");
 
                 if (itemData.resizable) {
-                    if (!itemData.Size.Pixel || Math.abs(itemData.Size.Pixel - size) >= 0.01) {
+                    if (!itemData.Size.Pixel || Math.abs(itemData.Size.Pixel - size) >= granit.Threshold) {
                         item.css(self.sizePropertyName, size + "px");
 
                         itemData.Size.Pixel = size;
@@ -497,30 +501,24 @@ $(function () {
             if (self.panels.some(function (item) {
                 return item.data().__granitData__.resized;
             })) {
-                var pc = new granit.PixelConverter(self.element[0]),
-                    offsetSizeName = granit.prefixSizeName(self.sizePropertyName, "offset", true);      //offsetWidth, offsetHeight
+                var pc = new granit.PixelConverter(self.element[0]);      //offsetWidth, offsetHeight
 
                 // iterating static panels for re-converting
                 self.panels.forEach(function (item, index) {
                     var data = item.data().__granitData__;
 
-                    var size = data.Size.Pixel,                             //current size in pixels
-                        unit = data.Size.Number.Unit;
-
                     if (data.resized) {
                         if (data.reconvert) {
-                            var result = pc.convertFromPixel(size, unit, self.sizePropertyName);
-                            data.Size = result;
-                            size = result.getSize();
+                            pc.convertFromPixel(data.Size, self.sizePropertyName);
+                            item.css("flex-basis", data.Size.getValue());
                         } else {
-                            if (!unit && data.Size.Number.Value !== 1) {
+                            if (!data.Size.TargetUnit && data.Size.Number.Value !== 1) {
                                 //autoSized
                                 item.css("flex", "1 1 0px");
                                 data.Size.Number.Value = 1;
                             }
-                            size += "px";
+                            item.css("flex-basis", data.Size.Pixel + "px");
                         }
-                        item.css("flex-basis", size);
                     }
                 });
 
