@@ -6,6 +6,9 @@
 var granit = (function (gt) {
     var self = this;
 
+    //the threshold that is used to calculate sufficient accurate lengths
+    gt.Threshold = 0.01;
+
     /*
      * Author(s):   Thomas Stein
      * Description: Manages ouput errors (as exceptions) and warnings (as console output). Optionally alerts the output.
@@ -44,40 +47,56 @@ var granit = (function (gt) {
     var NumberUnit = function (value, unit) {
         var self = this;
 
-        value = value || 0;
-        self.Value = value;
-        self.Unit = unit || "";
+        self.Value;
+        self.Unit;
 
-        self.getSize = function () {
-            if (this.Value.startsWith && this.Value.startsWith("calc")) {
-                return this.Value;
+        self.getValue = function () {
+            if (self.Unit) {
+                return self.Value + self.Unit;
             }
-            return self.Value + self.Unit;
+            return self.Value;
         }
+
+        self.setValue = function (value, unit) {
+            self.Value = value || 0;
+            self.Unit = unit || "";
+        }
+
+        self.setValue(value, unit);
     };
 
     /*
      * Author(s):   Thomas Stein
-     * Description: NumberUnit wrapper with additional properties in order to express width and height lenghts
+     * Description: NumberUnit wrapper with additional properties in order to express the length as Number, Offset, Pixel, Precise
      */
-    var Size = function (number, offset, pixel) {
+    var Size = function (number) {
         var self = this;
 
-        if (!number || number === "auto") {
-            number = new NumberUnit();
-        }
-        self.Number = number;
-        self.Offset = offset;
-        self.Pixel = pixel || 0;
+        self.Number;    //holds the target unit number of the value
+        self.Offset;    //holds the pixel offset of the value
+        self.Precise;   //holds the precise target unit value (no pixel offset)
+        self.Pixel;     //holds the size in pixels while dragging a splitter
 
-        self.autoSized = !number.Unit ? true : false;
-
-        self.getSize = function () {
-            if (!self.Offset || self.Offset.Value < 0.01) {
-                return self.Number.getSize();
+        self.getValue = function () {
+            if (!self.Offset) {
+                return self.Number.getValue();
             }
-            return "calc(" + self.Number.getSize() + " " + " + " + self.Offset.getSize() + ")";
+            return "calc(" + self.Number.getValue() + " " + " + " + self.Offset + ")";
         }
+
+        self.setValue = function (number, offset, precise) {
+            if (!number || number === "auto") {
+                number = new NumberUnit(1);
+            }
+            self.Number = number;
+            self.Offset = offset;
+            self.Precise = precise || number.getValue();
+
+            self.autoSized = number.getValue() === 1 ? true : false;
+        }
+
+        self.setValue(number);
+        self.TargetUnit = self.Number.Unit;
     }
 
     //check if value is of type boolean
@@ -123,10 +142,10 @@ var granit = (function (gt) {
         value = parseFloat(size);
 
         if (numberSet !== "Q") {
-            if (value < 0.0 && numberSet == "Q+") {
+            if (value < 0.0 && numberSet === "Q+") {
                 output("value (" + value + ") < 0.0 -- positive value expected", errorObject);
             }
-            if (value > 0.0 && numberSet == "Q-") {
+            if (value > 0.0 && numberSet === "Q-") {
                 output("value (" + value + ") > 0.0 -- negative value expected", errorObject);
             }
         }
@@ -182,7 +201,7 @@ var granit = (function (gt) {
         uniqueArray: function (list) {
             var result = [];
             $.each(list, function (i, e) {
-                if ($.inArray(e, result) == -1) result.push(e);
+                if ($.inArray(e, result) === -1) result.push(e);
             });
             return result;
         }
@@ -302,7 +321,7 @@ var granit = (function (gt) {
 
             if (!value) {
                 //get CSS value
-                var value = getComputedStyle(target, null).getPropertyValue(cssPropertyName);
+                value = getComputedStyle(target, null).getPropertyValue(cssPropertyName);
             }
 
             //if the value is a string ("none") we simply return it
@@ -328,52 +347,43 @@ var granit = (function (gt) {
         };
 
         //convert any pixel length to target unit
-        this.convertFromPixel = function (size, targetUnit, cssPropertyName, modus, destroy) {
+        this.convertFromPixel = function (size, cssPropertyName, destroy) {
             self.reset();
-
-            modus = modus || "Offset";
-            if (modus !== "Offset" && modus !== "Precise") {
-                output("Invalid parameter 'modus': expected values are 'Offset', 'Precise'.", "granit.PixelConverter.convertFromPixel");
-            }
-            var isPreciseMode = false;
-            if (modus === "Precise") {
-                isPreciseMode = true;
-            }
 
             var result, pixelBase = 1.0,
                 precision = 1;
 
-            if (targetUnit === "px") {
-                result = size;
+            if (size.TargetUnit === "px") {
+                return;
             }
             else if (
                 //relative (viewport) lengths
-                targetUnit === "%" ||
-                targetUnit === "vw" || targetUnit === "vh" ||
-                targetUnit === "vmin" || targetUnit === "vmax"
+                size.TargetUnit === "%" ||
+                size.TargetUnit === "vw" || size.TargetUnit === "vh" ||
+                size.TargetUnit === "vmin" || size.TargetUnit === "vmax"
             ) {                
                 var total;
                 precision = 2;            //support 1 decimal places for relative sizes
 
-                if (targetUnit === "%") {
+                if (size.TargetUnit === "%") {
                     if (cssPropertyName === "width") {
                         total = parentSize().width();
                     } else {
                         total = parentSize().height();
                     }
                 }
-                else if (targetUnit === "vw") {
+                else if (size.TargetUnit === "vw") {
                     total = viewportSize().width();
                 }
-                else if (targetUnit === "vh") {
+                else if (size.TargetUnit === "vh") {
                     total = viewportSize().height();
                 }
-                else if (targetUnit === "vmin") {
+                else if (size.TargetUnit === "vmin") {
                     var test1 = viewportSize().width();
                     var test2 = viewportSize().height();
                     total = Math.min(test1, test2);
                 }
-                else if (targetUnit === "vmax") {
+                else if (size.TargetUnit === "vmax") {
                     total = Math.max(viewportSize().width(), viewportSize().height());
                 }
 
@@ -381,57 +391,57 @@ var granit = (function (gt) {
             }
             else if (
                 //font-related lenghts
-                targetUnit === "em" || targetUnit === "rem" ||
-                targetUnit === "ex" || targetUnit === "ch"
+                size.TargetUnit === "em" || size.TargetUnit === "rem" ||
+                size.TargetUnit === "ex" || size.TargetUnit === "ch"
             ) {
                 testElement.style.lineHeight = "1";
                 testElement.style.fontSize = "1.0em";
 
                 precision = 2;            //support 2 decimal places for font-related sizes
 
-                if (targetUnit === "em" || targetUnit === "rem") {
+                if (size.TargetUnit === "em" || size.TargetUnit === "rem") {
                     testElement.textContent = "&nbsp;";  //space content
-                    testElement.style.fontSize = "1.0" + targetUnit;
+                    testElement.style.fontSize = "1.0" + size.TargetUnit;
 
                     pixelBase = $(testElement).height();
                 }
-                else if (targetUnit === "ex") {
+                else if (size.TargetUnit === "ex") {
                     testElement.textContent = "x";  //x content
-                    testElement.style.height = "1.0" + targetUnit;
+                    testElement.style.height = "1.0" + size.TargetUnit;
 
                     pixelBase = $(testElement).height();
                 }
-                else if (targetUnit === "ch") {
+                else if (size.TargetUnit === "ch") {
                     testElement.textContent = "0";  //0 content
-                    testElement.style.width = "1.0" + targetUnit;
+                    testElement.style.width = "1.0" + size.TargetUnit;
 
                     pixelBase = $(testElement).width();
                 }
             }
             else if (
                 //static lenghts
-                targetUnit === "in" || targetUnit === "pt" || targetUnit === "pc" || 
-                targetUnit === "cm" || targetUnit === "mm"
+                size.TargetUnit === "in" || size.TargetUnit === "pt" || size.TargetUnit === "pc" || 
+                size.TargetUnit === "cm" || size.TargetUnit === "mm"
             ) {
                 testElement.style.width = "1in";
                 precision = 2;
 
-                var pixelBase = $(testElement).width(),
+                pixelBase = $(testElement).width(),
                     conversionFactor = 1.0;
 
-                if (targetUnit === "pt") {
+                if (size.TargetUnit === "pt") {
                     conversionFactor = 72.0;
                     precision = 0;              //support no decimal places for point
                 }
-                else if (targetUnit === "mm") {
+                else if (size.TargetUnit === "mm") {
                     conversionFactor = 25.4;
                     precision = 1;              //support 1 decimal places for millimeter
                 }
-                else if (targetUnit === "pc") {
+                else if (size.TargetUnit === "pc") {
                     conversionFactor = 6.0;
                     precision = 2;              //support 2 decimal places for millimeter
                 }
-                else if (targetUnit === "cm") {
+                else if (size.TargetUnit === "cm") {
                     conversionFactor = 2.54;
                     precision = 2;              //support 2 decimal places for centimeter
                 }
@@ -443,16 +453,14 @@ var granit = (function (gt) {
                 self.destroy();
             }
 
-            if (isPreciseMode) {
-                return (size / pixelBase) + targetUnit;
-            }
+            var precise = (size.Pixel / pixelBase) + size.TargetUnit;
 
             //calculate pixel offset
             var precisionFactor = Math.pow(10, precision);      //support precision decimal places for static sizes
 
-            var rest = (size * precisionFactor) % pixelBase;
+            var rest = (size.Pixel * precisionFactor) % pixelBase;
 
-            var floor = Math.floor((size * precisionFactor) / pixelBase);
+            var floor = Math.floor((size.Pixel * precisionFactor) / pixelBase);
             if (rest > pixelBase - rest) {
                 floor += 1.0;
                 rest = (pixelBase - rest) * -1.0;
@@ -460,11 +468,13 @@ var granit = (function (gt) {
             floor = floor / precisionFactor;
             rest = rest / precisionFactor;
 
-            var main = new NumberUnit(floor, targetUnit),
-                offset = new NumberUnit(rest, "px");
+            size.Number.setValue(floor, size.TargetUnit);
+            var offset;
+            if (rest >= gt.Threshold) {
+                rest + "px";
+            }
 
-            var number = new Size(main, offset, size);
-            return number;
+            size.setValue(size.Number, offset, precise);
         };
     };
 
