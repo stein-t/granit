@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="favicon.ico">
+
+    <!-- css -->
+    <link href="Content/granit.css" rel="stylesheet" />
+    <link href="Content/custom.css" rel="stylesheet" />
+
+    <!-- jquery -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+    <!--<script src="Scripts/jquery-3.3.1.min.js" type="text/javascript"></script>
+    <script src="Scripts/jquery-ui-1.12.1.min.js" type="text/javascript"></script>-->
+
+    <!-- granit -->
+    <!-- <script src="Scripts/granitUtils.min.js"></script>
+    <script src="Scripts/granit.min.js"></script> -->
+    <script src="Scripts/granitUtils.js"></script>
+    <script src="Scripts/granit.js"></script>
+
+    <!--<script src="Scripts/jquery.resize.js"></script>-->
+    <!--<script src="Scripts/jquery.resize.min.js"></script>-->
+
+    <script>
+        $(document).ready(function () {
+            $("div[class^='granit-splitter']").each(function() {
+                $(this).splitter({
+                    splitter: [
+                        { },
+                        { },
+                        { }
+                    ]
+                })
+            });
+            
+            // $("#splitterOuter").splitter({
+            //     splitter: [
+            //         { },
+            //         { },
+            //         { }
+            //     ],
+            //     direction: "horizontal"
+            // });
+
+            // $("#splitterInner").splitter({
+            //     splitter: [
+            //         { },
+            //         { },
+            //         { }
+            //     ],
+            //     direction: "vertical"
+            // });
+
+            // $("#splitterInner2").splitter({
+            //     splitter: [
+            //         { },
+            //         { },
+            //         { }
+            //     ],
+            //     direction: "horizontal"
+            // });
+        });
+    </script>
+</head>
+
+<body>
+    <!--<div class="stein_container">-->
+    <div id="splitterOuter" class="granit-splitter-vertical">
+        <div class="stein_content">
+            Contentfhfjhfhjfjhfjhfjhg
+        </div>
+        <!--<div id="OuterPanel2" style="width:auto;height:100%;">
+            Contentfhfjhfhjfjhfjhfjhg
+        </div>-->
+        <div id="splitterInner" class="granit-splitter-horizontal">
+            <div class="stein_content" style="width:1200px;height:1200px;">
+                Content
+            </div>
+            <div class="stein_content" style="width:auto;height:100%;">
+                Contentfhgfjhhgfjhhjfhjjhjhg
+            </div>
+            <div class="stein_content" style="width:auto;height:200px;">
+                Content
+            </div>
+            <div id="splitterInner2" class="granit-splitter-vertical">
+                <article class="stein_content" style="width:1200px;height:1200px;">
+                    Content
+                </article>
+                <article class="stein_content" style="width:auto;height:100%;">
+                    Contentfhgfjhhgfjhhjfhjjhjhg
+                </article>
+                <article class="stein_content" style="width:auto;height:200px;">
+                    Content
+                </article>
+                <article class="stein_content" style="width:1200px;height:100%;">
+                    Content
+                </article>
+            </div>
+            <div class="stein_content" style="width:1200px;height:100%;">
+                Content
+            </div>
+        </div>
+        <div class="stein_content" style="width:1200px;height:1200px;">
+            Static Content
+        </div>
+        <div class="stein_content">
+            Contentsdfgsdfg
+        </div>
+    </div id="splitterInner">
+    <!--</div>-->
+</body>
+</html>

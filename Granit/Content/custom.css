@@ -22,7 +22,7 @@
 .panelLayout7 {
     border: 2px solid green;
     background: lightgreen;
-    padding: 5%;
+    /* padding: 5%; */
     /*margin: 10px 0;*/
     /*overflow: scroll;*/
 }
@@ -39,8 +39,8 @@
 .panelLayout1 {
     border: 10px solid blue;
     background: lightyellow;
-    padding: 5%;
-    margin: 5%;
+    /* padding: 5%; */
+    /* margin: 5%; */
 }
 
 .panelLayout2 {
@@ -92,5 +92,5 @@
 }
 
 .splitter_Layout2 {
-    background: #404040;
+    background: #e91212;
 }

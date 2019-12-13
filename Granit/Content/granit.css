@@ -51,12 +51,12 @@ body {
     bottom: 0 !important;
 }
 
-.granit_container_vertical {
+.granit-splitter-vertical {
     flex-flow: row nowrap !important;
     justify-content: flex-start !important;
 }
 
-.granit_container_horizontal {
+.granit-splitter-horizontal {
     flex-flow: column nowrap !important;
     align-items: flex-start !important;
 }
@@ -131,16 +131,14 @@ body {
 /*custom default panel layout styles*/
 .granit_panel_default {
     border: 1px solid grey;
-    padding: 5px 20px 20px 5px;
-    margin: 5% 20px 20px 5%;
+    padding: 5px;
+    margin: 0px;
 }
 
 /*custom default splitter layout styles*/
 .granit_splitter_default {
     background: darkgrey;
-    margin: 0;
-    /*padding: 5px;
-    margin: 5px;*/
+    /*padding: 1px;*/
 }
 .granit_splitter_wrapper:hover > .granit_splitter_default,
 .granit_splitter_wrapper:active > .granit_splitter_default,

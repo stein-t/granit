@@ -14,16 +14,14 @@
 $(function () {
     $.widget("granit.splitter", {
         options: {
-            direction: "vertical",
+            direction: undefined,
             overflow: "auto",
             panel: [],
             splitter: [],
-            panelTemplate: {
-                size: "auto", minSize: 20, maxSize: "none", resizable: true, flexible: true, class: "granit_panel_default"
-            },
-            splitterTemplate: { width: "2em", length: "100%", class: "granit_splitter_default" },
-            separatorTemplate: { width: "1em", length: "100%", class: "granit_separator_default" },
-            reconvert: "default"       //reconvert units: 'all', 'none' or specify explicitly
+            panelTemplate: { size: "auto", minSize: 30, maxSize: "none", resizable: true, flexible: true, class: "granit_panel_default" },
+            splitterTemplate: { width: "6px", length: "100%", class: "granit_splitter_default" },
+            separatorTemplate: { width: "6px", length: "100%", class: "granit_separator_default" },
+            reconvert: "all"
         },
         /*
          * Author(s):   Thomas Stein
@@ -55,11 +53,7 @@ $(function () {
             ];
 
             var panelOptionsAllowed = [
-                'size', 'minSize', 'maxSize', 'resizable', 'flexible', 'class'
-            ];
-
-            var splitterTemplateOptionsAllowed = [
-                'width', 'length', 'class'
+                'index', 'size', 'minSize', 'maxSize', 'resizable', 'flexible', 'class'
             ];
 
             var splitterOptionsAllowed = [
@@ -72,17 +66,17 @@ $(function () {
             }
 
             //check for invalid panelTemplate options
-            if (self.options.panelTemplate && !granit.arrayOperations.compareObjectToArray(self.options.panelTemplate, panelOptionsAllowed, true)) {
+            if (self.options.panelTemplate && !granit.arrayOperations.compareObjectToArray(self.options.panelTemplate, panelOptionsAllowed)) {
                 granit.output("invalid panel template option property found - check the panel template options", self.IdString + " -- options.panelTemplate", 'Warning');
             }
 
             //check for invalid splitterTemplate options
-            if (self.options.splitterTemplate && !granit.arrayOperations.compareObjectToArray(self.options.splitterTemplate, splitterTemplateOptionsAllowed, true)) {
+            if (self.options.splitterTemplate && !granit.arrayOperations.compareObjectToArray(self.options.splitterTemplate, splitterOptionsAllowed)) {
                 granit.output("invalid splitter template option property found - check the splitter template options", self.IdString + " -- options.splitterTemplate", 'Warning');
             }
 
             //check for invalid separatorTemplate options
-            if (self.options.separatorTemplate && !granit.arrayOperations.compareObjectToArray(self.options.separatorTemplate, splitterTemplateOptionsAllowed, true)) {
+            if (self.options.separatorTemplate && !granit.arrayOperations.compareObjectToArray(self.options.separatorTemplate, splitterOptionsAllowed)) {
                 granit.output("invalid separator template option property found - check the separator template options", self.IdString + " -- options.separatorTemplate", 'Warning');
             }
 
@@ -92,6 +86,15 @@ $(function () {
 
             if (this.options.splitter && !Array.isArray(this.options.splitter)) {
                 granit.output("the options property splitter must be an array - check the options object", this.IdString + " -- options.splitter");
+            }
+            
+            if (!self.options.direction) {
+                if (this.element.hasClass("granit-splitter-vertical")) {
+                    self.options.direction = "vertical"
+                }
+                else if (this.element.hasClass("granit-splitter-horizontal")) {
+                    self.options.direction = "horizontal"
+                }
             }
 
             //validate options.direction
@@ -127,13 +130,19 @@ $(function () {
             }
 
             if (self.options.direction === "vertical") {
-                this.element.addClass("granit_container_vertical");
+                this.element.removeClass("granit-splitter-horizontal");
+                if (!this.element.hasClass("granit-splitter-vertical")) {
+                    this.element.addClass("granit-splitter-vertical");
+                }
                 this.element.css("overflow-x", self.options.overflow);
                 this.sizePropertyName = "width";
                 this.cursor = "ew-resize";
                 this.coordinate = "x";
             } else {
-                this.element.addClass("granit_container_horizontal");
+                this.element.removeClass("granit-splitter-vertical");
+                if (!this.element.hasClass("granit-splitter-horizontal")) {
+                    this.element.addClass("granit-splitter-horizontal");
+                }
                 this.element.css("overflow-y", self.options.overflow);
                 this.sizePropertyName = "height";
                 this.cursor = "ns-resize";
@@ -152,6 +161,8 @@ $(function () {
             //global
             this.panels = [];               //reference to the panels (or final panel wrappers)
             this.splitterList = [];         //reference to the splitters
+            
+            this.units = /%|px|em|ex|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/      //possible measure units as regex pattern
 
             /*
              * iterate the children in order to ...
@@ -163,7 +174,7 @@ $(function () {
              */
             children.each(function (index, element) {
                 //identify the associated panel
-                var panel = self.options.panel && self.options.panel[index];
+                var panel = self.options.panel && self.options.panel.find(x => x.index == index) || self.options.panelTemplate;
 
                 //check for invalid options
                 if (panel && !granit.arrayOperations.compareObjectToArray(panel, panelOptionsAllowed)) {
@@ -186,11 +197,11 @@ $(function () {
 
                 //retrieve the minSize option: a value defined individually on panel level overwrites any panel template value
                 var minSize = (panel && panel.minSize) || self.options.panelTemplate && self.options.panelTemplate.minSize;
-                minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit("none");
+                minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", self.units, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit("none");
 
                 //retrieve the maxSize option: a value defined individually on panel level overwrites any panel template value
                 var maxSize = (panel && panel.maxSize) || self.options.panelTemplate && self.options.panelTemplate.maxSize;
-                maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
+                maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", self.units, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
 
                 //retrieve the panelClasses option: the result is a string of class names as a combination of both the individual panel- and the global template- level options
                 var panelClasses = ((self.options.panelTemplate && self.options.panelTemplate.class && (" " + self.options.panelTemplate.class)) || "") +
@@ -213,7 +224,7 @@ $(function () {
 
                     //retrieve the splitterWidth option: a value defined individually on splitter level overwrites any template value
                     var splitterWidth = (splitter && splitter.width) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.width : self.options.splitterTemplate && self.options.splitterTemplate.width);
-                    splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", /%|px|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, "px", self.IdString + " -- splitter width (splitter.width)");
+                    splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", self.units, "px", self.IdString + " -- splitter width (splitter.width)");
 
                     //retrieve the splitterLength option: a value defined individually on splitter level overwrites any template value
                     var splitterLength = (splitter && splitter.length) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.length : self.options.splitterTemplate && self.options.splitterTemplate.length);
@@ -250,13 +261,10 @@ $(function () {
 
                 /*
                  * we wrap the element into a style container that represents layout styles for the panel like padding, margin, border, etc.
-                 * this step is skipped if the element itself is a nested splitter (in a layout szenario).
-                 * here we have the main reason for the Creation-Splitter-Order Rule in a layout szenario:
-                 *      nested inner splitters must be created / instantiated before its parent splitters!
-                 *      ... otherwise the logic would not recognize nested splitters and would wrap those elements into style containers
-                 *          ... for those elements (nested splitters), any defined styles (border, margin, padding, etc.) would be displayed twice unintentionally
+                 * this step is skipped if the element itself is a nested splitter (in a layout szenario), because any defined styles (border, margin, padding, etc.) would be displayed twice unintentionally
+                 * test wether the wrapped element is a nested splitter: check if the class starts with "granit-splitter"
                  */
-                if (!(wrappedElement.is(":data('granit-splitter')") || wrappedElement.hasClass("granit-splitter"))) {                   //test if the element is a nested splitter
+                if (!wrappedElement.is("[class^=granit-splitter]")) {
                     wrappedElement.wrap("<div class='" + panelClasses + "'></div>");
                     wrappedElement = wrappedElement.parent();
                 } else {
@@ -286,7 +294,7 @@ $(function () {
                 //retrieve the size option: a value defined individually on panel level overwrites any panel template value
                 var size = (panel && panel.size) || self.options.panelTemplate && self.options.panelTemplate.size || 1;
                 if (size === "auto") { size = 1; }
-                size = granit.extractFloatUnit(size, "Q+", /%|em|ex|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/, null, self.IdString + " -- Panel size (size)");
+                size = granit.extractFloatUnit(size, "Q+", self.units, null, self.IdString + " -- Panel size (size)");
                 size = new granit.Size(size);
 
                 var reconvert = false;

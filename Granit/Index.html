@@ -16,10 +16,10 @@
     <script src="Scripts/jquery-ui-1.12.1.min.js" type="text/javascript"></script>-->
 
     <!-- granit -->
-    <script src="Scripts/granitUtils.min.js"></script>
-    <!--<script src="Scripts/granitUtils.js"></script>-->
-    <script src="Scripts/granit.min.js"></script>
-    <!--<script src="Scripts/granit.js"></script>-->
+    <!-- <script src="Scripts/granitUtils.min.js"></script>
+    <script src="Scripts/granit.min.js"></script> -->
+    <script src="Scripts/granitUtils.js"></script>
+    <script src="Scripts/granit.js"></script>
 
     <!--<script src="Scripts/jquery.resize.js"></script>-->
     <!--<script src="Scripts/jquery.resize.min.js"></script>-->
@@ -28,10 +28,10 @@
         $(document).ready(function () {
             $("#splitterOuter").splitter({
                 panel: [
-                    { size: 1, minSize: "1%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true },
-                    { class: "panelLayout4", resizable: true },
-                    { size: "20.5%", class: "panelLayout5", resizable: false, flexible: false },
-                    { size: 1.25, class: "panelLayout6", resizable: true }
+                    { index: 0, size: 1, minSize: "1%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true },
+                    { index: 1, class: "panelLayout4", resizable: true },
+                    { index: 2, size: "20.5%", class: "panelLayout5", resizable: false, flexible: false },
+                    { index: 3, size: 1.25, class: "panelLayout6", resizable: true }
                 ],
                 splitter: [
                     { width: "10ex", },
@@ -49,11 +49,11 @@
 
             $("#splitterInner").splitter({
                 panel: [
-                    { size: "15.5%", class: "panelLayout1 panelLayout7", resizable: true, flexible: false },
-                    { size: "40.76mm", class: "panelLayout2 panelLayout7", resizable: true },
-                    { maxSize: "20vmin", resizable: true, class: "panelLayout7" },
-                    { size: "5.4rem", minSize: "5px", class: "panelLayout3 panelLayout5" },
-                    { size: "15.5%", resizable: true }
+                    { index: 0, size: "15.5%", class: "panelLayout1 panelLayout7", resizable: true, flexible: false },
+                    { index: 1, size: "40.76mm", class: "panelLayout2 panelLayout7", resizable: true },
+                    { index: 2, maxSize: "20vmin", resizable: true, class: "panelLayout7" },
+                    { index: 3, size: "5.4rem", minSize: "5px", class: "panelLayout3 panelLayout5" },
+                    { index: 4, size: "15.5%", resizable: true }
                 ],
                 splitter: [
                     { width: "2.5%" },
@@ -70,10 +70,10 @@
 
             $("#splitterInner2").splitter({
                 panel: [
-                    { size: "10ch", class: "panelLayout1 panelLayout7", resizable: true },
-                    { size: "10.4vw", class: "panelLayout2 panelLayout7" },
-                    { size: "10ex" },
-                    { class: "panelLayout3 panelLayout5" }
+                    { index: 0, size: "10ch", class: "panelLayout1 panelLayout7", resizable: true },
+                    { index: 1, size: "10.4vw", class: "panelLayout2 panelLayout7" },
+                    { index: 2, size: "10ex" },
+                    { index: 3, class: "panelLayout3 panelLayout5" }
                 ],
                 splitter: [
                     { width: 10 },
