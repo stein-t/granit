@@ -21,7 +21,7 @@ $(function () {
             panelTemplate: { size: "auto", minSize: 30, maxSize: "none", resizable: true, flexible: true, class: "granit_panel_default" },
             splitterTemplate: { width: "6px", length: "100%", class: "granit_splitter_default" },
             separatorTemplate: { width: "6px", length: "100%", class: "granit_separator_default" },
-            reconvert: "all"
+            reconvert: "default"
         },
         /*
          * Author(s):   Thomas Stein
@@ -57,7 +57,7 @@ $(function () {
             ];
 
             var splitterOptionsAllowed = [
-                'display', 'width', 'length', 'class'
+                'index', 'display', 'width', 'length', 'class'
             ];
 
             //check for invalid options
@@ -107,11 +107,11 @@ $(function () {
                 granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow", 'Warning');
             }
 
-            var reconvertibleUnits = ["%", "em", "rem", "cm", "mm", "in", "pt", "pc"];    //array of all possible reconvertible units       
+            var reconvertibleUnits = ["%", "rem", "em", "cm", "mm", "in", "pt", "pc"];    //array of all possible reconvertible units       
             if (self.options.reconvert === "all") {
                 self.options.reconvert = reconvertibleUnits.join("|");
             }
-            if (self.options.reconvert === "default") {
+            else if (self.options.reconvert === "default") {
                 var def = ["%", "em"];                  //these is the default minimum set of reconvertible units
                 self.options.reconvert = def.join("|");
             }
@@ -123,6 +123,7 @@ $(function () {
                     granit.output("value (" + self.options.reconvert + ") is invalid -- expected values are 'all', 'default', 'none' or some of the following ['%', 'em', 'cm', 'mm', 'in', 'pt', 'pc']", this.IdString + " -- self.options.reconvert", 'Warning');
                 }
             }
+            self.options.reconvert = "^" + self.options.reconvert + "$"
             var reconvertRegex = new RegExp(self.options.reconvert);
 
             if (!this.element.hasClass("granit-splitter")) {
@@ -162,7 +163,7 @@ $(function () {
             this.panels = [];               //reference to the panels (or final panel wrappers)
             this.splitterList = [];         //reference to the splitters
             
-            this.units = /%|px|em|ex|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax/      //possible measure units as regex pattern
+            this.units = /%|vmin|vmax|rem|px|em|ex|cm|mm|in|pt|pc|ch|vh|vw/      //possible measure units as regex pattern
 
             /*
              * iterate the children in order to ...
@@ -211,7 +212,7 @@ $(function () {
 
                 if (index < children.length - 1) {
                     //identify the associated splitter
-                    var splitter = self.options.splitter && self.options.splitter[index];
+                    var splitter = self.options.splitter && self.options.splitter.find(x => x.index == index);
 
                     //check for invalid options
                     if (splitter && !granit.arrayOperations.compareObjectToArray(splitter, splitterOptionsAllowed)) {

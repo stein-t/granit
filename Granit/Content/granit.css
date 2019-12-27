@@ -51,12 +51,12 @@ body {
     bottom: 0 !important;
 }
 
-.granit-splitter-vertical {
+.granit-splitter.granit-splitter-vertical {
     flex-flow: row nowrap !important;
     justify-content: flex-start !important;
 }
 
-.granit-splitter-horizontal {
+.granit-splitter.granit-splitter-horizontal {
     flex-flow: column nowrap !important;
     align-items: flex-start !important;
 }

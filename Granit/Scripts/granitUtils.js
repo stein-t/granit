@@ -334,7 +334,7 @@ var granit = (function (gt) {
             }
             //We can return pixels directly, but not other units
             else if (value.slice(-2) !== "px") {
-                if (cssPropertyName.indexof('-') > 0) {
+                if (cssPropertyName.indexOf('-') > 0) {
                     //cut out "min-" and "max-", that is extract "width" or "height"
                     cssPropertyName = cssPropertyName.slice(4);
                 }
