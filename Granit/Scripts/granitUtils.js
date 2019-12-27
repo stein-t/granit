@@ -220,7 +220,7 @@ var granit = (function (gt) {
 
     /*
      * Author(s):   Thomas Stein
-     * Description: 
+     * Description: support entity for converting non-pixel length values into pixel lengths and vice versa
      */
     var PixelConverter = function (targetParent) {
         var testElement = document.createElement("div");  //Create a temporary sibling for the target
