@@ -250,6 +250,7 @@ var granit = (function (gt) {
             return _viewportSize;
         };
 
+        //helper for retrieving width and height from parent
         var parentSizeClass = function () {
             var _width, _height;
             this.width = function () {
@@ -266,6 +267,7 @@ var granit = (function (gt) {
             }
         };
 
+        //helper for retrieving width and height from viewport        
         var viewportSizeClass = function () {
             var _width, _height;
             this.width = function () {
@@ -313,12 +315,12 @@ var granit = (function (gt) {
         var self = this;
 
         /*
-         * Converts some css Property values into pixel
-         * Supported properties are min-width, min-height, max-width, max-height
+         * Converts some css length Property values into pixel
+         * Supported properties are width, height, min-width, min-height, max-width, max-height
          */
-        this.convertToPixel = function (target, cssPropertyName, value, destroy) {
+        this.convertToPixel = function (target, cssPropertyName, value) {
             self.reset();
-
+            
             if (!value) {
                 //get CSS value
                 value = getComputedStyle(target, null).getPropertyValue(cssPropertyName);
@@ -332,22 +334,21 @@ var granit = (function (gt) {
             }
             //We can return pixels directly, but not other units
             else if (value.slice(-2) !== "px") {
-                cssPropertyName = cssPropertyName.slice(4);
+                if (cssPropertyName.indexof('-') > 0) {
+                    //cut out "min-" and "max-", that is extract "width" or "height"
+                    cssPropertyName = cssPropertyName.slice(4);
+                }
                 var offsetSizeName = prefixSizeName(cssPropertyName, "offset", true);
 
                 testElement.style[cssPropertyName] = value;
                 result = testElement[offsetSizeName];
             }
 
-            if (destroy) {
-                self.destroy();
-            }
-
             return result;
         };
 
         //convert any pixel length to target unit
-        this.convertFromPixel = function (size, cssPropertyName, destroy) {
+        this.convertFromPixel = function (size, cssPropertyName) {
             self.reset();
 
             var result, pixelBase = 1.0,
@@ -447,10 +448,6 @@ var granit = (function (gt) {
                 }
 
                 pixelBase /= conversionFactor;
-            }
-
-            if (destroy) {
-                self.destroy();
             }
 
             var precise = (size.Pixel / pixelBase) + size.TargetUnit;
