@@ -21,7 +21,7 @@ $(function () {
             panelTemplate: { size: "auto", minSize: 30, maxSize: "none", resizable: true, flexible: true, class: "granit_panel_default" },
             splitterTemplate: { width: "6px", length: "100%", class: "granit_splitter_default" },
             separatorTemplate: { width: "6px", length: "100%", class: "granit_separator_default" },
-            reconvert: "default"
+            reconvert: "all"
         },
         /*
          * Author(s):   Thomas Stein
@@ -107,24 +107,33 @@ $(function () {
                 granit.output("value (" + self.options.overflow + ") is invalid -- expected values are 'auto', 'hidden', 'scroll'", this.IdString + " -- self.options.overflow", 'Warning');
             }
 
-            var reconvertibleUnits = ["%", "rem", "em", "cm", "mm", "in", "pt", "pc"];    //array of all possible reconvertible units       
+            var units = ["%", "vmin", "vmax", "rem", "px", "em", "ex", "ch", "cm", "mm", "in", "pt", "pc", "vh", "vw"];     //set of all supported units
+            this.unitsRegex = new RegExp(units.join("|"));          //the associated regular expression of all supported units
+
+            self.unconvertibleUnits = [];                           //set of problematic units that cannot be converted into pixel accurately
+            var dh = new granit.DeviceHelper();
+            //check unit conversion for browsers
+            if (dh.isIE()) {
+                self.unconvertibleUnits.push("em", "rem");                      //Internet Explorer seems to have problems handling certain units accurately
+            }
+            if (dh.isEdge()) {
+                self.unconvertibleUnits.push("ex", "vh", "vmin", "vmax");       //Edge seems to have problems handling certain units accurately
+            }
+            
             if (self.options.reconvert === "all") {
-                self.options.reconvert = reconvertibleUnits.join("|");
+                self.options.reconvert = units;
             }
             else if (self.options.reconvert === "default") {
-                var def = ["%", "em"];                  //these is the default minimum set of reconvertible units
-                self.options.reconvert = def.join("|");
+                self.options.reconvert = ["%", "em", "rem", "cm", "in", "pc"];                                           //these is the default minimum set of reconvertible units
             }
             else if (self.options.reconvert === "none") {
-                self.options.reconvert === "";
+                self.options.reconvert === [];
             }
             else {
-                if (!granit.arrayOperations.compareArrayToArray(self.options.reconvert.split("|"), reconvertibleUnits)) {
+                if (!granit.arrayOperations.compareArrayToArray(self.options.reconvert, units)) {
                     granit.output("value (" + self.options.reconvert + ") is invalid -- expected values are 'all', 'default', 'none' or some of the following ['%', 'em', 'cm', 'mm', 'in', 'pt', 'pc']", this.IdString + " -- self.options.reconvert", 'Warning');
                 }
             }
-            self.options.reconvert = "^" + self.options.reconvert + "$"
-            var reconvertRegex = new RegExp(self.options.reconvert);
 
             if (!this.element.hasClass("granit-splitter")) {
                 this.element.addClass("granit-splitter");
@@ -163,8 +172,6 @@ $(function () {
             this.panels = [];               //reference to the panels (or final panel wrappers)
             this.splitterList = [];         //reference to the splitters
             
-            this.units = /%|vmin|vmax|rem|px|em|ex|cm|mm|in|pt|pc|ch|vh|vw/      //possible measure units as regex pattern
-
             /*
              * iterate the children in order to ...
              *      ... retrieve and validate the associated panel and splitter options
@@ -175,7 +182,7 @@ $(function () {
              */
             children.each(function (index, element) {
                 //identify the associated panel
-                var panel = self.options.panel && self.options.panel.find(x => x.index == index) || self.options.panelTemplate;
+                var panel = self.options.panel && $.grep(self.options.panel, function(x){ return x.index == index; })[0]  || self.options.panelTemplate;                
 
                 //check for invalid options
                 if (panel && !granit.arrayOperations.compareObjectToArray(panel, panelOptionsAllowed)) {
@@ -198,11 +205,11 @@ $(function () {
 
                 //retrieve the minSize option: a value defined individually on panel level overwrites any panel template value
                 var minSize = (panel && panel.minSize) || self.options.panelTemplate && self.options.panelTemplate.minSize;
-                minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", self.units, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit("none");
+                minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", self.unitsRegex, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit("none");
 
                 //retrieve the maxSize option: a value defined individually on panel level overwrites any panel template value
                 var maxSize = (panel && panel.maxSize) || self.options.panelTemplate && self.options.panelTemplate.maxSize;
-                maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", self.units, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
+                maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", self.unitsRegex, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
 
                 //retrieve the panelClasses option: the result is a string of class names as a combination of both the individual panel- and the global template- level options
                 var panelClasses = ((self.options.panelTemplate && self.options.panelTemplate.class && (" " + self.options.panelTemplate.class)) || "") +
@@ -212,7 +219,7 @@ $(function () {
 
                 if (index < children.length - 1) {
                     //identify the associated splitter
-                    var splitter = self.options.splitter && self.options.splitter.find(x => x.index == index);
+                    var splitter = self.options.splitter && $.grep(self.options.splitter, function(x){ return x.index == index; })[0] || self.options.splitterTemplate;                
 
                     //check for invalid options
                     if (splitter && !granit.arrayOperations.compareObjectToArray(splitter, splitterOptionsAllowed)) {
@@ -225,7 +232,7 @@ $(function () {
 
                     //retrieve the splitterWidth option: a value defined individually on splitter level overwrites any template value
                     var splitterWidth = (splitter && splitter.width) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.width : self.options.splitterTemplate && self.options.splitterTemplate.width);
-                    splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", self.units, "px", self.IdString + " -- splitter width (splitter.width)");
+                    splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", self.unitsRegex, "px", self.IdString + " -- splitter width (splitter.width)");
 
                     //retrieve the splitterLength option: a value defined individually on splitter level overwrites any template value
                     var splitterLength = (splitter && splitter.length) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.length : self.options.splitterTemplate && self.options.splitterTemplate.length);
@@ -285,9 +292,9 @@ $(function () {
                         var dh = new granit.DeviceHelper();
                         //check for IE browsers (excluding Edge)
                         if (dh.isIE()) {
-                            //... I (stein-t) decided to set overflow-y = hidden in this case to ensure proper children widths rendering
+                            //... I decided to set overflow-y = hidden in this case to ensure proper children widths rendering
                             self.element.css("overflow-y", "hidden");
-                            granit.output("Due to a known but unresolved bug in IE11 and older (Issue #1: IE11 Flexbox Column Children width problem) overflow-y is set to hidden for those Flexbox container columns in order to ensure proper width rendering of its verically arranged children panels", self.IdString + " -- options.overflow", 'Warning');
+                            //granit.output("Due to a known but unresolved bug in IE11 and older (Issue #1: IE11 Flexbox Column Children width problem) overflow-y is set to hidden for those Flexbox container columns in order to ensure proper width rendering of its verically arranged children panels", self.IdString + " -- options.overflow", 'Warning');
                         }
                     }
                 }
@@ -295,11 +302,11 @@ $(function () {
                 //retrieve the size option: a value defined individually on panel level overwrites any panel template value
                 var size = (panel && panel.size) || self.options.panelTemplate && self.options.panelTemplate.size || 1;
                 if (size === "auto") { size = 1; }
-                size = granit.extractFloatUnit(size, "Q+", self.units, null, self.IdString + " -- Panel size (size)");
+                size = granit.extractFloatUnit(size, "Q+", self.unitsRegex, null, self.IdString + " -- Panel size (size)");
                 size = new granit.Size(size);
 
                 var reconvert = false;
-                if (size.TargetUnit.match(reconvertRegex)) {
+                if (self.options.reconvert.indexOf(size.TargetUnit) > -1 ) {
                     reconvert = true;
                 }
 
@@ -412,34 +419,29 @@ $(function () {
                 }
                 var itemData = item.data().__granitData__;
 
-                if (!itemData.resizable) {
-                    return false;    //we do not need to prepare non-resizable panels
-                }
-
-                var minSize = pc.convertToPixel(item[0], minSizeName);
-                if (minSize && minSize === "none") {
-                    minSize = 0.0;
-                }
-
-                var maxSize = pc.convertToPixel(item[0], maxSizeName);
-                if (maxSize && maxSize === "none") {
-                    maxSize = self.element[0][offsetSizeName];
-                }
-
-                //capture the current limit sizes to support mouse-moving calculation 
-                itemData.minSize = Math.floor(minSize + 1);       //round slightly up to egalize (percent) convertion errors (in firefox and chrome)
-                itemData.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
-
-                //convert to Pixel
-                item.addClass("granit_panel_static");
-
                 if (itemData.resizable) {
-                    if (!itemData.Size.Pixel || Math.abs(itemData.Size.Pixel - size) >= granit.Threshold) {
-                        item.css(self.sizePropertyName, size + "px");
-
-                        itemData.Size.Pixel = size;
-                        itemData.resized = true;
+                    var minSize = pc.convertToPixel(item[0], minSizeName, false);
+                    if (minSize && minSize === "none") {
+                        minSize = 0.0;
                     }
+
+                    var maxSize = pc.convertToPixel(item[0], maxSizeName, false);
+                    if (maxSize && maxSize === "none") {
+                        maxSize = self.element[0][offsetSizeName];
+                    }
+
+                    //capture the current limit sizes to support mouse-moving calculation 
+                    itemData.minSize = Math.floor(minSize + 1);       //round slightly up to egalize (percent) convertion errors (in firefox and chrome)
+                    itemData.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
+
+                    //remove from FlexBox
+                    item.addClass("granit_panel_static");
+
+                    if (!itemData.Size.Pixel || Math.abs(itemData.Size.Pixel - size) >= granit.Threshold) {
+                        itemData.Size.Pixel = size;
+                    }
+                    item.css(self.sizePropertyName, size + "px");
+                    itemData.resized = true;        //we set to resized here in order to reconvert all resizable panels properly on MouseUp
                 }
             });
 
@@ -516,19 +518,21 @@ $(function () {
                 self.panels.forEach(function (item, index) {
                     var data = item.data().__granitData__;
 
-                    if (data.resized) {
-                        if (data.reconvert) {
-                            pc.convertFromPixel(data.Size, self.sizePropertyName);
-                            item.css("flex-basis", data.Size.getValue());
-                        } else {
-                            if (!data.Size.TargetUnit && data.Size.Number.Value !== 1) {
-                                //autoSized
-                                item.css("flex", "1 1 0px");
-                                data.Size.Number.Value = 1;
-                            }
-                            item.css("flex-basis", data.Size.Pixel + "px");
-                        }
+                    if (data.resized && data.reconvert) {
+                        pc.convertFromPixel(data.Size, self.sizePropertyName, false);
                     }
+                    
+                    var getPixel = false;   //getPixel means "do not convert"
+                    if (!data.reconvert || self.unconvertibleUnits.indexOf(data.Size.TargetUnit) > -1) {
+                        if (!data.Size.TargetUnit && data.Size.Number.Value !== 1) {
+                            //autoSized
+                            item.css("flex", "1 1 0px");
+                            data.Size.Number.Value = 1;
+                        }
+                        getPixel = true;
+                    }
+                    
+                    item.css("flex-basis", data.Size.getValue(getPixel));
                 });
 
                 pc.destroy();   //destroy the convertion tool

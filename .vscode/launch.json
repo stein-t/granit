@@ -15,6 +15,18 @@
             "type": "chrome",
             "request": "launch",
             "file": "${workspaceFolder}/Granit/Index.html"
-        }
+        },
+        {
+            "name": "Index.html in Microsoft Edge",
+            "type": "edge",
+            "request": "launch",
+            "file": "${workspaceFolder}/Granit/Index.html"
+        },
+        {
+            "name": "Index2.html in Microsoft Edge",
+            "type": "edge",
+            "request": "launch",
+            "file": "${workspaceFolder}/Granit/Index2.html"
+        }        
     ]
 }

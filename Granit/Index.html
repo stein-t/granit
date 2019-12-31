@@ -28,8 +28,8 @@
         $(document).ready(function () {
             $("#splitterOuter").splitter({
                 panel: [
-                    { index: 0, size: 1, minSize: "1%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true },
-                    { index: 1, size: 2, class: "panelLayout4", resizable: true },
+                    { index: 0, size: "100ex", minSize: "1%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true },
+                    { index: 1, size: "25em", class: "panelLayout4", resizable: true },
                     { index: 2, size: "20.5%", class: "panelLayout5", resizable: false, flexible: false },
                     { index: 3, class: "panelLayout6", resizable: true }
                 ],
@@ -49,11 +49,11 @@
 
             $("#splitterInner").splitter({
                 panel: [
-                    { index: 0, size: "15.5%", class: "panelLayout1 panelLayout7", resizable: true, flexible: false },
-                    { index: 1, size: "40.76mm", class: "panelLayout2 panelLayout7", resizable: true },
-                    { index: 2, maxSize: "20vmin", resizable: true, class: "panelLayout7" },
-                    { index: 3, size: "30.4rem", minSize: "5px", class: "panelLayout3 panelLayout5" },
-                    { index: 4, size: "15.5%", resizable: true }
+                    { index: 0, size: "15.87ch", class: "panelLayout1 panelLayout7", resizable: true, flexible: false },
+                    { index: 1, size: "15.87ch", class: "panelLayout2 panelLayout7", resizable: true },
+                    { index: 2, size: "15.87ch", maxSize: "20vmin", resizable: true, class: "panelLayout7" },
+                    { index: 3, size: "15.87ch", minSize: "5px", class: "panelLayout3 panelLayout5" },
+                    { index: 4, resizable: true }
                 ],
                 splitter: [
                     { index: 0, width: "2.5%" },
