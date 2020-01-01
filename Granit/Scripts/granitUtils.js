@@ -394,8 +394,7 @@ var granit = (function (gt) {
                     var test = pixelBase;
                 }
                 else if (["ex", "ch"].indexOf(size.TargetUnit) > -1) {
-                    //test for minHeight seems to work best for Chrome
-                    //Edge does not deliver very accurate results
+                    //test for minHeight seems to work best with all browsers
                     testElement.style.minHeight = "1.0" + size.TargetUnit;
 
                     //get CSS value
@@ -403,11 +402,7 @@ var granit = (function (gt) {
                     var test = pixelBase;
                 }
             }
-            else if (
-                //static lenghts
-                size.TargetUnit === "in" || size.TargetUnit === "pt" || size.TargetUnit === "pc" || 
-                size.TargetUnit === "cm" || size.TargetUnit === "mm"
-            ) {
+            else if (["in", "pt", "pc", "cm", "mm"].indexOf(size.TargetUnit) > -1)  {   //static lenghts
                 testElement.style.width = "1in";
                 precision = 2;
 

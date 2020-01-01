@@ -34,25 +34,23 @@
                     { index: 3, class: "panelLayout6", resizable: true }
                 ],
                 splitter: [
-                    { index: 0, width: "10ex", },
-                    { index: 1, width: "3em", display: "separator", length: "80%" },
+                    { index: 0 },
+                    { index: 1, length: "80%", class: "granit_separator_default", disabled: true },
                     { index: 2, width: "3em", length: "30ch", class: "splitter_HandleStyle" }
                 ],
                 panelTemplate: {
                     minSize: "1em", resizable: false, class: "panelLayout7 panelLayout7"
                 },
-                splitterTemplate: { width: "2.5em", class: "splitter_Layout1" },
-                //separatorTemplate: { width: "2.2em", class: "splitter_Layout2" },
-                //direction: "horizontal",
+                splitterTemplate: { width: "1em", class: "splitter_Layout1" },
                 direction: "vertical"
             });
 
             $("#splitterInner").splitter({
                 panel: [
-                    { index: 0, size: "15.87ch", class: "panelLayout1 panelLayout7", resizable: true, flexible: false },
-                    { index: 1, size: "15.87ch", class: "panelLayout2 panelLayout7", resizable: true },
-                    { index: 2, size: "15.87ch", maxSize: "20vmin", resizable: true, class: "panelLayout7" },
-                    { index: 3, size: "15.87ch", minSize: "5px", class: "panelLayout3 panelLayout5" },
+                    { index: 0, size: "15%", class: "panelLayout1 panelLayout7", resizable: true, flexible: false },
+                    { index: 1, size: "40mm", class: "panelLayout2 panelLayout7", resizable: true },
+                    { index: 2, size: "30.87ex", maxSize: "20vmin", resizable: true, class: "panelLayout7" },
+                    { index: 3, size: "30.87ch", minSize: "5px", class: "panelLayout3 panelLayout5" },
                     { index: 4, resizable: true }
                 ],
                 splitter: [

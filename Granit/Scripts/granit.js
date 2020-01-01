@@ -19,8 +19,7 @@ $(function () {
             panel: [],
             splitter: [],
             panelTemplate: { size: "auto", minSize: 30, maxSize: "none", resizable: true, flexible: true, class: "granit_panel_default" },
-            splitterTemplate: { width: "6px", length: "100%", class: "granit_splitter_default" },
-            separatorTemplate: { width: "6px", length: "100%", class: "granit_separator_default" },
+            splitterTemplate: { width: "6px", length: "100%", class: "granit_splitter_default", disabled: false },
             reconvert: "all"
         },
         /*
@@ -48,7 +47,7 @@ $(function () {
             var optionsAllowed = [
                 'classes', 'disabled', 'create', 'hide', 'show',
                 'direction', 'overflow', 'panel', 'splitter',
-                'panelTemplate', 'splitterTemplate', 'separatorTemplate',
+                'panelTemplate', 'splitterTemplate',
                 'reconvert'
             ];
 
@@ -57,7 +56,7 @@ $(function () {
             ];
 
             var splitterOptionsAllowed = [
-                'index', 'display', 'width', 'length', 'class'
+                'index', 'disabled', 'width', 'length', 'class'
             ];
 
             //check for invalid options
@@ -73,11 +72,6 @@ $(function () {
             //check for invalid splitterTemplate options
             if (self.options.splitterTemplate && !granit.arrayOperations.compareObjectToArray(self.options.splitterTemplate, splitterOptionsAllowed)) {
                 granit.output("invalid splitter template option property found - check the splitter template options", self.IdString + " -- options.splitterTemplate", 'Warning');
-            }
-
-            //check for invalid separatorTemplate options
-            if (self.options.separatorTemplate && !granit.arrayOperations.compareObjectToArray(self.options.separatorTemplate, splitterOptionsAllowed)) {
-                granit.output("invalid separator template option property found - check the separator template options", self.IdString + " -- options.separatorTemplate", 'Warning');
             }
 
             if (this.options.panel && !Array.isArray(this.options.panel)) {
@@ -226,29 +220,30 @@ $(function () {
                         granit.output("invalid splitter array item option property found - check the splitter array item options", self.IdString + " -- options.splitter", 'Warning');
                     }
 
-                    if (splitter && splitter.display && splitter.display !== "splitter" && splitter.display !== "separator") {
-                        granit.output("invalid value '" + self.options.display + "' for the splitter display option", self.IdString + " -- splitter.display", 'Warning');
+                    //retrieve the disabled option: a value defined individually on splitter level overwrites any splitter template value
+                    var disabled = splitter && splitter.disabled;
+                    if (!(splitter && granit.IsBooleanType(splitter.disabled))) {
+                        disabled = self.options.splitterTemplate && self.options.splitterTemplate.disabled;
                     }
+                    disabled = disabled ? true : false;
 
                     //retrieve the splitterWidth option: a value defined individually on splitter level overwrites any template value
-                    var splitterWidth = (splitter && splitter.width) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.width : self.options.splitterTemplate && self.options.splitterTemplate.width);
+                    var splitterWidth = (splitter && splitter.width) || self.options.splitterTemplate && self.options.splitterTemplate.width;
                     splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", self.unitsRegex, "px", self.IdString + " -- splitter width (splitter.width)");
 
                     //retrieve the splitterLength option: a value defined individually on splitter level overwrites any template value
-                    var splitterLength = (splitter && splitter.length) || (splitter && splitter.display === "separator" ? self.options.separatorTemplate && self.options.separatorTemplate.length : self.options.splitterTemplate && self.options.splitterTemplate.length);
+                    var splitterLength = (splitter && splitter.length) || self.options.splitterTemplate && self.options.splitterTemplate.length;
                     //Any css length value is allowed (including calc() statements). No validation needed here, because this value is directly forwarded into the css style definition
 
                     //retrieve the splitterClasses option: the result is a string of class names as a combination of both the individual splitter- and the global template- level options
-                    var splitterClasses = (
-                        splitter && splitter.display === "separator" ?
-                            ((self.options.separatorTemplate && self.options.separatorTemplate.class && (" " + self.options.separatorTemplate.class)) || "") :
-                            ((self.options.splitterTemplate && self.options.splitterTemplate.class && (" " + self.options.splitterTemplate.class)) || "")
-                    ) +
-                        ((splitter && splitter.class && (" " + splitter.class)) || "");                                       //all provided classes on template level and individual panel level are concatenated
+                    //note that the class defined for the splitter template is only considered when the disabled property of the template matches the disabled property of the current splitter
+                    var splitterClasses = 
+                        (disabled == (self.options.splitterTemplate && self.options.splitterTemplate.disabled) ? (self.options.splitterTemplate && self.options.splitterTemplate.class && (" " + self.options.splitterTemplate.class)) || "" : "") +
+                        ((splitter && splitter.class && (" " + splitter.class)) || "");                             //all provided classes on template level and individual panel level are concatenated
                     splitterClasses = granit.arrayOperations.uniqueArray(splitterClasses.split(" ")).join(" ");     //avoiding duplicate class names
                     splitterClasses = "granit_splitter" + splitterClasses;                  //prefix the class string with the required system class
 
-                    var cursor = splitter && splitter.display === "separator" ? "default" : self.cursor;
+                    var cursor = splitter && splitter.disabled ? "default" : self.cursor;
 
                     var splitterElement = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='granit_splitter_wrapper' style='cursor:" + cursor + ";'></div>");
                     splitterElement.append("<div class='" + splitterClasses + "'></div>");  //embed the div with custom splitter styles 
@@ -261,7 +256,7 @@ $(function () {
                         splitterElement.css("height", splitterWidth.getValue());
                         splitterElement.css("width", splitterLength);
                     }
-                    splitterElement.data().__granitData__ = { disabled: splitter && splitter.display === "separator" ? true : false };
+                    splitterElement.data().__granitData__ = { disabled: splitter && splitter.disabled };
                     self.splitterList[index] = splitterElement;
                 }
 
