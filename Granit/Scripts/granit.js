@@ -14,12 +14,22 @@
 $(function () {
     $.widget("granit.splitter", {
         options: {
+            classes: {
+                "granit-splitter-panel": "granit_panel_default",
+                "granit-splitter-state-default": "granit_splitter_state_default",
+                "granit-splitter-state-hover": "granit_splitter_state_hover",
+                "granit-splitter-state-active": "granit_splitter_state_active"
+                // "granit-splitter-panel": "ui-widget-content granit_panel_default",
+                // "granit-splitter-state-default": "ui-state-default",
+                // "granit-splitter-state-hover": "ui-state-hover",
+                // "granit-splitter-state-active": "ui-state-active"
+            },
             direction: undefined,
             overflow: "auto",
             panel: [],
             splitter: [],
-            panelTemplate: { size: "auto", minSize: 30, maxSize: "none", resizable: true, flexible: true, class: "granit_panel_default" },
-            splitterTemplate: { width: "6px", length: "100%", class: "granit_splitter_default", disabled: false },
+            panelTemplate: { size: "auto", minSize: 30, maxSize: "none", resizable: true, flexible: true },
+            splitterTemplate: { width: "6px", length: "100%", disabled: false },
             reconvert: "all"
         },
         /*
@@ -130,7 +140,7 @@ $(function () {
             }
 
             if (!this.element.hasClass("granit-splitter")) {
-                this.element.addClass("granit-splitter");
+                this._addClass("granit-splitter");
             }
 
             if (self.options.direction === "vertical") {
@@ -205,12 +215,6 @@ $(function () {
                 var maxSize = (panel && panel.maxSize) || self.options.panelTemplate && self.options.panelTemplate.maxSize;
                 maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", self.unitsRegex, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
 
-                //retrieve the panelClasses option: the result is a string of class names as a combination of both the individual panel- and the global template- level options
-                var panelClasses = ((self.options.panelTemplate && self.options.panelTemplate.class && (" " + self.options.panelTemplate.class)) || "") +
-                    ((panel && panel.class && (" " + panel.class)) || "");                                       //all provided classes on template level and individual panel level are concatenated
-                panelClasses = granit.arrayOperations.uniqueArray(panelClasses.split(" ")).join(" ");       //avoiding duplicate class names
-                panelClasses = "granit_panel" + panelClasses;                       //prefix the class string with the required system class
-
                 if (index < children.length - 1) {
                     //identify the associated splitter
                     var splitter = self.options.splitter && $.grep(self.options.splitter, function(x){ return x.index == index; })[0] || self.options.splitterTemplate;                
@@ -235,18 +239,13 @@ $(function () {
                     var splitterLength = (splitter && splitter.length) || self.options.splitterTemplate && self.options.splitterTemplate.length;
                     //Any css length value is allowed (including calc() statements). No validation needed here, because this value is directly forwarded into the css style definition
 
-                    //retrieve the splitterClasses option: the result is a string of class names as a combination of both the individual splitter- and the global template- level options
-                    //note that the class defined for the splitter template is only considered when the disabled property of the template matches the disabled property of the current splitter
-                    var splitterClasses = 
-                        (disabled == (self.options.splitterTemplate && self.options.splitterTemplate.disabled) ? (self.options.splitterTemplate && self.options.splitterTemplate.class && (" " + self.options.splitterTemplate.class)) || "" : "") +
-                        ((splitter && splitter.class && (" " + splitter.class)) || "");                             //all provided classes on template level and individual panel level are concatenated
-                    splitterClasses = granit.arrayOperations.uniqueArray(splitterClasses.split(" ")).join(" ");     //avoiding duplicate class names
-                    splitterClasses = "granit_splitter" + splitterClasses;                  //prefix the class string with the required system class
-
                     var cursor = splitter && splitter.disabled ? "default" : self.cursor;
-
-                    var splitterElement = $("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='granit_splitter_wrapper' style='cursor:" + cursor + ";'></div>");
-                    splitterElement.append("<div class='" + splitterClasses + "'></div>");  //embed the div with custom splitter styles 
+                    
+                    var splitterElement = $("<div></div>");
+                    //add structural class granit-splitter-state-default / any associated theming class defined in the classes option / add associated individual class defined for the current splitter
+                    self._addClass(splitterElement, "granit-splitter-state-default", splitter.class);
+                    splitterElement.wrap("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='granit_splitter_wrapper' style='cursor:" + cursor + ";'></div>");
+                    splitterElement = splitterElement.parent();
 
                     //define the splitter element
                     if (self.options.direction === "vertical") {
@@ -268,8 +267,11 @@ $(function () {
                  * test wether the wrapped element is a nested splitter: check if the class starts with "granit-splitter"
                  */
                 if (!wrappedElement.is("[class^=granit-splitter]")) {
-                    wrappedElement.wrap("<div class='" + panelClasses + "'></div>");
+                    wrappedElement.wrap("<div></div>");
                     wrappedElement = wrappedElement.parent();
+
+                    //add structural class granit-splitter-panel / any associated theming class defined in the classes option / add associated individual class defined for the current panel                     
+                    self._addClass(wrappedElement, "granit-splitter-panel", panel.class ); 
                 } else {
                     /* 
                      * --> see Issue #1: IE11 Flexbox Column Children width problem 
@@ -345,6 +347,11 @@ $(function () {
                         self._on(item, {
                             "mousedown": "_splitterMouseDown"
                         });
+                        item.hover(
+                            function() {
+                                self._toggleClass($(this).children(0), "granit-splitter-state-hover");
+                            }
+                        )
                     }
                 });
             }
@@ -386,7 +393,8 @@ $(function () {
             this.movedSplitter = $(event.currentTarget);
 
             $(".granit_splitter_wrapper, .granit_panel_wrapper").not(this.movedSplitter).addClass("granit_suppressMouseEvents");
-            this.movedSplitter.addClass("granit_splitter_active");
+            this.movedSplitter.addClass("granit_splitter_active");            
+            this._addClass(this.movedSplitter.children(0), "granit-splitter-state-active");   //add granit-splitter-active template
 
             //capture the mouse event
             if (event.target.setCapture) {
@@ -494,6 +502,7 @@ $(function () {
 
             //clean up
             this.movedSplitter.removeClass("granit_splitter_active");
+            this._removeClass(this.movedSplitter.children(0), "granit-splitter-state-active");  //remove granit-splitter-active template
             $(".granit_splitter_wrapper, .granit_panel_wrapper").removeClass("granit_suppressMouseEvents");
 
             $("html").css("cursor", "default");

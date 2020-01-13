@@ -61,7 +61,7 @@ body {
     align-items: flex-start !important;
 }
 
-.granit_panel {
+.granit-splitter-panel {
     display: block !important;
     position: absolute !important;
     box-sizing: border-box !important;
@@ -92,7 +92,7 @@ body {
     flex: none !important;
 }
 
-.granit_splitter {
+.granit-splitter-state-default {
     display: block !important;
     float: none !important;
     box-sizing: border-box !important;
@@ -135,16 +135,27 @@ body {
     margin: 0px;
 }
 
-/*custom default splitter layout styles*/
-.granit_splitter_default {
-    background: darkgrey;
-    /*padding: 1px;*/
+.granit_Padding_Crazy {
+    padding: 5%;
+    border: 1% solid grey;
 }
-.granit_splitter_wrapper:hover > .granit_splitter_default,
+
+/*custom default splitter layout styles*/
+.granit_splitter_state_default {
+    background: lightgrey;
+}
+.granit_splitter_state_hover {
+    background: darkgrey;
+}
+.granit_splitter_state_active {
+    background: grey;
+}
+
+/* .granit_splitter_wrapper:hover > .granit_splitter_default,
 .granit_splitter_wrapper:active > .granit_splitter_default,
 .granit_splitter_wrapper.granit_splitter_active > .granit_splitter_default {
     background: grey;
-}
+} */
 
 .granit_separator_default {
     background: #404040;

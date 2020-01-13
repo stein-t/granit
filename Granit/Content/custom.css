@@ -1,7 +1,4 @@
-﻿html, body {
-    background: #F0F0F0;
-}
-
+﻿
 .stein_content {
     font-size: 3em;
 }
@@ -78,17 +75,25 @@
     background: grey;
 }
 
-.splitter_HandleStyle {
+.splitter_HandleStyle_default {
+    border: 2px solid black;
+    background: lightgrey;
+    border-radius: 20px;
+    margin: 10px;
+}
+
+.splitter_HandleStyle_hover {
     border: 2px solid black;
     background: darkgrey;
     border-radius: 20px;
-    margin: 0 10px;
+    margin: 10px;
 }
-.granit_splitter_wrapper:hover > .splitter_HandleStyle,
-.granit_splitter_wrapper:active > .splitter_HandleStyle,
-.granit_splitter_wrapper.granit_splitter_active > .splitter_HandleStyle {
-    border: 2px solid darkgrey;
+
+.splitter_HandleStyle_active {
+    border: 2px solid black;
     background: grey;
+    border-radius: 20px;
+    margin: 10px;
 }
 
 .splitter_Layout2 {
