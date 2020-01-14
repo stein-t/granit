@@ -135,11 +135,6 @@ body {
     margin: 0px;
 }
 
-.granit_Padding_Crazy {
-    padding: 5%;
-    border: 1% solid grey;
-}
-
 /*custom default splitter layout styles*/
 .granit_splitter_state_default {
     background: lightgrey;

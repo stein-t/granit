@@ -65,14 +65,10 @@
     /*overflow: scroll;*/
 }
 
-.splitter_Layout1 {
-    background: darkgrey;
-    margin: 0 2px;
-}
-.granit_splitter_wrapper:hover > .splitter_Layout1,
-.granit_splitter_wrapper:active > .splitter_Layout1,
-.granit_splitter_wrapper.granit_splitter_active > .splitter_Layout1 /* in IE11 only */ {
-    background: grey;
+.granit_Padding_Crazy {
+    padding: 5%;
+    border: 1% solid grey;
+    margin: 0px;
 }
 
 .splitter_HandleStyle_default {

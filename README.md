@@ -2,12 +2,20 @@
 Experimental splitter layout widget based on Flexbox ... in development
 
 Feel free to see some results at rawcdn.githack.com: 
+
+Simple call (default):
 https://raw.githack.com/stein-t/granit/master/Granit/Index2.html
 
-... or something more crazy demo
+... or something more individual:
 https://raw.githack.com/stein-t/granit/master/Granit/Index.html
 
-things are still missing, documentation will come soon
+- any panel div and splitter separator can be configurated individually
+- define min and max of panel divs
+- you can use any length unit
+- moving of sibling splitter supported
+- much more ...
+
+... still things are still missing, documentation, etc.
 
 /*
  * Copyright (c) <year> <copyright holders>

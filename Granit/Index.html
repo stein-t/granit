@@ -76,13 +76,13 @@
 
 <script>
     $(document).ready(function () {
+        // Conversion of splitter classes
+        $.granit.splitter.prototype.options.classes[ "granit-splitter-panel" ] = "granit_panel_default granit_Padding_Crazy";
+        $.granit.splitter.prototype.options.classes[ "granit-splitter-state-default" ] = "splitter_HandleStyle_default";        
+        $.granit.splitter.prototype.options.classes[ "granit-splitter-state-hover" ] = "splitter_HandleStyle_hover";        
+        $.granit.splitter.prototype.options.classes[ "granit-splitter-state-active" ] = "splitter_HandleStyle_active";        
+
         $("#splitterOuter").splitter({
-            classes: {
-                "granit-splitter-panel": "granit_panel_default granit_Padding_Crazy",
-                "granit-splitter-state-default": "splitter_HandleStyle_default",
-                "granit-splitter-state-hover": "splitter_HandleStyle_hover",
-                "granit-splitter-state-active": "splitter_HandleStyle_active"
-            },
             panel: [
                 { index: 0, size: "50ex", minSize: "1%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true },
                 { index: 1, size: "50em", class: "panelLayout4", resizable: true },
@@ -97,17 +97,11 @@
             panelTemplate: {
                 minSize: "1em", resizable: true, class: "panelLayout7 panelLayout7"
             },
-            splitterTemplate: { width: "3em", length: "50%" },
+            splitterTemplate: { width: "3em", length: "25%" },
             direction: "vertical"
         });
 
         $("#splitterInner").splitter({
-            classes: {
-                "granit-splitter-panel": "granit_panel_default granit_Padding_Crazy",
-                "granit-splitter-state-default": "splitter_HandleStyle_default",
-                "granit-splitter-state-hover": "splitter_HandleStyle_hover",
-                "granit-splitter-state-active": "splitter_HandleStyle_active"
-            },
             panel: [
                 { index: 0, size: "15%", class: "panelLayout1 panelLayout7", resizable: true, flexible: false },
                 { index: 1, size: "40mm", class: "panelLayout2 panelLayout7", resizable: true },
@@ -128,12 +122,6 @@
         });
 
         $("#splitterInner2").splitter({
-            classes: {
-                "granit-splitter-panel": "granit_panel_default granit_Padding_Crazy",
-                "granit-splitter-state-default": "splitter_HandleStyle_default",
-                "granit-splitter-state-hover": "splitter_HandleStyle_hover",
-                "granit-splitter-state-active": "splitter_HandleStyle_active"
-            },
             panel: [
                 { index: 0, size: "10ch", class: "panelLayout1 panelLayout7", resizable: true },
                 { index: 1, size: "10.4vw", class: "panelLayout2 panelLayout7" },
@@ -145,7 +133,7 @@
             //     { index: 1, width: 15, length: "200rem" },
             //     { index: 2, width: 10 }
             // ],
-            splitterTemplate: { width: "3em", length: "50%" },
+            splitterTemplate: { width: "3em", length: "75%" },
             direction: "vertical",
             overflow: "auto"
         });
