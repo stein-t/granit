@@ -85,7 +85,10 @@ var granit = (function (gt) {
             if (!self.Offset) {
                 return self.Number.getValue();
             }
-            return "calc(" + self.Number.getValue() + " " + " + " + self.Offset + ")";
+
+            var test = self.Precise;
+            return self.Precise;
+            // return "calc(" + self.Number.getValue() + " " + " + " + self.Offset + ")";
         }
 
         self.setValue = function (number, offset, precise) {
