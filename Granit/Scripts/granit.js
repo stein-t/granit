@@ -15,14 +15,14 @@ $(function () {
     $.widget("granit.splitter", {
         options: {
             classes: {
-                "granit-splitter-panel": "granit_panel_default",
-                "granit-splitter-state-default": "granit_splitter_state_default",
-                "granit-splitter-state-hover": "granit_splitter_state_hover",
-                "granit-splitter-state-active": "granit_splitter_state_active"
-                // "granit-splitter-panel": "ui-widget-content granit_panel_default",
-                // "granit-splitter-state-default": "ui-state-default",
-                // "granit-splitter-state-hover": "ui-state-hover",
-                // "granit-splitter-state-active": "ui-state-active"
+                // "granit-splitter-panel": "granit_panel_default",
+                // "granit-splitter-state-default": "granit_splitter_state_default",
+                // "granit-splitter-state-hover": "granit_splitter_state_hover",
+                // "granit-splitter-state-active": "granit_splitter_state_active"
+                "granit-splitter-panel": "ui-widget-content",
+                "granit-splitter-state-default": "ui-state-default",
+                "granit-splitter-state-hover": "ui-state-hover",
+                "granit-splitter-state-active": "ui-state-active"
             },
             direction: undefined,
             overflow: "auto",
@@ -93,10 +93,10 @@ $(function () {
             }
             
             if (!self.options.direction) {
-                if (this.element.hasClass("granit-splitter-vertical")) {
+                if (this.element.hasClass("granit_layout_vertical")) {
                     self.options.direction = "vertical"
                 }
-                else if (this.element.hasClass("granit-splitter-horizontal")) {
+                else if (this.element.hasClass("granit_layout_horizontal")) {
                     self.options.direction = "horizontal"
                 }
             }
@@ -139,23 +139,23 @@ $(function () {
                 }
             }
 
-            if (!this.element.hasClass("granit-splitter")) {
-                this._addClass("granit-splitter");
+            if (!this.element.hasClass("granit_layout")) {
+                this._addClass("granit_layout");
             }
 
             if (self.options.direction === "vertical") {
-                this.element.removeClass("granit-splitter-horizontal");
-                if (!this.element.hasClass("granit-splitter-vertical")) {
-                    this.element.addClass("granit-splitter-vertical");
+                this.element.removeClass("granit_layout_horizontal");
+                if (!this.element.hasClass("granit_layout_vertical")) {
+                    this.element.addClass("granit_layout_vertical");
                 }
                 this.element.css("overflow-x", self.options.overflow);
                 this.sizePropertyName = "width";
                 this.cursor = "ew-resize";
                 this.coordinate = "x";
             } else {
-                this.element.removeClass("granit-splitter-vertical");
-                if (!this.element.hasClass("granit-splitter-horizontal")) {
-                    this.element.addClass("granit-splitter-horizontal");
+                this.element.removeClass("granit_layout_vertical");
+                if (!this.element.hasClass("granit_layout_horizontal")) {
+                    this.element.addClass("granit_layout_horizontal");
                 }
                 this.element.css("overflow-y", self.options.overflow);
                 this.sizePropertyName = "height";
@@ -242,21 +242,24 @@ $(function () {
                     var cursor = splitter && splitter.disabled ? "default" : self.cursor;
                     
                     var splitterElement = $("<div></div>");
+
                     //add structural class granit-splitter-state-default / any associated theming class defined in the classes option / add associated individual class defined for the current splitter
-                    self._addClass(splitterElement, "granit-splitter-state-default", splitter.class);
+                    self._addClass(splitterElement, "granit-splitter-state-default", splitter.class || self.options.splitterTemplate.class);
+
                     splitterElement.wrap("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='granit_splitter_wrapper' style='cursor:" + cursor + ";'></div>");
-                    splitterElement = splitterElement.parent();
 
                     //define the splitter element
                     if (self.options.direction === "vertical") {
-                        splitterElement.css("width", splitterWidth.getValue());
-                        splitterElement.css("height", splitterLength);
+                        splitterElement.addClass("granit-splitter-vertical");           //justify ui-themed splitter
+                        splitterElement.parent().css("width", splitterWidth.getValue());
+                        splitterElement.parent().css("height", splitterLength);
                     } else {
-                        splitterElement.css("height", splitterWidth.getValue());
-                        splitterElement.css("width", splitterLength);
+                        splitterElement.addClass("granit-splitter-horizontal");         //justify ui-themed splitter
+                        splitterElement.parent().css("height", splitterWidth.getValue());
+                        splitterElement.parent().css("width", splitterLength);
                     }
-                    splitterElement.data().__granitData__ = { disabled: splitter && splitter.disabled };
-                    self.splitterList[index] = splitterElement;
+                    splitterElement.parent().data().__granitData__ = { disabled: splitter && splitter.disabled };
+                    self.splitterList[index] = splitterElement.parent();
                 }
 
                 var wrappedElement = $(element);
@@ -264,14 +267,14 @@ $(function () {
                 /*
                  * we wrap the element into a style container that represents layout styles for the panel like padding, margin, border, etc.
                  * this step is skipped if the element itself is a nested splitter (in a layout szenario), because any defined styles (border, margin, padding, etc.) would be displayed twice unintentionally
-                 * test wether the wrapped element is a nested splitter: check if the class starts with "granit-splitter"
+                 * test wether the wrapped element is a nested splitter: check if the class starts with "granit_layout"
                  */
-                if (!wrappedElement.is("[class^=granit-splitter]")) {
+                if (!wrappedElement.is("[class^=granit_layout]")) {
                     wrappedElement.wrap("<div></div>");
                     wrappedElement = wrappedElement.parent();
 
                     //add structural class granit-splitter-panel / any associated theming class defined in the classes option / add associated individual class defined for the current panel                     
-                    self._addClass(wrappedElement, "granit-splitter-panel", panel.class ); 
+                    self._addClass(wrappedElement, "granit-splitter-panel", panel.class || self.options.panelTemplate.class ); 
                 } else {
                     /* 
                      * --> see Issue #1: IE11 Flexbox Column Children width problem 
@@ -315,6 +318,10 @@ $(function () {
                 self.panels.push(wrappedElement.parent());
 
                 self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
+
+                if (self.splitterList[index] && !parseFloat(getComputedStyle(self.splitterList[index].children(0)[0], null).getPropertyValue("margin"))) {
+                    self.splitterList[index].children(0).addClass("granit-splitter-noBorder");               //justify ui-themed splitter
+                }
 
                 //flex default values
                 var value = size.getValue(),

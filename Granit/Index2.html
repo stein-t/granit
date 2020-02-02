@@ -6,25 +6,23 @@
     <link rel="shortcut icon" href="favicon.ico">
 
     <!-- css -->
-    <!-- <link href="www/jquery-ui-1.12.1/jquery-ui.css" rel="stylesheet" /> -->
-    <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/start/theme.css" type="text/css" rel="stylesheet" />
 
     <link href="Content/granit.min.css" rel="stylesheet" />
-    <!-- <link href="Content/granit.css" rel="stylesheet" /> -->
 
-    <link href="Content/custom.css" rel="stylesheet" />
+    <link href="Content/custom.min.css" rel="stylesheet" />
 </head>
 
 <body>
     <!--<div class="stein_container">-->
-    <div id="splitterOuter" class="granit-splitter-vertical">
+    <div id="splitterOuter" class="granit_layout_vertical">
         <div class="stein_content">
             Contentfhfjhfhjfjhfjhfjhg
         </div>
         <!--<div id="OuterPanel2" style="width:auto;height:100%;">
             Contentfhfjhfhjfjhfjhfjhg
         </div>-->
-        <div id="splitterInner" class="granit-splitter-horizontal">
+        <div id="splitterInner" class="granit_layout_horizontal">
             <div class="stein_content" style="width:1200px;height:1200px;">
                 Content
             </div>
@@ -34,7 +32,7 @@
             <div class="stein_content" style="width:auto;height:200px;">
                 Content
             </div>
-            <div id="splitterInner2" class="granit-splitter-vertical">
+            <div id="splitterInner2" class="granit_layout_vertical">
                 <article class="stein_content" style="width:1200px;height:1200px;">
                     Content
                 </article>
@@ -71,15 +69,13 @@
 <!-- granit -->
 <script src="Scripts/granitUtils.min.js"></script>
 <script src="Scripts/granit.min.js"></script>
-<!-- <script src="Scripts/granitUtils.js"></script>
-<script src="Scripts/granit.js"></script> -->
 
 <script>
     $(document).ready(function () {
         // // Conversion of splitter classes
         // $.granit.splitter.prototype.options.classes[ "granit-splitter-panel" ] = "granit_panel_default granit_Padding_Crazy";
 
-        $("div[class^='granit-splitter']").each(function() {
+        $("div[class^='granit_layout']").each(function() {
             $(this).splitter()
         });
     });

@@ -7,24 +7,23 @@
 
     <!-- css -->
     <!-- <link href="www/jquery-ui-1.12.1/jquery-ui.css" rel="stylesheet" /> -->
-    <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css" rel="stylesheet" />
+    <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/ui-darkness/jquery-ui.css" rel="stylesheet" />
 
     <link href="Content/granit.min.css" rel="stylesheet" />
-    <!-- <link href="Content/granit.css" rel="stylesheet" /> -->
 
-    <link href="Content/custom.css" rel="stylesheet" />
+    <link href="Content/custom.min.css" rel="stylesheet" />
 </head>
 
 <body>
     <!--<div class="stein_container">-->
-    <div id="splitterOuter" class="granit-splitter">
+    <div id="splitterOuter" class="granit_layout">
         <div id="OuterPanel1" class="stein_content">
             Contentfhfjhfhjfjhfjhfjhg
         </div>
         <!--<div id="OuterPanel2" style="width:auto;height:100%;">
             Contentfhfjhfhjfjhfjhfjhg
         </div>-->
-        <div id="splitterInner" class="granit-splitter">
+        <div id="splitterInner" class="granit_layout">
             <div id="InnerPanel1" class="stein_content" style="width:1200px;height:1200px;">
                 Content
             </div>
@@ -34,7 +33,7 @@
             <div id="InnerPanel3" class="stein_content" style="width:auto;height:200px;">
                 Content
             </div>
-            <div id="splitterInner2" class="granit-splitter">
+            <div id="splitterInner2" class="granit_layout">
                 <article id="InnerPanelB1" class="stein_content" style="width:1200px;height:1200px;">
                     Content
                 </article>
@@ -69,25 +68,17 @@
 <script src="Scripts/jquery-ui-1.12.1.min.js" type="text/javascript"></script> -->
 
 <!-- granit -->
-<!-- <script src="Scripts/granitUtils.min.js"></script>
-<script src="Scripts/granit.min.js"></script> -->
-<script src="Scripts/granitUtils.js"></script>
-<script src="Scripts/granit.js"></script>
+<script src="Scripts/granitUtils.min.js"></script>
+<script src="Scripts/granit.min.js"></script>
 
 <script>
     $(document).ready(function () {
-        // Conversion of splitter classes
-        $.granit.splitter.prototype.options.classes[ "granit-splitter-panel" ] = "granit_panel_default granit_Padding_Crazy";
-        $.granit.splitter.prototype.options.classes[ "granit-splitter-state-default" ] = "splitter_HandleStyle_default";        
-        $.granit.splitter.prototype.options.classes[ "granit-splitter-state-hover" ] = "splitter_HandleStyle_hover";        
-        $.granit.splitter.prototype.options.classes[ "granit-splitter-state-active" ] = "splitter_HandleStyle_active";        
-
         $("#splitterOuter").splitter({
             panel: [
-                { index: 0, size: "50ex", minSize: "1%", class: "panelLayout2 panelLayout7 panelLayout7", resizable: true },
-                { index: 1, size: "50em", class: "panelLayout4", resizable: true },
-                { index: 2, size: "10.5%", class: "panelLayout5", resizable: false, flexible: false },
-                { index: 3, class: "panelLayout6", resizable: true }
+                { index: 0, size: "50ex", minSize: "1%", resizable: true },
+                { index: 1, size: "50em", resizable: true },
+                { index: 2, size: "10.5%", resizable: false, flexible: false },
+                { index: 3, resizable: true }
             ],
             // splitter: [
             //     { index: 0 },
@@ -95,18 +86,19 @@
             //     { index: 2, width: "3em", length: "50%" }
             // ],
             panelTemplate: {
-                minSize: "1em", resizable: true, class: "panelLayout7 panelLayout7"
+                minSize: "4em", resizable: true, class: "granit_Padding_Corner panelLayout_Hover"
             },
-            splitterTemplate: { width: "3em", length: "25%" },
-            direction: "vertical"
+            splitterTemplate: { width: "3em", length: "100%", class: "splitter_HandleStyle" },
+            direction: "vertical",
+            overflow: "hidden"
         });
 
         $("#splitterInner").splitter({
             panel: [
-                { index: 0, size: "15%", class: "panelLayout1 panelLayout7", resizable: true, flexible: false },
-                { index: 1, size: "20mm", class: "panelLayout2 panelLayout7", resizable: true },
-                { index: 2, size: "15.87ex", maxSize: "20vmin", resizable: true, class: "panelLayout7" },
-                { index: 3, size: "30.87ch", minSize: "5px", class: "panelLayout3 panelLayout5" },
+                { index: 0, size: "15%", resizable: true, flexible: false },
+                { index: 1, size: "20mm", resizable: true },
+                { index: 2, size: "15.87ex", maxSize: "20vmin", resizable: true },
+                { index: 3, size: "30.87ch" },
                 { index: 4, resizable: true }
             ],
             // splitter: [
@@ -114,28 +106,32 @@
             //     { index: 1, width: 15, length: "200rem" },
             //     { index: 2, width: "2rem" }
             // ],
+            overflow: "hidden",
             direction: "horizontal",
             panelTemplate: {
-                minSize: "5px", resizable: true
+                minSize: "4em", resizable: true, class: "granit_Padding_Corner panelLayout_Hover"
             },
-            splitterTemplate: { width: "3em", length: "50%" }
+            splitterTemplate: { width: "3em", length: "100%", class: "splitter_HandleStyle" }
         });
 
         $("#splitterInner2").splitter({
             panel: [
-                { index: 0, size: "10ch", class: "panelLayout1 panelLayout7", resizable: true },
-                { index: 1, size: "10.4vw", class: "panelLayout2 panelLayout7" },
+                { index: 0, size: "10ch", resizable: true },
+                { index: 1, size: "10.4vw" },
                 { index: 2, size: "10ex" },
-                { index: 3, class: "panelLayout3 panelLayout5" }
+                { index: 3 }
             ],
             // splitter: [
             //     { index: 0, width: 10 },
             //     { index: 1, width: 15, length: "200rem" },
             //     { index: 2, width: 10 }
             // ],
-            splitterTemplate: { width: "3em", length: "75%" },
+            panelTemplate: {
+                minSize: "4em", class: "granit_Padding_Corner panelLayout_Hover"
+            },
+            splitterTemplate: { width: "3em", length: "100%", class: "splitter_HandleStyle" },
             direction: "vertical",
-            overflow: "auto"
+            overflow: "hidden"
         });
     });
 </script>
