@@ -29,7 +29,7 @@ $(function () {
             panel: [],
             splitter: [],
             panelTemplate: { size: "auto", minSize: 30, maxSize: "none", resizable: true, flexible: true },
-            splitterTemplate: { width: "6px", length: "100%", disabled: false },
+            splitterTemplate: { width: "6px", length: "100%", margin: 0, disabled: false },
             reconvert: "all"
         },
         /*
@@ -66,7 +66,7 @@ $(function () {
             ];
 
             var splitterOptionsAllowed = [
-                'index', 'disabled', 'width', 'length', 'class'
+                'index', 'disabled', 'width', 'length', 'margin', 'class'
             ];
 
             //check for invalid options
@@ -239,6 +239,10 @@ $(function () {
                     var splitterLength = (splitter && splitter.length) || self.options.splitterTemplate && self.options.splitterTemplate.length;
                     //Any css length value is allowed (including calc() statements). No validation needed here, because this value is directly forwarded into the css style definition
 
+                    //retrieve the splitterMargin option: a value defined individually on splitter level overwrites any template value
+                    var splitterMargin = (splitter && splitter.margin) || self.options.splitterTemplate && self.options.splitterTemplate.margin;
+                    //Any css margin value is allowed (including calc() statements). No validation needed here, because this value is directly forwarded into the css style definition
+
                     var cursor = splitter && splitter.disabled ? "default" : self.cursor;
                     
                     var splitterElement = $("<div></div>");
@@ -253,10 +257,12 @@ $(function () {
                         splitterElement.addClass("granit-splitter-vertical");           //justify ui-themed splitter
                         splitterElement.parent().css("width", splitterWidth.getValue());
                         splitterElement.parent().css("height", splitterLength);
+                        splitterElement.css({ marginLeft: splitterMargin, marginRight: splitterMargin });
                     } else {
                         splitterElement.addClass("granit-splitter-horizontal");         //justify ui-themed splitter
                         splitterElement.parent().css("height", splitterWidth.getValue());
                         splitterElement.parent().css("width", splitterLength);
+                        splitterElement.css({ marginTop: splitterMargin, marginBottom: splitterMargin });
                     }
                     splitterElement.parent().data().__granitData__ = { disabled: splitter && splitter.disabled };
                     self.splitterList[index] = splitterElement.parent();
@@ -318,7 +324,8 @@ $(function () {
                 self.panels.push(wrappedElement.parent());
 
                 self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement.parent());
-
+                
+                //remove border if splitter has no margin, so vertical and horizontal splitter "merge into one another"
                 if (self.splitterList[index] && !parseFloat(getComputedStyle(self.splitterList[index].children(0)[0], null).getPropertyValue("margin"))) {
                     self.splitterList[index].children(0).addClass("granit-splitter-noBorder");               //justify ui-themed splitter
                 }
