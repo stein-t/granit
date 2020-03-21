@@ -62,7 +62,7 @@ body {
     align-items: flex-start; /*!important;*/
 }
 
-.granit-splitter-panel {
+.granit_splitter_panel {
     position: absolute; /*!important;*/
     bottom: 0; /*!important;*/
     top: 0; /*!important;*/
@@ -95,7 +95,7 @@ body {
     flex: none !important;
 }
 
-.granit-splitter-state-default {
+.granit_splitter {
     position: absolute; /*!important;*/
     bottom: 0; /*!important;*/
     top: 0; /*!important;*/
@@ -109,30 +109,6 @@ body {
     width: auto !important;
     height: auto !important;
     margin: 0; */
-}
-
-/* justify ui-themed splitter */
-.granit-splitter-state-default.ui-state-default.granit-splitter-horizontal,
-.granit-splitter-state-default.ui-state-hover.granit-splitter-horizontal,
-.granit-splitter-state-default.ui-state-active.granit-splitter-horizontal {
-    background-position-x: 120%;
-    background-position-y: 0;
-    background-repeat: repeat-x; /*!important;*/
-}
-.granit-splitter-state-default.ui-state-default.granit-splitter-vertical,
-.granit-splitter-state-default.ui-state-hover.granit-splitter-vertical,
-.granit-splitter-state-default.ui-state-active.granit-splitter-vertical
-{
-    background-position-x: 120%;
-    background-position-y: 0;
-    background-repeat: repeat-y; /*!important;*/
-}
-
-/* justify ui-themed splitter */
-.granit-splitter-state-default.ui-state-default.granit-splitter-noBorder,
-.granit-splitter-state-default.ui-state-hover.granit-splitter-noBorder,
-.granit-splitter-state-default.ui-state-active.granit-splitter-noBorder {
-    border-width: 0;
 }
 
 .granit_splitter_wrapper {
@@ -149,6 +125,30 @@ body {
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important; */
+}
+
+/* justify ui-themed splitter */
+.granit_splitter.ui-state-default.granit_splitter_horizontal,
+.granit_splitter.ui-state-hover.granit_splitter_horizontal,
+.granit_splitter.ui-state-active.granit_splitter_horizontal {
+    background-position-x: 120%;
+    background-position-y: 0;
+    background-repeat: repeat-x; /*!important;*/
+}
+.granit_splitter.ui-state-default.granit_splitter_vertical,
+.granit_splitter.ui-state-hover.granit_splitter_vertical,
+.granit_splitter.ui-state-active.granit_splitter_vertical
+{
+    background-position-x: 120%;
+    background-position-y: 0;
+    background-repeat: repeat-y; /*!important;*/
+}
+
+/* justify ui-themed splitter */
+.granit_splitter.ui-state-default.granit_splitter_noBorder,
+.granit_splitter.ui-state-hover.granit_splitter_noBorder,
+.granit_splitter.ui-state-active.granit_splitter_noBorder {
+    border-width: 0;
 }
 
 .granit_suppressMouseEvents {

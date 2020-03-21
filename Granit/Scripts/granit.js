@@ -15,21 +15,21 @@ $(function () {
     $.widget("granit.splitter", {
         options: {
             classes: {
-                // "granit-splitter-panel": "granit_panel_default",
-                // "granit-splitter-state-default": "granit_splitter_state_default",
-                // "granit-splitter-state-hover": "granit_splitter_state_hover",
-                // "granit-splitter-state-active": "granit_splitter_state_active"
-                "granit-splitter-panel": "ui-widget-content",
-                "granit-splitter-state-default": "ui-state-default",
-                "granit-splitter-state-hover": "ui-state-hover",
-                "granit-splitter-state-active": "ui-state-active"
+                // "granit_splitter_panel": "granit_panel_default",
+                // "granit_splitter": "granit_splitter_state_default",
+                // "granit_splitter_hover": "granit_splitter_state_hover",
+                // "granit_splitter_active": "granit_splitter_state_active"
+                "granit_splitter_panel": "ui-widget-content",
+                "granit_splitter": "ui-state-default",
+                "granit_splitter_hover": "ui-state-hover",
+                "granit_splitter_active": "ui-state-active"
             },
             direction: undefined,
             overflow: "auto",
             panel: [],
             splitter: [],
             panelTemplate: { size: "auto", minSize: 30, maxSize: "none", resizable: true, flexible: true },
-            splitterTemplate: { width: "6px", length: "100%", margin: 0, disabled: false },
+            splitterTemplate: { len: "100%", width: "6px", marge: 0, disabled: false },
             reconvert: "all"
         },
         /*
@@ -66,7 +66,7 @@ $(function () {
             ];
 
             var splitterOptionsAllowed = [
-                'index', 'disabled', 'width', 'length', 'margin', 'class'
+                'index', 'disabled', 'width', 'len', 'marge', 'class'
             ];
 
             //check for invalid options
@@ -236,33 +236,33 @@ $(function () {
                     splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", self.unitsRegex, "px", self.IdString + " -- splitter width (splitter.width)");
 
                     //retrieve the splitterLength option: a value defined individually on splitter level overwrites any template value
-                    var splitterLength = (splitter && splitter.length) || self.options.splitterTemplate && self.options.splitterTemplate.length;
+                    var splitterLen = (splitter && splitter.len) || self.options.splitterTemplate && self.options.splitterTemplate.len;
                     //Any css length value is allowed (including calc() statements). No validation needed here, because this value is directly forwarded into the css style definition
 
-                    //retrieve the splitterMargin option: a value defined individually on splitter level overwrites any template value
-                    var splitterMargin = (splitter && splitter.margin) || self.options.splitterTemplate && self.options.splitterTemplate.margin;
-                    //Any css margin value is allowed (including calc() statements). No validation needed here, because this value is directly forwarded into the css style definition
+                    //retrieve the splitterMarge option: a value defined individually on splitter level overwrites any template value
+                    var splitterMarge = (splitter && splitter.marge) || self.options.splitterTemplate && self.options.splitterTemplate.marge;
+                    //Any single css marginTop, marginBottom, marginLeft, marginRight value is allowed (including calc() statements). No validation needed here, because this value is directly forwarded into the css style definition
 
                     var cursor = splitter && splitter.disabled ? "default" : self.cursor;
                     
                     var splitterElement = $("<div></div>");
 
-                    //add structural class granit-splitter-state-default / any associated theming class defined in the classes option / add associated individual class defined for the current splitter
-                    self._addClass(splitterElement, "granit-splitter-state-default", splitter.class || self.options.splitterTemplate.class);
+                    //add structural class granit_splitter / any associated theming class defined in the classes option / add associated individual class defined for the current splitter
+                    self._addClass(splitterElement, "granit_splitter", splitter.class || self.options.splitterTemplate.class);
 
                     splitterElement.wrap("<div id='granit-" + splitterId + "-splitter-" + (index + 1) + "' class='granit_splitter_wrapper' style='cursor:" + cursor + ";'></div>");
 
                     //define the splitter element
                     if (self.options.direction === "vertical") {
-                        splitterElement.addClass("granit-splitter-vertical");           //justify ui-themed splitter
+                        splitterElement.addClass("granit_splitter_vertical");           //justify ui-themed splitter
                         splitterElement.parent().css("width", splitterWidth.getValue());
-                        splitterElement.parent().css("height", splitterLength);
-                        splitterElement.css({ marginLeft: splitterMargin, marginRight: splitterMargin });
+                        splitterElement.parent().css("height", splitterLen);
+                        splitterElement.css({ marginLeft: splitterMarge, marginRight: splitterMarge });
                     } else {
-                        splitterElement.addClass("granit-splitter-horizontal");         //justify ui-themed splitter
+                        splitterElement.addClass("granit_splitter_horizontal");         //justify ui-themed splitter
                         splitterElement.parent().css("height", splitterWidth.getValue());
-                        splitterElement.parent().css("width", splitterLength);
-                        splitterElement.css({ marginTop: splitterMargin, marginBottom: splitterMargin });
+                        splitterElement.parent().css("width", splitterLen);
+                        splitterElement.css({ marginTop: splitterMarge, marginBottom: splitterMarge });
                     }
                     splitterElement.parent().data().__granitData__ = { disabled: splitter && splitter.disabled };
                     self.splitterList[index] = splitterElement.parent();
@@ -279,8 +279,8 @@ $(function () {
                     wrappedElement.wrap("<div></div>");
                     wrappedElement = wrappedElement.parent();
 
-                    //add structural class granit-splitter-panel / any associated theming class defined in the classes option / add associated individual class defined for the current panel                     
-                    self._addClass(wrappedElement, "granit-splitter-panel", panel.class || self.options.panelTemplate.class ); 
+                    //add structural class granit_splitter_panel / any associated theming class defined in the classes option / add associated individual class defined for the current panel                     
+                    self._addClass(wrappedElement, "granit_splitter_panel", panel.class || self.options.panelTemplate.class ); 
                 } else {
                     /* 
                      * --> see Issue #1: IE11 Flexbox Column Children width problem 
@@ -327,7 +327,7 @@ $(function () {
                 
                 //remove border if splitter has no margin, so vertical and horizontal splitter "merge into one another"
                 if (self.splitterList[index] && !parseFloat(getComputedStyle(self.splitterList[index].children(0)[0], null).getPropertyValue("margin"))) {
-                    self.splitterList[index].children(0).addClass("granit-splitter-noBorder");               //justify ui-themed splitter
+                    self.splitterList[index].children(0).addClass("granit_splitter_noBorder");               //justify ui-themed splitter
                 }
 
                 //flex default values
@@ -363,7 +363,7 @@ $(function () {
                         });
                         item.hover(
                             function() {
-                                self._toggleClass($(this).children(0), "granit-splitter-state-hover");
+                                self._toggleClass($(this).children(0), "granit_splitter_hover");
                             }
                         )
                     }
@@ -408,7 +408,7 @@ $(function () {
 
             $(".granit_splitter_wrapper, .granit_panel_wrapper").not(this.movedSplitter).addClass("granit_suppressMouseEvents");
             this.movedSplitter.addClass("granit_splitter_active");            
-            this._addClass(this.movedSplitter.children(0), "granit-splitter-state-active");   //add granit-splitter-active template
+            this._addClass(this.movedSplitter.children(0), "granit_splitter_active");   //add granit-splitter-active template
 
             //capture the mouse event
             if (event.target.setCapture) {
@@ -516,7 +516,7 @@ $(function () {
 
             //clean up
             this.movedSplitter.removeClass("granit_splitter_active");
-            this._removeClass(this.movedSplitter.children(0), "granit-splitter-state-active");  //remove granit-splitter-active template
+            this._removeClass(this.movedSplitter.children(0), "granit_splitter_active");  //remove granit-splitter-active template
             $(".granit_splitter_wrapper, .granit_panel_wrapper").removeClass("granit_suppressMouseEvents");
 
             $("html").css("cursor", "default");
