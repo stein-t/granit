@@ -4,11 +4,7 @@
  * License:        MIT
  */
 var granit = (function (gt) {
-    var self = this;
-
-    //the threshold that is used to calculate sufficient accurate lengths
-    gt.Threshold = 0.001;
-
+    
     /*
      * Author(s):   Thomas Stein
      * Description: Manages ouput errors (as exceptions) and warnings (as console output). Optionally alerts the output.
@@ -86,7 +82,6 @@ var granit = (function (gt) {
                 return self.Number.getValue();
             }
 
-            var test = self.Precise;
             return self.Precise;
             // return "calc(" + self.Number.getValue() + " " + " + " + self.Offset + ")";
         }
@@ -96,15 +91,16 @@ var granit = (function (gt) {
                 number = new NumberUnit(1);
             }
             self.Number = number;
+
             self.Offset = offset;
             self.Precise = precise || number.getValue();
-
-            self.autoSized = number.getValue() === 1 ? true : false;
         }
 
         self.setValue(number);
-        self.TargetUnit = self.Number.Unit;
     }
+    //define getter as Number wrapper properties
+    Object.defineProperty(Size.prototype, 'TargetUnit', { get: function() { return this.Number.Unit; } });
+    Object.defineProperty(Size.prototype, 'AutoSized', { get: function() { return this.Number.Unit == false; } });
 
     //check if value is of type boolean
     var isBooleanType = function (value) {
@@ -451,9 +447,8 @@ var granit = (function (gt) {
 
             size.Number.setValue(floor, size.TargetUnit);
             var offset;
-            if (Math.abs(rest) >= gt.Threshold) {
-                offset = rest + "px";
-            }
+
+            offset = rest + "px";
 
             size.setValue(size.Number, offset, precise);
 

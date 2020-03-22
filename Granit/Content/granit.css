@@ -15,7 +15,7 @@
  * the provided html and body css especially is necessary for the splitter 
  * to work properly on full screen stretch level (as a direct body child) 
  */
-html {
+ html {
     /* IE has problems with em calculation: set the general html font-size to a natural pixel number. See issues #2 and #3 */
     /*font-size: 5px;*/
     /* for all other browsers: set the general font-size to a value that exactly converts to a natural pixel number. See issues  #2 and #3 */
@@ -24,32 +24,27 @@ html {
     /*font-size: 0.125in;*/
     /*font-size: 0.625em;*/
     height: 100%;
-    width: auto;
 }
 
 body {
     margin: 0;
     height: 100%;
-    width: auto;
-    /*padding: 10px;
-    box-sizing: border-box;*/
 }
 
 /*******************************************************************/
 .granit_layout {
-    width: auto;
-    height: 100%;
+    height: 100%; /*!important;*/
     display: flex; /*!important;*/
     overflow: hidden;
 
-    /* position: relative !important;
+    /* box-sizing: border-box !important;
+    position: relative !important;
     margin: 0 !important;
     padding: 0 !important;
     left: 0 !important;
     top: 0 !important;
     right: 0 !important;
-    bottom: 0 !important;
-    box-sizing: border-box !important; */
+    bottom: 0 !important; */
 }
 
 .granit_layout.granit_layout_vertical {
@@ -77,24 +72,6 @@ body {
     float: none !important; */
 }
 
-.granit_panel_wrapper {
-    height: 100%;
-    width: 100%;
-    flex: 0 1 auto;                  /* default flex setting: the proper size will be set at runtime */
-    position: relative; /*!important;*/
-    overflow: hidden; /*!important;*/
-
-    /* display: block !important;
-    box-sizing: border-box !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important; */
-}
-
-.granit_panel_static {
-    flex: none !important;
-}
-
 .granit_splitter {
     position: absolute; /*!important;*/
     bottom: 0; /*!important;*/
@@ -107,8 +84,21 @@ body {
     float: none !important;
     box-sizing: border-box !important;
     width: auto !important;
-    height: auto !important;
-    margin: 0; */
+    height: auto !important; */
+}
+
+.granit_panel_wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /*!important;*/
+    flex: 0 1 auto;                  /* default flex setting: the proper size will be set at runtime */
+    position: relative; /*!important;*/
+
+    /* display: block !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important; */
 }
 
 .granit_splitter_wrapper {
@@ -133,7 +123,7 @@ body {
 .granit_splitter.ui-state-active.granit_splitter_horizontal {
     background-position-x: 120%;
     background-position-y: 0;
-    background-repeat: repeat-x; /*!important;*/
+    background-repeat: repeat-x !important;
 }
 .granit_splitter.ui-state-default.granit_splitter_vertical,
 .granit_splitter.ui-state-hover.granit_splitter_vertical,
@@ -141,7 +131,7 @@ body {
 {
     background-position-x: 120%;
     background-position-y: 0;
-    background-repeat: repeat-y; /*!important;*/
+    background-repeat: repeat-y !important;
 }
 
 /* justify ui-themed splitter */
@@ -155,7 +145,7 @@ body {
     pointer-events: none;
 }
 .granit_splitter_active {
-    pointer-events: auto; /*!important;*/
+    pointer-events: auto !important;
 }
 
 /*custom default panel layout styles*/
