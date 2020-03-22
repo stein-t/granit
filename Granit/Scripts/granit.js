@@ -354,7 +354,7 @@ $(function () {
             //    }
             //});
 
-            //1. fetch sizes from rendered autosized panels
+            //1. We do not know the sizes of autosized panels. Still we need to update flex with that values. So here we fetch them.
             self.panels.forEach(function(item, index) {
                 var data = item.data().__granitData__;
                 if (data.Size.AutoSized) {                   
@@ -367,7 +367,7 @@ $(function () {
                     data.Size.Pixel = size;
                 }
             });
-            //2. define the flex-basis for autosized panels with previously fetched sizes
+            //2. Define the flex-basis for autosized panels with previously fetched sizes
             self.panels.forEach(function(item, index) {
                 var data = item.data().__granitData__;
                 if (data.Size.AutoSized) {                   
@@ -377,7 +377,7 @@ $(function () {
                     item.css("flex", grow + " " + shrink + " " + basis);
                 }
             });
-            //3. finally set the flex properties for non-autosized panels
+            //3. Finally set the flex properties for the remaining non-autosized panels
             self.panels.forEach(function(item, index) {
                 var data = item.data().__granitData__;
                 if (!data.Size.AutoSized) {                   
