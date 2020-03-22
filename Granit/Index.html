@@ -75,9 +75,9 @@
     $(document).ready(function () {
         $("#splitterOuter").splitter({
             panel: [
-                { index: 0, size: "20.5mm", minSize: "1%", resizable: true },
+                { index: 0, size: "20.5mm", minSize: "1%", resizable: true, flexGrow: 1 },
                 { index: 1, size: "55.87em", resizable: true },
-                { index: 2, size: "65.87ex", resizable: false, flexible: false },
+                { index: 2, size: "65.87ex", resizable: false, flexGrow: 0, flexShrink: 0 },
                 { index: 3, resizable: true }
             ],
             // splitter: [
@@ -95,7 +95,7 @@
 
         $("#splitterInner").splitter({
             panel: [
-                { index: 0, size: "20.5mm", resizable: true, flexible: true },
+                { index: 0, size: "20.5mm", resizable: true, flexGrow: 1, flexShrink: 1 },
                 { index: 1, size: "20.5mm", resizable: true },
                 { index: 2, size: "25.87ex", maxSize: "20vmin", resizable: true },
                 { index: 3, size: "35.87ch" },

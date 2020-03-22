@@ -100,7 +100,7 @@ var granit = (function (gt) {
     }
     //define getter as Number wrapper properties
     Object.defineProperty(Size.prototype, 'TargetUnit', { get: function() { return this.Number.Unit; } });
-    Object.defineProperty(Size.prototype, 'AutoSized', { get: function() { return this.Number.Unit == false; } });
+    Object.defineProperty(Size.prototype, 'AutoSized', { get: function() { return this.Number.Unit == false; } });      //check for falsy
 
     //check if value is of type boolean
     var isBooleanType = function (value) {
@@ -109,9 +109,45 @@ var granit = (function (gt) {
 
     /*
      * Author(s):   Thomas Stein
+     * Description: validate the given size as a float number.
+     */
+    var extractNumber = function(size, numberSet, errorObject, math) {
+        if (!numberSet || (numberSet !== "Q" && numberSet !== "Q+" && numberSet !== "Q-")) {
+            numberSet = "Q";
+        }
+
+        if (jQuery.type(size) !== "string" && jQuery.type(size) !== "number") {
+            output("value (" + size + ") is not a number or a string", errorObject);
+        }
+
+        math = math || function (x) { return x; };
+
+        if (jQuery.type(size) === "string") {
+            var regex = /[+-]?\d+(\.\d+)?/;
+            var match = size.match(regex);
+            if (!match) {
+                output("value (" + size + ") format is invalid -- format (" + regex + ") expected a number", errorObject);
+            }
+        }
+        value = parseFloat(size);
+
+        if (numberSet !== "Q") {
+            if (value < 0.0 && numberSet === "Q+") {
+                output("value (" + value + ") < 0.0 -- positive value expected", errorObject);
+            }
+            if (value > 0.0 && numberSet === "Q-") {
+                output("value (" + value + ") > 0.0 -- negative value expected", errorObject);
+            }
+        }
+
+        return value;
+    }
+
+    /*
+     * Author(s):   Thomas Stein
      * Description: function to validate the given size as a float number and an optional unit. As a result a NumberUnit object is returned.
      */
-    var extractFloatUnit = function (size, numberSet, unitFormat, defaultUnit, errorObject, math) {
+    var extractNumberUnit = function (size, numberSet, unitFormat, defaultUnit, errorObject, math) {
         if (!numberSet || (numberSet !== "Q" && numberSet !== "Q+" && numberSet !== "Q-")) {
             numberSet = "Q";
         }
@@ -493,7 +529,8 @@ var granit = (function (gt) {
     };
 
     //publish
-    gt.extractFloatUnit = extractFloatUnit;
+    gt.extractNumber = extractNumber;
+    gt.extractNumberUnit = extractNumberUnit;
     gt.output = output;
     gt.arrayOperations = arrayOperations;
     gt.NumberUnit = NumberUnit;

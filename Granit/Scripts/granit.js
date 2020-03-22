@@ -28,7 +28,7 @@ $(function () {
             overflow: "auto",
             panel: [],
             splitter: [],
-            panelTemplate: { size: "auto", minSize: 30, maxSize: "none", resizable: true, flexible: true },
+            panelTemplate: { size: 1, minSize: 30, maxSize: "none", resizable: true, flexGrow: "auto", flexShrink: "auto" },
             splitterTemplate: { len: "100%", width: "6px", marge: 0, disabled: false }
         },
         /*
@@ -60,7 +60,7 @@ $(function () {
             ];
 
             var panelOptionsAllowed = [
-                'index', 'size', 'minSize', 'maxSize', 'resizable', 'flexible', 'class'
+                'index', 'size', 'minSize', 'maxSize', 'resizable', 'flexGrow', 'flexShrink', 'class'
             ];
 
             var splitterOptionsAllowed = [
@@ -149,8 +149,6 @@ $(function () {
             this.panels = [];               //reference to the panels (or final panel wrappers)
             this.splitterList = [];         //reference to the splitters            
 
-            var existsFlexiblePanel = false;    //indicates wether flexible panels exist to fill remaining space
-
             /*
              * iterate the children in order to ...
              *      ... retrieve and validate the associated panel and splitter options
@@ -175,20 +173,44 @@ $(function () {
                 }
                 resizable = resizable ? true : false;
 
-                //retrieve the flexible option: a value defined individually on panel level overwrites any panel template value
-                var flexible = panel && panel.flexible;
-                if (!(panel && granit.IsBooleanType(panel.flexible))) {
-                    flexible = self.options.panelTemplate && self.options.panelTemplate.flexible;
-                }
-                flexible = flexible ? true : false;
-
                 //retrieve the minSize option: a value defined individually on panel level overwrites any panel template value
                 var minSize = (panel && panel.minSize) || self.options.panelTemplate && self.options.panelTemplate.minSize;
-                minSize = minSize && minSize !== "none" ? granit.extractFloatUnit(minSize, "Q+", self.unitsRegex, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit("none");
+                minSize = minSize && minSize !== "none" ? granit.extractNumberUnit(minSize, "Q+", self.unitsRegex, "px", self.IdString + " -- Panel minimum size (minSize)") : new granit.NumberUnit("none");
 
                 //retrieve the maxSize option: a value defined individually on panel level overwrites any panel template value
                 var maxSize = (panel && panel.maxSize) || self.options.panelTemplate && self.options.panelTemplate.maxSize;
-                maxSize = maxSize && maxSize !== "none" ? granit.extractFloatUnit(maxSize, "Q+", self.unitsRegex, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
+                maxSize = maxSize && maxSize !== "none" ? granit.extractNumberUnit(maxSize, "Q+", self.unitsRegex, "px", self.IdString + " -- Panel maximum size (maxSize)") : new granit.NumberUnit("none");
+
+                //retrieve the size option: a value defined individually on panel level overwrites any panel template value
+                var size = (panel && panel.size) || self.options.panelTemplate && self.options.panelTemplate.size || 1;
+                size = granit.extractNumberUnit(size, "Q+", self.unitsRegex, null, self.IdString + " -- Panel size (size)");
+                size = new granit.Size(size);
+
+                var relativeUnits = ["%", "vmin", "vmax", "vh", "vw"];          //used to define default flex growing behaviour
+
+                //retrieve the flexGrow option: a value defined individually on panel level overwrites any panel template value
+                var flexGrow = "auto";
+                if (panel && $.isNumeric(panel.flexGrow)) {
+                    flexGrow = panel.flexGrow;
+                }
+                else if (self.options.panelTemplate && $.isNumeric(self.options.panelTemplate.flexGrow)) {
+                    flexGrow = self.options.panelTemplate.flexGrow;
+                }
+                size.FlexGrow = flexGrow == "auto" 
+                                    ? (size.AutoSized ? size.getValue() : (granit.arrayOperations.compareArrayToArray([size.TargetUnit], relativeUnits) ? 1 : 0))       //by default (auto) we support flex growing for relative units only
+                                    : granit.extractNumber(flexGrow, "Q+", self.IdString + " -- Panel flexGrow");
+
+                //retrieve the flexShrink option: a value defined individually on panel level overwrites any panel template value
+                var flexShrink = "auto";
+                if (panel && $.isNumeric(panel.flexShrink)) {
+                    flexShrink = panel.flexShrink;
+                }
+                else if (self.options.panelTemplate && $.isNumeric(self.options.panelTemplate.flexShrink)) {
+                    flexShrink = self.options.panelTemplate.flexShrink;
+                }
+                size.FlexShrink = flexShrink == "auto"
+                                    ? (size.AutoSized ? size.getValue() : 1)                                                        //by default (auto) flex shrinking is always supported
+                                    : granit.extractNumber(flexShrink, "Q+", self.IdString + " -- Panel flexShrink");                 
 
                 if (index < children.length - 1) {
                     //identify the associated splitter
@@ -208,7 +230,7 @@ $(function () {
 
                     //retrieve the splitterWidth option: a value defined individually on splitter level overwrites any template value
                     var splitterWidth = (splitter && splitter.width) || self.options.splitterTemplate && self.options.splitterTemplate.width;
-                    splitterWidth = granit.extractFloatUnit(splitterWidth, "Q+", self.unitsRegex, "px", self.IdString + " -- splitter width (splitter.width)");
+                    splitterWidth = granit.extractNumberUnit(splitterWidth, "Q+", self.unitsRegex, "px", self.IdString + " -- splitter width (splitter.width)");
 
                     //retrieve the splitterLength option: a value defined individually on splitter level overwrites any template value
                     var splitterLen = (splitter && splitter.len) || self.options.splitterTemplate && self.options.splitterTemplate.len;
@@ -280,52 +302,16 @@ $(function () {
                     }
                 }
 
-                //retrieve the size option: a value defined individually on panel level overwrites any panel template value
-                var size = (panel && panel.size) || self.options.panelTemplate && self.options.panelTemplate.size || 1;
-                if (size === "auto") { size = 1; }
-                size = granit.extractFloatUnit(size, "Q+", self.unitsRegex, null, self.IdString + " -- Panel size (size)");
-                size = new granit.Size(size);
-
                 var panelWrapperClass = "granit_panel_wrapper";
                 //apply panel wrapper
                 wrappedElement.wrap("<div id='granit-" + splitterId + "-panel-" + (index + 1) + "' class='" + panelWrapperClass + "' style='" + granit.prefixSizeName(self.sizePropertyName, "min") + ":" + minSize.getValue() + ";'></div>");
 
                 wrappedElement = wrappedElement.parent();   //pointer to parent
 
-                var basis, grow, shrink;
-                if (!size.AutoSized) {
-                    basis = size.getValue();
-                    grow = 0,
-                    shrink = flexible ? 1 : 0;
-                }
-                else {                    
-                    basis = size.AutoSized ? 0 : size.getValue(),
-                    grow = size.AutoSized ? size.getValue() : 0,
-                    shrink = size.AutoSized ? size.getValue() : flexible ? 1 : 0;
-                }
-
-                // //flex default values
-                // var basis, grow, shrink;
-                // if (
-                //     !size.AutoSized && 
-                //     (index < children.length - 1 || existsFlexiblePanel)    //the last panel should fill remaining space if there is no flexible panel yet
-                // ) {
-                //     basis = size.getValue();
-                //     grow = 0;
-                //     shrink = flexible ? 1 : 0;
-                // }
-                // else {                    
-                //     if (!size.AutoSized) {
-                //         //set the last panel to be flexible regarding growing and shrinking
-                //         value = 1;
-                //         size.Number.setValue(value);
-                //     }
-                //     basis = size.AutoSized ? 0 : value,
-                //     grow = value,
-                //     shrink = value;
-                //     existsFlexiblePanel = existsFlexiblePanel || size.AutoSized;
-                // }
-                
+                /* some properties are set in subsequent loops */
+                var basis = size.AutoSized ? 0 : size.getValue(),
+                    grow = !size.AutoSized ? 0 : size.FlexGrow,
+                    shrink = !size.AutoSized ? 0 : size.FlexShrink;
                 wrappedElement.css("flex", grow + " " + shrink + " " + basis);
 
                 //remove border if splitter has no margin, so vertical and horizontal splitter "merge into one another"
@@ -333,7 +319,7 @@ $(function () {
                     self.splitterList[index].children(0).addClass("granit_splitter_noBorder");               //justify ui-themed splitter
                 }
 
-                wrappedElement.data().__granitData__ = { index: index, Size: size, flexible: flexible, resizable: resizable, minSize: minSize, maxSize: maxSize };
+                wrappedElement.data().__granitData__ = { index: index, Size: size, resizable: resizable, minSize: minSize, maxSize: maxSize };
                 self.panels.push(wrappedElement);
 
                 self.splitterList[index] && self.splitterList[index].insertAfter(wrappedElement);
@@ -368,7 +354,7 @@ $(function () {
             //    }
             //});
 
-            //finally for all autosized panels --> set flex-basis from rendered sizes
+            //1. fetch sizes from rendered autosized panels
             self.panels.forEach(function(item, index) {
                 var data = item.data().__granitData__;
                 if (data.Size.AutoSized) {                   
@@ -378,13 +364,36 @@ $(function () {
                     } else {
                         size = item.height();
                     }
-                    var basis = size + "px",
-                        grow = data.Size.getValue(),
-                        shrink = data.Size.getValue();
-
+                    data.Size.Pixel = size;
+                }
+            });
+            //2. define the flex-basis for autosized panels with previously fetched sizes
+            self.panels.forEach(function(item, index) {
+                var data = item.data().__granitData__;
+                if (data.Size.AutoSized) {                   
+                    var basis = data.Size.Pixel + "px",
+                        grow = data.Size.FlexGrow,
+                        shrink = data.Size.FlexShrink;
                     item.css("flex", grow + " " + shrink + " " + basis);
                 }
-            });    
+            });
+            //3. finally set the flex properties for non-autosized panels
+            self.panels.forEach(function(item, index) {
+                var data = item.data().__granitData__;
+                if (!data.Size.AutoSized) {                   
+                    var basis = data.Size.getValue(),
+                        grow = data.Size.FlexGrow,
+                        shrink = data.Size.FlexShrink;
+                    item.css("flex", grow + " " + shrink + " " + basis);
+                }
+            });
+            /*
+             * ########################################
+             * HACK TS:     The above 3 loops cause that explicitly sized panels with flex-grow are rendered initially with their explicit sizes.
+             * Otherwise:   If we would set the flex properties for all panels together in one step - Flexbox would divide the remaining space among all panels that support growing.
+             *              Especially those explitly sized panels then would be stretched on initial rendering, which I would consider as unintended behaviour.
+             * ########################################
+             */
         },
 
         _elementOnResize: function (element) {
@@ -442,9 +451,9 @@ $(function () {
                 } else {
                     size = item.height();
                 }
-                var itemData = item.data().__granitData__;
+                var data = item.data().__granitData__;
 
-                if (itemData.resizable) {
+                if (data.resizable) {
                     var minSize = pc.convertToPixel(item[0], minSizeName, false);
                     if (minSize && minSize === "none") {
                         minSize = 0.0;
@@ -456,19 +465,24 @@ $(function () {
                     }
 
                     //capture the current limit sizes to support mouse-moving calculation
-                    itemData.minSize = Math.floor(minSize + 1);       //round slightly up to egalize (percent) convertion errors (in firefox and chrome)
-                    itemData.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
+                    data.minSize = Math.floor(minSize + 1);       //round slightly up to egalize (percent) convertion errors (in firefox and chrome)
+                    data.maxSize = Math.ceil(maxSize - 1);        //round slightly down to egalize (percent) convertion errors (in firefox and chrome)
 
-                    itemData.Size.Pixel = size;
-                    
-                    item.css("flex", "none");                       //switch off flex for the period of dragging                    
-                    item.css(self.sizePropertyName, size + "px");   //set size to pixels for the period of dragging
-
-                    itemData.resized = true;        //we set to resized here in order to reconvert all resizable panels properly on MouseUp
+                    data.Size.Pixel = size;         //fetch current size             
                 }
             });
 
             pc.destroy();   //destroy the convertion tool
+
+            //manipulate the css inside a separate loop: fetching & setting sizes in one step could cause unintended behaviour!
+            this.panels.forEach(function(item, index) {
+                var data = item.data().__granitData__;
+                if (data.resizable) {      
+                    item.css("flex", "none");                                       //switch off flex for the period of dragging                    
+                    item.css(self.sizePropertyName, data.Size.Pixel + "px");        //set size to pixels for the period of dragging
+                    data.resized = true;                                            //we set to resized here in order to reconvert all resizable panels properly on MouseUp
+                }
+            });
 
             if (this.options.direction === "vertical") {
                 $("html").css("cursor", "ew-resize");
@@ -547,17 +561,9 @@ $(function () {
                             pc.convertFromPixel(data.Size, self.sizePropertyName, false);
                         }
                         
-                        var basis, grow, shrink;
-                        if (!data.Size.AutoSized) {
-                            basis = data.Size.getValue();
-                            grow = 0,
-                            shrink = data.flexible ? 1 : 0;
-                        }
-                        else {
-                            basis = data.Size.getValue(data.Size.AutoSized);        //set new pixel size as flex basis
-                            grow = data.Size.AutoSized ? data.Size.getValue() : 0,
-                            shrink = data.Size.AutoSized ? data.Size.getValue() : data.flexible ? 1 : 0;
-                        }
+                        var basis = data.Size.getValue(data.Size.AutoSized),        //set new pixel size as flex basis
+                            grow = data.Size.FlexGrow,
+                            shrink = data.Size.FlexShrink;
                         item.css("flex", grow + " " + shrink + " " + basis);        //set flex size
 
                         data.minimized = false;
